@@ -31,7 +31,7 @@ add_library(common_lib STATIC
 )
 SOURCE_GROUP("src\\ext\\stb" FILES ${ext_stb_srcs})
 
-set(a6_srcs   src/a6_main.cpp src/a6.cpp src/morphing.cpp src/a2.cpp)       # a6
+set(a6_srcs   src/final_main.cpp src/seam.cpp src/energy.cpp src/filtering.cpp src/a6.cpp src/morphing.cpp src/a2.cpp)       # a6
 add_executable(a6 ${a6_srcs})                                               # a6
 target_link_libraries(a6 common_lib)                                        # a6
 SOURCE_GROUP("src" FILES ${a6_srcs})                                        # a6

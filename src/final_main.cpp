@@ -9,29 +9,18 @@ using namespace std;
 
 void createTestImage()
 {
-    FloatImage test(10, 10, 1);
-    test(1, 0, 0) = 1;
-    test(1, 1, 0) = 1;
-    test(1, 2, 0) = 1;
-    test(1, 3, 0) = 1;
-    test(1, 4, 0) = 1;
-    test(1, 5, 0) = 1;
-    test(1, 6, 0) = 1;
-    test(1, 7, 0) = 1;
-    test(1, 8, 0) = 1;
-    test(1, 9, 0) = 1;
-
-    test(3, 0, 0) = 1;
-    test(3, 1, 0) = 1;
-    test(3, 2, 0) = 1;
-    test(3, 3, 0) = 1;
-    test(3, 4, 0) = 1;
-    test(3, 5, 0) = 1;
-    test(3, 6, 0) = 1;
-    test(3, 7, 0) = 1;
-    test(3, 8, 0) = 1;
-    test(3, 9, 0) = 1;
-    test.write(DATA_DIR "/input/test3.png");
+    FloatImage test(100, 68, 1);
+    for (int x = 0; x <test.width(); x++) {
+        for (int y = 0; y < test.height(); y++) {
+            test(x, y, 0) = 1;
+        }
+    }
+    for (int x = 0; x <test.width(); x+= 10) {
+        for (int y = 0; y < test.height(); y++) {
+            test(x, y, 0) = 0;
+        }
+    }
+    test.write(DATA_DIR "/input/test4.png");
 }
 
 void testEnergy()
@@ -92,8 +81,8 @@ void testRemoveSeam()
 
     for (int i = 0; i < 50; i++) {
         FloatImage eMap = energyMap(mid);
-     //   const vector<tuple<int, int>> seam = findVerticalSeamMap(eMap);
-    //    mid = removeSeam(mid, seam);
+        const vector<int> seam = findVerticalSeamMap(eMap);
+        mid = removeSeam(mid, seam, false);
     }
 
     //FloatImage eMap = gradientEnergy(mid);
@@ -128,14 +117,52 @@ void testEnlarge()
     output.write(DATA_DIR "/output/enlarge/castle-micro.png");
 }
 
+void testRemoveObject()
+{
+    const FloatImage input(DATA_DIR "/input/castle-micro.png");
+    vector<tuple<int, int>> object = {};
+
+    FloatImage castle(input);
+    //black out the castle
+    for (int x = 60; x < input.width(); x++) {
+        for (int y = 10; y < 60; y++) {
+            tuple<int, int> t = make_tuple(x, y);
+            object.push_back(t);
+            castle(x, y, 0) = 1;
+            castle(x, y, 1) = 0;
+            castle(x, y, 2) = 0;
+        }
+    }
+
+    //black out the person
+    for (int x = 6; x < 11; x++) {
+        for (int y = 50; y < 57; y++) {
+            tuple<int, int> t = make_tuple(x, y);
+            object.push_back(t);
+            castle(x, y, 0) = 1;
+            castle(x, y, 1) = 0;
+            castle(x, y, 2) = 0;
+        }
+    }
+
+    castle.write(DATA_DIR "/output/removal/test.png");
+
+
+    FloatImage output = removeObject(input, object);
+    cout << input.width() << " " << input.height() << endl;
+    cout << output.width() << " " << output.height() << endl;
+    output.write(DATA_DIR "/output/removal/test-castle-removal.png");
+}
+
 int main()
 {
-   // createTestImage();
+    createTestImage();
   //  testEnergy();
    // testEnergyMap();
-    testFindSeam();
+    //testFindSeam();
 //    testRemoveSeam();
 //    testFindHorizontalSeam();
 //    testFindVerticalSeam();
     //testEnlarge();
+    testRemoveObject();
 }

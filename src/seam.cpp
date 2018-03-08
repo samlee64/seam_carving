@@ -6,6 +6,7 @@
 #include "a2.h"
 #include "a6.h"
 #include "energy.h"
+#include "seam.h"
 
 using namespace std;
 
@@ -52,6 +53,33 @@ void debugPrintMap(FloatImage map)
     }
     cout << endl;
 
+}
+
+//takes in an image to create an energy map
+// and another image that has 1s wherever the value should be set at the given value
+FloatImage createMaskedEnergyMap(FloatImage im, FloatImage mask, float value)
+{
+    FloatImage energyMap = dualGradientEnergy(im);
+    //so iterate through the marked areas and set those values in the energymap
+    for(int y = 0; y < im.height(); y++) {
+        for (int x = 0; x < im.width(); x++) {
+            if (mask(x, y, 0) == 1) {
+                energyMap(x, y, 0) += value;
+            }
+        }
+    }
+    for(int y = 1; y < im.height(); y++) {
+        for (int x = 0; x < im.width(); x++) {
+            //for every pixel at this height, i go 1 up, 1 down
+            float lowestEnergy = 10000000; //do i need to change this to be max value?
+            for (int change = -1; change <= 1; change++) {
+                if (x + change >= im.width() or x + change < 0) {continue;}
+                lowestEnergy = min(energyMap(x + change, y - 1, 0), lowestEnergy);
+            }
+            energyMap(x, y, 0) = energyMap(x, y, 0) + lowestEnergy;
+        }
+    }
+    return energyMap;
 }
 
 FloatImage createEnergyMap(FloatImage im)
@@ -227,19 +255,21 @@ vector<int> findHorizontalSeamImage(FloatImage im)
 
 
 
-FloatImage removeSeam(const FloatImage im, vector<tuple<int, int>> seam)
+//just hardcoding vertical seams right now
+FloatImage removeSeam(const FloatImage im, vector<int> seam, bool isHorizontal)
 {
     FloatImage output(im.width() - 1, im.height(), im.depth());
     //seam goes from high to low
-    for (int y = output.height() - 1; y >= 0; y--) {
-        int badPixel = get<0>(seam[y]); //this is the x coord
-        //prety sure i need to index badPixel the other way around
+    for (int reverseY = 0; reverseY < output.height(); reverseY++) {
+        int badPixel = seam[reverseY]; //this is the x coord
         int offsetPixel = 0;
+
         for (int x = 0; x < output.width(); x++) {
-            if ( x + 1== badPixel ) {
+            if ( x == badPixel) { //this is correct. I tried x + 1 and it removed from the wrong side of the seam during object removal
                 offsetPixel = 1;
             }
             for (int z = 0; z < output.depth(); z++) {
+                int y = im.height() - 1 - reverseY;
                 output(x, y, z) = im(x + offsetPixel, y, z);
             }
         }
@@ -370,21 +400,70 @@ FloatImage contentAmpfliication(const FloatImage &im, int factor)
 }
 
 //lets just remove objects vertically
-void removeObject(const FloatImage &im, const vector<tuple<int, int>> object)
+// system should be able to automatically calculate the smaller of th evertical or horizontal diameters
+//perform vertical or horizontal removals
+FloatImage removeObject(const FloatImage &im, const vector<tuple<int, int>> object)
 {
-    const float lowValue = numeric_limits<float>::min();
+    FloatImage output(im);
+    FloatImage test(DATA_DIR "/input/test4.png");
+    for (int x = 6; x < 11; x++) {
+        for (int y = 50; y < 57; y++) {
+            test(x, y, 0) = 1;
+            test(x, y, 1) = 0;
+            test(x, y, 2) = 0;
+        }
+    }
+
+    FloatImage badArea(im.width(), im.height(), 1); //values are inited to 0
+
+    //const float lowValue = numeric_limits<float>::min();
+    const float lowValue = -100;
     FloatImage eMap = createEnergyMap(im);
     //so lets iterate through the object and give each value a super low score in the energy map
     for (int i = 0; i < object.size(); i++) {
         int x = get<0>(object[i]);
         int y = get<1>(object[i]);
-        eMap(x, y, 0) == lowValue;
+        badArea(x, y, 0) = 1;
+        eMap(x, y, 0) = lowValue;
     }
 
-    findVerticalSeamMap(eMap);
+    //remove the seam from the photo and the energyMap
+    //I think that this also means that I need to recaluclate the energy map
+    for (int i = 0; i < 60; i++) {
+        eMap = createMaskedEnergyMap(output, badArea, lowValue);
+        char buffer[255];
+        sprintf(buffer, DATA_DIR "/output/removal/energy/energyMap-%d.png", i);
+        eMap.write(buffer);
+        vector<int> seam = findVerticalSeamMap(eMap);
+        //so i want to see what this seam looks like
+        //i also want to see what the energy map lookks like
+
+        FloatImage med = drawSeam(output, seam, false);
+        char buffer5[255];
+        sprintf(buffer5, DATA_DIR "/output/removal/seam-%d.png", i);
+        med.write(buffer5);
+
+        output = removeSeam(output, seam, false);
+        char buffer2[255];
+        sprintf(buffer2, DATA_DIR "/output/removal/medoutput-%d.png", i);
+        output.write(buffer2);
+
+
+        test = removeSeam(test, seam, false);
+        char buffer6[255];
+        sprintf(buffer6, DATA_DIR "/output/removal/test-%d.png", i);
+        test.write(buffer6);
+
+
+        badArea = removeSeam(badArea, seam, false);
+        char buffer3[255];
+        sprintf(buffer3, DATA_DIR "/output/removal/medoutput-%d.png", i);
+        badArea.write(buffer3);
+    }
 
 
 
+    return output;
 }
 
 FloatImage drawSeam(const FloatImage &im, const vector<int> seam, bool isHorizontal)
@@ -401,7 +480,6 @@ FloatImage drawSeam(const FloatImage &im, const vector<int> seam, bool isHorizon
             }
         }
     } else {
-
         for (int j = 0; j < seam.size(); j++) {
             for (int z = 0; z < im.depth(); z++) {
                 if (z == 0) {

@@ -29,7 +29,7 @@ FloatImage gradientEnergy(const FloatImage &im, bool clamp)
         for (int x = 0; x < im.width(); x++) {
             float energy = 0.0;
             for (int z = 0; z < im.depth(); z++) {
-                energy += xGradient(x, y, z) + yGradient(x, y, z);
+                energy += abs(xGradient(x, y, z)) + abs(yGradient(x, y, z));
 
             }
             energyMap(x, y, 0) = energy;
@@ -47,3 +47,30 @@ FloatImage gradientEnergy(const FloatImage &im, bool clamp)
     //}
     //return output;
 }
+
+float dualGradientEnergy(const FloatImage &im, int x, int y, bool clamp)
+{
+    float rx = im.smartAccessor(x - 1, y, 0, clamp) - im.smartAccessor(x + 1, y, 0, clamp);
+    float gx = im.smartAccessor(x - 1, y, 1, clamp) - im.smartAccessor(x + 1, y, 1, clamp);
+    float bx = im.smartAccessor(x - 1, y, 2, clamp) - im.smartAccessor(x + 1, y, 2, clamp);
+    float changeX = pow(rx, 2) + pow(gx, 2) + pow(bx, 2);
+
+    float ry = im.smartAccessor(x, y - 1, 0, clamp) - im.smartAccessor(x, y + 1, 0, clamp);
+    float gy = im.smartAccessor(x, y - 1, 1, clamp) - im.smartAccessor(x, y + 1, 1, clamp);
+    float by = im.smartAccessor(x, y - 1, 2, clamp) - im.smartAccessor(x, y + 1, 2, clamp);
+
+    float changeY = pow(ry, 2) + pow(gy, 2) + pow(by, 2);
+
+    return changeX + changeY;
+}
+
+FloatImage dualGradientEnergy(const FloatImage &im, bool clamp) {
+    FloatImage energyMap(im.width(), im.height(), 1);
+    for (int y = 0; y < im.height(); y++) {
+        for (int x = 0; x < im.width(); x++) {
+            energyMap(x, y, 0) = dualGradientEnergy(im, x, y, clamp);
+        }
+    }
+    return energyMap;
+}
+

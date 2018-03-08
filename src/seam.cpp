@@ -9,106 +9,219 @@
 
 using namespace std;
 
-FloatImage energyMap(FloatImage im, bool debug)
-{
-    FloatImage energyMap = gradientEnergy(im);
-    //alright so i start at the second row
-    for(int y = 1; y < im.height(); y++) {
-        //i go through each box in the row
-        for (int x = 0; x < im.width(); x++) {
-            //for every pixel at this height, i go 1 up, 1 down
-            float lowestEnergy = 100; //do i need to change this to be max value?
+//return the Y coord that has the min value on either neighboring side of the given y coordj
+int getMinY(FloatImage energyMap, int x, int y) {
+    int minY;
+    float minEnergy = numeric_limits<float>::max();
 
-            //I dont think that this is write. x and y should be flipped
-            for (int changeY = -1; changeY <= 1; changeY++) {
-                if (x + changeY >= im.width() or x + changeY < 0) {
-                    continue;
-                }
-                lowestEnergy = min(energyMap(x + changeY, y - 1, 0), lowestEnergy);
-            }
-
-            energyMap(x, y, 0) = energyMap(x, y, 0) + lowestEnergy;
+    for (int changeY = -1; changeY <= 1; changeY++) {
+        if (y + changeY >= energyMap.height() or y + changeY < 0) {continue;}
+        if (energyMap(x, y + changeY, 0) < minEnergy) {
+            minY = y + changeY;
+            minEnergy = energyMap(x, minY, 0);
         }
     }
-    if (true) {
-        for (int y = 0; y < im.height(); y++) {
-            for (int x = 0; x < im.width(); x++) {
-                cout << energyMap(x, y, 0) << " ";
+    return minY;
+}
+void debugPrintMap(FloatImage map)
+{
+    for (int y = 0; y < map.height(); y++) {
+        for (int x = 0; x < map.width(); x++) {
+            cout << round(map(x, y, 0)) << " ";
+        }
+        cout << endl;
+    }
+    cout << endl;
+
+}
+
+FloatImage energyMap(FloatImage im, bool debug)
+{
+    FloatImage energyMap = dualGradientEnergy(im);
+    for(int y = 1; y < im.height(); y++) {
+        for (int x = 0; x < im.width(); x++) {
+            //for every pixel at this height, i go 1 up, 1 down
+            float lowestEnergy = 10000000; //do i need to change this to be max value?
+            for (int change = -1; change <= 1; change++) {
+                if (x + change >= im.width() or x + change < 0) {
+                    continue;
+                }
+                lowestEnergy = min(energyMap(x + change, y - 1, 0), lowestEnergy);
             }
-            cout << endl;
+            energyMap(x, y, 0) = energyMap(x, y, 0) + lowestEnergy;
         }
     }
     return energyMap;
 }
 
 
-float energy(FloatImage im, int x, int y)
+//finds the lowest energy value in the bottom row
+// returns the index
+int lowestRowIndex(FloatImage energyMap)
 {
-    return 0.0;
-
-}
-//returns a list of x, y, values
-//defaults to finding vertical seams
-
-vector<tuple<int, int>> findSeam(FloatImage energyMap, bool horizontal)
-{
-    vector<tuple<int, int>> seam;
-    //so now i have this updated energy map. I now need to iterate through the last row and find the lowest energy value
-
-    //find the root
-    float minEnergy = 1000;
     int minX;
-    int minY;
+    float minEnergy = numeric_limits<float>::max();
+
     for (int x = 0; x < energyMap.width(); x++) {
         float e = energyMap(x, energyMap.height() - 1, 0);
         if (e < minEnergy) {
             minEnergy = e;
             minX = x;
-            minY = energyMap.height() - 1;
         }
     }
+    return minX;
+}
+
+//returns the lowest energy value of the last column of the photo
+int lowestColumnIndex(FloatImage energyMap)
+{
+    int minY;
+    float minEnergy = numeric_limits<float>::max();
+
+    for (int y = 0; y < energyMap.height(); y++) {
+        float e = energyMap(energyMap.width() - 1, y, 0);
+        if (e < minEnergy) {
+            minEnergy = e;
+            minY = y;
+        }
+    }
+    return minY;
+}
+
+vector<tuple<int, int>> findVerticalSeam(FloatImage energyMap)
+{
+    vector<tuple<int, int>> seam;
+
+    //find the root
+    int minX = lowestRowIndex(energyMap);
+    int minY = energyMap.height() - 1;
     seam.push_back(make_tuple(minX, minY));
 
-    //then propogate up
-    int prevX = minX;
-    int prevY = minY;
-    minEnergy = 1000;
+    int currentX = minX;
+    int nextX;
 
     for (int y = energyMap.height() - 2; y >= 0; y--) {
-        int nextX;
-
+        float minEnergy = numeric_limits<float>::max();
         for (int changeX = -1; changeX <= 1; changeX++) {
-            if (prevX + changeX >= energyMap.width() or prevX + changeX < 0) {
+            if (currentX + changeX >= energyMap.width() or currentX + changeX < 0) {
                 continue;
             }
-            if (energyMap(prevX + changeX, y, 0) < minEnergy) {
-                minEnergy = energyMap(prevX + changeX, y, 0);
-                nextX = prevX + changeX;
+            if (energyMap(currentX + changeX, y, 0) < minEnergy) {
+                nextX = currentX + changeX;
+                minEnergy = energyMap(nextX, y, 0);
             }
         }
+        currentX = nextX;
         seam.push_back(make_tuple(nextX, y));
     }
-    // I can then just backtrace
-    for (int i = 0; i < seam.size(); i++) {
-        cout << get<0>(seam[i]) << " " << get<1>(seam[i]) << endl;
+    return seam;
+}
 
+vector<int> findVerticalSeam1(FloatImage im)
+{
+    vector<int> seam;
+
+
+}
+vector<int> findHorizontalSeam(FloatImage im)
+{
+    vector<int> seam;
+    FloatImage energyMap(im.width(), im.height(), 1);
+
+    //generate the aggregate energy map
+    for (int x = 1; x < energyMap.width(); x++) {
+        for (int y = 0; y < energyMap.height(); y++) {
+            float energy = dualGradientEnergy(im, x, y);
+            float minEnergy = numeric_limits<float>::max();
+
+            for (int changeY = -1; changeY <= 1; changeY++) {
+                if (y + changeY >= energyMap.height() or y + changeY < 0) {continue;}
+                if (energyMap(x - 1, y + changeY, 0) < minEnergy) {
+                    minEnergy = energyMap(x - 1, y + changeY, 0);
+                }
+            }
+
+            energyMap(x, y, 0) = energy + minEnergy;
+        }
     }
 
-        cout << seam.size() << endl;
-    return seam;
+    int minY = lowestColumnIndex(energyMap);
+    seam.push_back(minY);
 
+    int currentY = minY;
+    int nextY;
+
+    for (int x = energyMap.width() - 2; x >= 0; x-- ) {
+        float minEnergy = numeric_limits<float>::max();
+        for (int changeY = -1; changeY <= 1; changeY++) {
+            if (currentY + changeY >= energyMap.height() or currentY + changeY < 0) {continue;}
+            if (energyMap(x, currentY + changeY, 0) < minEnergy) {
+                nextY = currentY + changeY;
+                minEnergy = energyMap(x, nextY, 0);
+            }
+        }
+        currentY = nextY;
+        seam.push_back(nextY);
+    }
+    return seam;
 }
 
 
-FloatImage drawSeam(const FloatImage im, const vector<tuple<int, int>> seam)
+
+FloatImage removeSeam(const FloatImage im, vector<tuple<int, int>> seam)
+{
+    FloatImage output(im.width() - 1, im.height(), im.depth());
+    //seam goes from high to low
+    for (int y = output.height() - 1; y >= 0; y--) {
+        int badPixel = get<0>(seam[y]); //this is the x coord
+        //prety sure i need to index badPixel the other way around
+        int offsetPixel = 0;
+        for (int x = 0; x < output.width(); x++) {
+            if ( x + 1== badPixel ) {
+                offsetPixel = 1;
+            }
+            for (int z = 0; z < output.depth(); z++) {
+                output(x, y, z) = im(x + offsetPixel, y, z);
+            }
+        }
+    }
+    return output;
+}
+
+FloatImage drawSeam(const FloatImage &im, const vector<int> seam, bool horizontal)
+{
+    FloatImage output(im);
+    if (horizontal) {
+        for (int i = 0; i < seam.size(); i++) {
+            for (int z = 0; z < im.depth(); z++) {
+                if (z == 0) {
+                    output(i, seam[i], z) = 1;
+                } else {
+                    output(i, seam[i], z) = 0;
+                }
+            }
+        }
+    } else {
+        for (int j = 0; j < seam.size(); j++) {
+            for (int z = 0; z < im.depth(); z++) {
+                if (z == 0) {
+                    output(seam[j], j, 0) = 1;
+                } else {
+                    output(seam[j], j, 0) = 0;
+                }
+            }
+        }
+    }
+    return output;
+}
+
+FloatImage drawSeam1(const FloatImage &im, const vector<tuple<int, int>> seam)
 {
     FloatImage output(im);
     for (int i = 0; i < seam.size(); i++) {
         int x = get<0>(seam[i]);
         int y = get<1>(seam[i]);
         output(x, y, 0) = 1;
-        output(x, y, 1) = 0;
-        output(x, y, 2) = 0;
     }
     return output;
 }

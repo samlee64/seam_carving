@@ -10,7 +10,8 @@
 using namespace std;
 
 //return the Y coord that has the min value on either neighboring side of the given y coordj
-int getMinY(FloatImage energyMap, int x, int y) {
+int getMinY(FloatImage energyMap, int x, int y)
+{
     int minY;
     float minEnergy = numeric_limits<float>::max();
 
@@ -23,6 +24,24 @@ int getMinY(FloatImage energyMap, int x, int y) {
     }
     return minY;
 }
+
+
+//return the X coord that has the min value of either neighboring side of the given x coord
+int getMinX(FloatImage energyMap, int x, int y)
+{
+    int minX;
+    float minEnergy = numeric_limits<float>::max();
+
+    for (int changeX = -1; changeX <= 1; changeX++) {
+        if (x + changeX >= energyMap.width() or x + changeX < 0) {continue;}
+        if (energyMap(x + changeX, y, 0) < minEnergy) {
+            minX = x + changeX;
+            minEnergy = energyMap(minX, y, 0);
+        }
+    }
+    return minX;
+}
+
 void debugPrintMap(FloatImage map)
 {
     for (int y = 0; y < map.height(); y++) {
@@ -120,8 +139,33 @@ vector<tuple<int, int>> findVerticalSeam(FloatImage energyMap)
 vector<int> findVerticalSeam1(FloatImage im)
 {
     vector<int> seam;
+    FloatImage energyMap(im.width(), im.height(), 1);
 
+    for (int y = 1; y < energyMap.height(); y++) {
+        for (int x = 0; x < energyMap.width(); x++) {
+            float minEnergy = numeric_limits<float>::max();
+            for (int changeX = -1; changeX <= 1; changeX++) {
+                if (x + changeX >= energyMap.width() or x + changeX < 0) {continue;}
+                minEnergy = min(energyMap(x + changeX, y - 1, 0), minEnergy);
+            }
+            energyMap(x, y, 0) = dualGradientEnergy(im, x, y) + minEnergy;
+        }
+    }
 
+    int minX = lowestRowIndex(energyMap);
+    seam.push_back(minX);
+
+    int currentX = minX;
+    int nextX;
+
+    for (int y = energyMap.height() - 2; y >= 0; y--) {
+        float minEnergy = numeric_limits<float>::max();
+        nextX = getMinX(energyMap, currentX, y);
+        currentX = nextX;
+        seam.push_back(nextX);
+    }
+
+    return seam;
 }
 vector<int> findHorizontalSeam(FloatImage im)
 {
@@ -131,19 +175,17 @@ vector<int> findHorizontalSeam(FloatImage im)
     //generate the aggregate energy map
     for (int x = 1; x < energyMap.width(); x++) {
         for (int y = 0; y < energyMap.height(); y++) {
-            float energy = dualGradientEnergy(im, x, y);
             float minEnergy = numeric_limits<float>::max();
 
             for (int changeY = -1; changeY <= 1; changeY++) {
                 if (y + changeY >= energyMap.height() or y + changeY < 0) {continue;}
-                if (energyMap(x - 1, y + changeY, 0) < minEnergy) {
-                    minEnergy = energyMap(x - 1, y + changeY, 0);
-                }
+                minEnergy = min(energyMap(x - 1, y + changeY, 0), minEnergy);
             }
-
-            energyMap(x, y, 0) = energy + minEnergy;
+            energyMap(x, y, 0) = dualGradientEnergy(im, x, y) + minEnergy;
         }
     }
+
+    energyMap.write(DATA_DIR "/output/new-surf-horizontal-energy.png");
 
     int minY = lowestColumnIndex(energyMap);
     seam.push_back(minY);

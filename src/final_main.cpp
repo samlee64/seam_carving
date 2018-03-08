@@ -64,6 +64,15 @@ void testFindHorizontalSeam()
     output.write(DATA_DIR "/output/surf-horizontal.png");
 }
 
+void testFindVerticalSeam()
+{
+    const FloatImage input(DATA_DIR "/input/surf.png");
+    cout << input.width() << " " << input.height() << endl;
+    vector<int> seam = findVerticalSeam1(input);
+    FloatImage output = drawSeam(input, seam, false);
+    output.write(DATA_DIR "/output/surf-vertical.png");
+}
+
 
 void testFindSeam()
 {
@@ -120,4 +129,5 @@ int main()
     //testFindSeam();
 //    testRemoveSeam();
     testFindHorizontalSeam();
+    testFindVerticalSeam();
 }

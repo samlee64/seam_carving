@@ -54,7 +54,26 @@ void debugPrintMap(FloatImage map)
 
 }
 
-FloatImage energyMap(FloatImage im, bool debug)
+FloatImage createEnergyMap(FloatImage im)
+{
+    FloatImage energyMap = dualGradientEnergy(im);
+    for(int y = 1; y < im.height(); y++) {
+        for (int x = 0; x < im.width(); x++) {
+            //for every pixel at this height, i go 1 up, 1 down
+            float lowestEnergy = 10000000; //do i need to change this to be max value?
+            for (int change = -1; change <= 1; change++) {
+                if (x + change >= im.width() or x + change < 0) {
+                    continue;
+                }
+                lowestEnergy = min(energyMap(x + change, y - 1, 0), lowestEnergy);
+            }
+            energyMap(x, y, 0) = energyMap(x, y, 0) + lowestEnergy;
+        }
+    }
+    return energyMap;
+}
+
+FloatImage energyMap(FloatImage im)
 {
     FloatImage energyMap = dualGradientEnergy(im);
     for(int y = 1; y < im.height(); y++) {
@@ -107,14 +126,13 @@ int lowestColumnIndex(FloatImage energyMap)
     return minY;
 }
 
-vector<tuple<int, int>> findVerticalSeam(FloatImage energyMap)
+vector<int> findVerticalSeamMap(FloatImage energyMap)
 {
-    vector<tuple<int, int>> seam;
+    vector<int> seam;
 
     //find the root
     int minX = lowestRowIndex(energyMap);
-    int minY = energyMap.height() - 1;
-    seam.push_back(make_tuple(minX, minY));
+    seam.push_back(minX);
 
     int currentX = minX;
     int nextX;
@@ -131,12 +149,12 @@ vector<tuple<int, int>> findVerticalSeam(FloatImage energyMap)
             }
         }
         currentX = nextX;
-        seam.push_back(make_tuple(nextX, y));
+        seam.push_back(nextX);
     }
     return seam;
 }
 
-vector<int> findVerticalSeam1(FloatImage im)
+vector<int> findVerticalSeamImage(FloatImage im)
 {
     vector<int> seam;
     FloatImage energyMap(im.width(), im.height(), 1);
@@ -159,7 +177,6 @@ vector<int> findVerticalSeam1(FloatImage im)
     int nextX;
 
     for (int y = energyMap.height() - 2; y >= 0; y--) {
-        float minEnergy = numeric_limits<float>::max();
         nextX = getMinX(energyMap, currentX, y);
         currentX = nextX;
         seam.push_back(nextX);
@@ -167,7 +184,7 @@ vector<int> findVerticalSeam1(FloatImage im)
 
     return seam;
 }
-vector<int> findHorizontalSeam(FloatImage im)
+vector<int> findHorizontalSeamImage(FloatImage im)
 {
     vector<int> seam;
     FloatImage energyMap(im.width(), im.height(), 1);
@@ -230,26 +247,167 @@ FloatImage removeSeam(const FloatImage im, vector<tuple<int, int>> seam)
     return output;
 }
 
-FloatImage drawSeam(const FloatImage &im, const vector<int> seam, bool horizontal)
+
+//Adds a seam to the image
+//Averages the left and right neighbors
+FloatImage addSeam(const FloatImage &im, const vector<int> seam)
+{
+    //given
+
+
+}
+//I should be adding all the seams at once
+FloatImage enlarge(const FloatImage &im, int addWidth, int addHeight, int numSteps)
+{
+    //lets just do horizontal scaling first
+    //we need to find the number of vertical seams
+    //ive really gotta keep these lines distinct
+
+//    FloatImage output(im.width() + addWidth, im.height() + addHeight, im.depth());
+    FloatImage output(im);
+    vector<vector<int>> seams;
+    FloatImage energyMap(im.width(), im.height(), 1);
+
+    for(int i = 0; i < addWidth; i++) {
+
+        //so i need to add in whatever seams and give them max values
+        // so that these pixels don't get repeated in other seams
+        //maybe not max values
+        //but super high ones
+        //only have to do this for the most resent one actually. Should do this at the end of the function
+
+        int highValue = 100000000000;
+        for (int j = 0; j < seams.size(); j++) {
+            for (int y = 0; y < seams[j].size(); y++) {
+                int x = seams[j][y];
+                energyMap(x, y, 0) = highValue;
+            }
+        }
+
+        //recalculate the energy map
+        // skipping over the recalculation of pixels that have super high energies to not overwrite them
+        for (int y = 1; y < energyMap.height(); y++) {
+            for (int x = 0; x < energyMap.width(); x++) {
+                if (energyMap(x, y, 0) >= highValue) {continue;} else {
+                    float minEnergy = numeric_limits<float>::max();
+                    for (int changeX = -1; changeX <= 1; changeX++) {
+                        if (x + changeX >= energyMap.width() or x + changeX < 0) { continue; }
+                        minEnergy = min(energyMap(x + changeX, y - 1, 0), minEnergy);
+                    }
+                    energyMap(x, y, 0) = dualGradientEnergy(im, x, y) + minEnergy;
+                }
+            }
+        }
+
+        char buffer[255];
+        sprintf(buffer, DATA_DIR "/output/energyMaps/adding-seams-%d.png", i);
+        energyMap.write(buffer);
+
+        //so lets find a new seam
+        //optimize this later
+        vector<int> seam;
+        float minValue = numeric_limits<float>::max();
+        int minX;
+        for (int x = 0; x < energyMap.width(); x++) {
+            //check to make sure that this seam already isn't in the seams
+            bool newSeam = true;
+            if (energyMap(x, energyMap.height() - 1, 0) < minValue) {
+                for (int i = 0; i < seams.size(); i++) {
+                    if ( x == seams[i][0]) {
+                        newSeam = false;
+                        break;
+                    }
+                }
+                //this breaks if we are doubling the size of the image
+                // because at some point every seam would have been added
+                if (newSeam){
+                    minValue = energyMap(x, energyMap.height() - 1, 0);
+                    minX = x;
+                }
+            }
+        }
+
+        seam.push_back(minX);
+        int currentX = minX;
+        int nextX;
+        for (int y = energyMap.height() - 2; y >= 0; y--) {
+            nextX = getMinX(energyMap, currentX, y);
+            currentX = nextX;
+            seam.push_back(nextX);
+        }
+
+        seams.push_back(seam);
+    }
+
+    cout << seams.size() << endl;
+    cout << seams[1].size() << endl;
+
+    for (int u = 0; u < seams.size(); u++) {
+        for (int o = 0; o < seams[u].size(); o++) {
+            int y = energyMap.height() - 1 - o;
+            int x = seams[u][o];
+            cout << seams[u][o] << " " << y << endl;
+            output(x, y, 0) = 1;
+            output(x, y, 1) = 0;
+            output(x, y, 2) = 0;
+        }
+        cout << endl;
+    }
+
+
+
+
+
+    return output;
+
+
+}
+
+//increase the image size by factor
+// scale back to orignal size
+FloatImage contentAmpfliication(const FloatImage &im, int factor)
+{
+}
+
+//lets just remove objects vertically
+void removeObject(const FloatImage &im, const vector<tuple<int, int>> object)
+{
+    const float lowValue = numeric_limits<float>::min();
+    FloatImage eMap = createEnergyMap(im);
+    //so lets iterate through the object and give each value a super low score in the energy map
+    for (int i = 0; i < object.size(); i++) {
+        int x = get<0>(object[i]);
+        int y = get<1>(object[i]);
+        eMap(x, y, 0) == lowValue;
+    }
+
+    findVerticalSeamMap(eMap);
+
+
+
+}
+
+FloatImage drawSeam(const FloatImage &im, const vector<int> seam, bool isHorizontal)
 {
     FloatImage output(im);
-    if (horizontal) {
+    if (isHorizontal) {
         for (int i = 0; i < seam.size(); i++) {
             for (int z = 0; z < im.depth(); z++) {
                 if (z == 0) {
-                    output(i, seam[i], z) = 1;
+                    output(im.width() - 1 - i, seam[i], z) = 1;
                 } else {
-                    output(i, seam[i], z) = 0;
+                    output(im.width() - 1 - i, seam[i], z) = 0;
                 }
             }
         }
     } else {
+
         for (int j = 0; j < seam.size(); j++) {
             for (int z = 0; z < im.depth(); z++) {
                 if (z == 0) {
-                    output(seam[j], j, 0) = 1;
+                    output(seam[j], im.height() - 1 - j, z) = 1;
                 } else {
-                    output(seam[j], j, 0) = 0;
+                    output(seam[j], im.height() - 1 - j, z) = 0;
                 }
             }
         }
@@ -257,13 +415,3 @@ FloatImage drawSeam(const FloatImage &im, const vector<int> seam, bool horizonta
     return output;
 }
 
-FloatImage drawSeam1(const FloatImage &im, const vector<tuple<int, int>> seam)
-{
-    FloatImage output(im);
-    for (int i = 0; i < seam.size(); i++) {
-        int x = get<0>(seam[i]);
-        int y = get<1>(seam[i]);
-        output(x, y, 0) = 1;
-    }
-    return output;
-}

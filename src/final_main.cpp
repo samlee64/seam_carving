@@ -52,14 +52,14 @@ void testEnergy()
 void testEnergyMap()
 {
     const FloatImage input2(DATA_DIR "/input/surf.png");
-    FloatImage output2 = energyMap(input2, true);
+    FloatImage output2 = energyMap(input2);
     output2.write(DATA_DIR "/output/surf-energyMap.png");
 }
 
 void testFindHorizontalSeam()
 {
     const FloatImage input(DATA_DIR "/input/surf.png");
-    vector<int> seam = findHorizontalSeam(input);
+    vector<int> seam = findHorizontalSeamImage(input);
     FloatImage output = drawSeam(input, seam, true);
     output.write(DATA_DIR "/output/surf-horizontal.png");
 }
@@ -68,7 +68,7 @@ void testFindVerticalSeam()
 {
     const FloatImage input(DATA_DIR "/input/surf.png");
     cout << input.width() << " " << input.height() << endl;
-    vector<int> seam = findVerticalSeam1(input);
+    vector<int> seam = findVerticalSeamImage(input);
     FloatImage output = drawSeam(input, seam, false);
     output.write(DATA_DIR "/output/surf-vertical.png");
 }
@@ -80,9 +80,9 @@ void testFindSeam()
     const FloatImage input(DATA_DIR "/input/surf.png");
     FloatImage eMap = energyMap(input);
     eMap.write(DATA_DIR "/output/surf-energyMap.png");
-    const vector<tuple<int, int>> seam = findVerticalSeam(eMap);
-    //FloatImage output = drawSeam1(eMap, seam);
-    //output.write(DATA_DIR "/output/surf-energyMap-seam.png");
+    const vector<int> seam = findVerticalSeamMap(eMap);
+    FloatImage output = drawSeam(eMap, seam, false);
+    output.write(DATA_DIR "/output/surf-energyMap-seam.png");
 }
 
 void testRemoveSeam()
@@ -92,8 +92,8 @@ void testRemoveSeam()
 
     for (int i = 0; i < 50; i++) {
         FloatImage eMap = energyMap(mid);
-        const vector<tuple<int, int>> seam = findVerticalSeam(eMap);
-        mid = removeSeam(mid, seam);
+     //   const vector<tuple<int, int>> seam = findVerticalSeamMap(eMap);
+    //    mid = removeSeam(mid, seam);
     }
 
     //FloatImage eMap = gradientEnergy(mid);
@@ -103,8 +103,6 @@ void testRemoveSeam()
     //    }
     //    cout << endl;
     //}
-    cout << input.width() << " " << input.height() << endl;
-    cout << mid.width() << " " << mid.height() << endl;
     mid.write(DATA_DIR "/output/removed-castle-small.png");
 }
 
@@ -121,13 +119,23 @@ void testCheck()
 
 }
 
+void testEnlarge()
+{
+
+    const FloatImage input(DATA_DIR "/input/castle-micro.png");
+
+    FloatImage output = enlarge(input, 10, 0, 0);
+    output.write(DATA_DIR "/output/enlarge/castle-micro.png");
+}
+
 int main()
 {
    // createTestImage();
   //  testEnergy();
    // testEnergyMap();
-    //testFindSeam();
+    testFindSeam();
 //    testRemoveSeam();
-    testFindHorizontalSeam();
-    testFindVerticalSeam();
+//    testFindHorizontalSeam();
+//    testFindVerticalSeam();
+    //testEnlarge();
 }

@@ -55,70 +55,6 @@ void debugPrintMap(FloatImage map)
 
 }
 
-//takes in an image to create an energy map
-// and another image that has 1s wherever the value should be set at the given value
-FloatImage createMaskedEnergyMap(FloatImage im, FloatImage mask, float value)
-{
-    FloatImage energyMap = dualGradientEnergy(im);
-    //so iterate through the marked areas and set those values in the energymap
-    for(int y = 0; y < im.height(); y++) {
-        for (int x = 0; x < im.width(); x++) {
-            if (mask(x, y, 0) == 1) {
-                energyMap(x, y, 0) += value;
-            }
-        }
-    }
-    for(int y = 1; y < im.height(); y++) {
-        for (int x = 0; x < im.width(); x++) {
-            //for every pixel at this height, i go 1 up, 1 down
-            float lowestEnergy = 10000000; //do i need to change this to be max value?
-            for (int change = -1; change <= 1; change++) {
-                if (x + change >= im.width() or x + change < 0) {continue;}
-                lowestEnergy = min(energyMap(x + change, y - 1, 0), lowestEnergy);
-            }
-            energyMap(x, y, 0) = energyMap(x, y, 0) + lowestEnergy;
-        }
-    }
-    return energyMap;
-}
-
-FloatImage createEnergyMap(FloatImage im)
-{
-    FloatImage energyMap = dualGradientEnergy(im);
-    for(int y = 1; y < im.height(); y++) {
-        for (int x = 0; x < im.width(); x++) {
-            //for every pixel at this height, i go 1 up, 1 down
-            float lowestEnergy = 10000000; //do i need to change this to be max value?
-            for (int change = -1; change <= 1; change++) {
-                if (x + change >= im.width() or x + change < 0) {
-                    continue;
-                }
-                lowestEnergy = min(energyMap(x + change, y - 1, 0), lowestEnergy);
-            }
-            energyMap(x, y, 0) = energyMap(x, y, 0) + lowestEnergy;
-        }
-    }
-    return energyMap;
-}
-
-FloatImage energyMap(FloatImage im)
-{
-    FloatImage energyMap = dualGradientEnergy(im);
-    for(int y = 1; y < im.height(); y++) {
-        for (int x = 0; x < im.width(); x++) {
-            //for every pixel at this height, i go 1 up, 1 down
-            float lowestEnergy = 10000000; //do i need to change this to be max value?
-            for (int change = -1; change <= 1; change++) {
-                if (x + change >= im.width() or x + change < 0) {
-                    continue;
-                }
-                lowestEnergy = min(energyMap(x + change, y - 1, 0), lowestEnergy);
-            }
-            energyMap(x, y, 0) = energyMap(x, y, 0) + lowestEnergy;
-        }
-    }
-    return energyMap;
-}
 
 
 //finds the lowest energy value in the bottom row
@@ -154,6 +90,31 @@ int lowestColumnIndex(FloatImage energyMap)
     return minY;
 }
 
+vector<int> findHorizontalSeamMap(FloatImage energyMap)
+{
+    vector<int> seam;
+
+    //find the root
+    int minY = lowestColumnIndex(energyMap);
+    seam.push_back(minY);
+
+    int currentY = minY;
+    int nextY;
+
+    for (int x = energyMap.width() - 2; x >= 0; x--) {
+        float minEnergy = numeric_limits<float>::max();
+        for (int changeY = -1; changeY <= 1; changeY++) {
+            if (currentY + changeY >= energyMap.height() or currentY + changeY < 0) {continue;}
+            if (energyMap(x, currentY + changeY, 0) < minEnergy) {
+                nextY = currentY + changeY;
+                minEnergy = energyMap(x, nextY, 0);
+            }
+        }
+        currentY = nextY;
+        seam.push_back(nextY);
+    }
+    return seam;
+}
 vector<int> findVerticalSeamMap(FloatImage energyMap)
 {
     vector<int> seam;
@@ -402,8 +363,16 @@ FloatImage contentAmpfliication(const FloatImage &im, int factor)
 //lets just remove objects vertically
 // system should be able to automatically calculate the smaller of th evertical or horizontal diameters
 //perform vertical or horizontal removals
-FloatImage removeObject(const FloatImage &im, const vector<tuple<int, int>> object)
+//@params
+// im: float image that has the object to remove
+// object: vector of tuples that have x, y coordinates of the object
+// lockRatio: true -> locks aspect ratio
+// onlyVert: true -> will only remove vertical seams. Overridden by lockRatio
+// onlyHorizontal: true -> will only remove horizontal seems. Overriden by lockRatio and onlyVert
+FloatImage removeObject(const FloatImage &im, const vector<tuple<int, int>> object, bool lockRatio, bool onlyVert, bool onlyHorizontal)
 {
+    //alright now lets see if we can alternate between vertical and horizontal rips
+    const int MAXTRIES = min(im.width(), im.height());
     FloatImage output(im);
     FloatImage test(DATA_DIR "/input/test4.png");
     for (int x = 6; x < 11; x++) {
@@ -415,47 +384,78 @@ FloatImage removeObject(const FloatImage &im, const vector<tuple<int, int>> obje
     }
 
     FloatImage badArea(im.width(), im.height(), 1); //values are inited to 0
-
-    //const float lowValue = numeric_limits<float>::min();
-    const float lowValue = -100;
-    FloatImage eMap = createEnergyMap(im);
-    //so lets iterate through the object and give each value a super low score in the energy map
     for (int i = 0; i < object.size(); i++) {
         int x = get<0>(object[i]);
         int y = get<1>(object[i]);
         badArea(x, y, 0) = 1;
-        eMap(x, y, 0) = lowValue;
     }
+    badArea.write(DATA_DIR "/output/removal/badarea.png");
 
+    //const float lowValue = numeric_limits<float>::min();
+    const float lowValue = -10000000;
+    FloatImage eMap;
+
+    bool isHorizontal = false;
+
+    //index 0 holds bool for stopping, index 1 holds bool for orientation
+    vector<bool> continueAndOrientation = {};
     //remove the seam from the photo and the energyMap
     //I think that this also means that I need to recaluclate the energy map
-    for (int i = 0; i < 60; i++) {
-        eMap = createMaskedEnergyMap(output, badArea, lowValue);
+    //so I should technically just do this until there is no more bad area
+
+    for (int i = 0; i < MAXTRIES; i++) {
+        //calculate the larger difference in area and perform the vertical or horizontal removal accordingly
+        continueAndOrientation= seamOrientation(badArea, i, lockRatio, onlyVert, onlyHorizontal);
+        isHorizontal = continueAndOrientation[1];
+        if (isHorizontal) {
+            cout << "removing horizontal at " << i << endl;
+        } else {
+            cout << "removing vertical at " << i << endl;
+        }
+
+        if (not continueAndOrientation[0]) {
+            cout << "done removing bad area after " << i << " iterations" << endl;
+            break;
+        }
+
+        eMap = createMaskedEnergyMap(output, badArea, lowValue, isHorizontal);
+
+        //junk
         char buffer[255];
         sprintf(buffer, DATA_DIR "/output/removal/energy/energyMap-%d.png", i);
         eMap.write(buffer);
-        vector<int> seam = findVerticalSeamMap(eMap);
-        //so i want to see what this seam looks like
-        //i also want to see what the energy map lookks like
 
-        FloatImage med = drawSeam(output, seam, false);
+        vector<int> seam;
+        if (isHorizontal) {
+            seam = findHorizontalSeamMap(eMap);
+        } else {
+            seam = findVerticalSeamMap(eMap);
+        }
+
+        FloatImage med = drawSeam(output, seam, isHorizontal);
         char buffer5[255];
         sprintf(buffer5, DATA_DIR "/output/removal/seam-%d.png", i);
         med.write(buffer5);
 
-        output = removeSeam(output, seam, false);
+        //no junk
+        output = removeSeam(output, seam, isHorizontal);
+        //no junk
+
         char buffer2[255];
         sprintf(buffer2, DATA_DIR "/output/removal/medoutput-%d.png", i);
         output.write(buffer2);
 
 
-        test = removeSeam(test, seam, false);
+        test = removeSeam(test, seam, isHorizontal);
         char buffer6[255];
         sprintf(buffer6, DATA_DIR "/output/removal/test-%d.png", i);
         test.write(buffer6);
 
 
-        badArea = removeSeam(badArea, seam, false);
+        //no junk
+        badArea = removeSeam(badArea, seam, isHorizontal);
+        //no junk
+
         char buffer3[255];
         sprintf(buffer3, DATA_DIR "/output/removal/medoutput-%d.png", i);
         badArea.write(buffer3);
@@ -464,6 +464,57 @@ FloatImage removeObject(const FloatImage &im, const vector<tuple<int, int>> obje
 
 
     return output;
+}
+
+//Returns true, true if a horizontal seam should be removed
+// returns true, false if a vertical seam should be removed
+// returns false, * if no seam should be removed
+//
+//@params
+// badArea: area that should be removed
+// i: the iteration that the removal is on
+// all bool params false: returns the the direction that has the largest difference in area that needs to be removed
+// lockRatio: true -> locks aspect ratio
+// onlyVert: true -> will only remove vertical seams. Overridden by lockRatio
+// onlyHorizontal: true -> will only remove horizontal seems. Overriden by lockRatio and onlyVert
+vector<bool> seamOrientation(FloatImage badArea, int i, bool lockRatio, bool onlyVert, bool onlyHorizontal)
+{
+    //calculate the larger difference in area and perform the vertical or horizontal removal accordingly
+    float checkSum = 0;
+    int minY = badArea.height() - 1;
+    int maxY = 0;
+
+    int minX = badArea.width() - 1;
+    int maxX = 0;
+
+    for (int y = 0; y < badArea.height(); y++ ) {
+        for (int x = 0; x < badArea.width(); x++) {
+            checkSum += badArea(x, y, 0);
+            if (badArea(x, y, 0) == 1) {
+                minX = min(minX, x);
+                maxX = max(maxX, x);
+                minY = min(minY, y);
+                maxY = max(maxY, y);
+            }
+        }
+    }
+    if (checkSum == 0) {
+        return {false, false};
+    } else if (lockRatio) {
+        if (i % 2 == 1) {
+            return {true, false};
+        } else {
+            return {true, true};
+        }
+    } else if (onlyVert) {
+        return {true, false};
+    } else if (onlyHorizontal) {
+        return {true, true};
+    } else if ((maxX - minX) > (maxY - minY)) {
+        return {true, true}; //remove horizontal
+    } else {
+        return {true, false}; //remove vertical
+    }
 }
 
 FloatImage drawSeam(const FloatImage &im, const vector<int> seam, bool isHorizontal)

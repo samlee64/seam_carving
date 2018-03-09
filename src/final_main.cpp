@@ -124,7 +124,7 @@ void testRemoveObject()
 
     FloatImage castle(input);
     //black out the castle
-    for (int x = 60; x < input.width(); x++) {
+    for (int x = 60; x < input.width() - 5; x++) {
         for (int y = 10; y < 60; y++) {
             tuple<int, int> t = make_tuple(x, y);
             object.push_back(t);
@@ -135,18 +135,17 @@ void testRemoveObject()
     }
 
     //black out the person
-    for (int x = 6; x < 11; x++) {
-        for (int y = 50; y < 57; y++) {
-            tuple<int, int> t = make_tuple(x, y);
-            object.push_back(t);
-            castle(x, y, 0) = 1;
-            castle(x, y, 1) = 0;
-            castle(x, y, 2) = 0;
-        }
-    }
+//    for (int x = 6; x < 11; x++) {
+//        for (int y = 50; y < 57; y++) {
+//            tuple<int, int> t = make_tuple(x, y);
+//            object.push_back(t);
+//            castle(x, y, 0) = 1;
+//            castle(x, y, 1) = 0;
+//            castle(x, y, 2) = 0;
+//        }
+//    }
 
     castle.write(DATA_DIR "/output/removal/test.png");
-
 
     FloatImage output = removeObject(input, object);
     cout << input.width() << " " << input.height() << endl;
@@ -156,7 +155,7 @@ void testRemoveObject()
 
 int main()
 {
-    createTestImage();
+    //createTestImage();
   //  testEnergy();
    // testEnergyMap();
     //testFindSeam();

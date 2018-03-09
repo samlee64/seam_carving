@@ -354,26 +354,12 @@ FloatImage grow(const FloatImage &im, int addWidth, int addHeight, int numSteps)
     return mid;
 }
 
-FloatImage expand(const FloatImage &im, int addWidth, int addHeight, int numSteps)
-{
-    cout << "expand" << endl;
-    FloatImage output(im.width() + addWidth, im.height(), im.depth());
-
-    for (int i = 0; i < addWidth; i++) {
-//        vector<int> seam = findVerticalSeam
-
-
-
-    }
-
-
-
-
-
-}
-
 //increase the image size by factor
 // scale back to orignal size
+//@params
+// im: float image
+// factor: factor to increase the content by. 2 would double it.
+
 FloatImage contentAmpfliication(const FloatImage &im, int factor)
 {
 }

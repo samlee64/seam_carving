@@ -161,7 +161,6 @@ FloatImage createBlockedEnergyMap(FloatImage im, FloatImage block, int value)
 
             if (block(x, y , 0) == 1) {
                 //energyMap(x, y, 0) = energyMap(x, y, 0)+ lowestEnergy - 100000000000 + value;
-                //energyMap(x, y, 0) = 0;
                 energyMap(x, y, 0) = 0;
             } else {
                 energyMap(x, y, 0) = energyMap(x, y, 0)+ lowestEnergy;

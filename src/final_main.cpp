@@ -168,6 +168,6 @@ int main()
 //    testRemoveSeam();
 //    testFindHorizontalSeam();
 //    testFindVerticalSeam();
-    //testGrow();
+    testGrow();
     testRemoveObject();
 }

@@ -115,6 +115,17 @@ void testEnlarge()
     output.write(DATA_DIR "/output/enlarge/castle-micro.png");
 }
 
+void testGrow()
+{
+    const FloatImage input(DATA_DIR "/input/castle-large.png");
+    cout << input.width() << " " << input.height() << endl;
+    FloatImage output = grow(input, 60, 0, 0);
+    cout << input.width() << " " << input.height() << endl;
+    cout << output.width() << " " << output.height() << endl;
+    output.write(DATA_DIR "/output/grow/castle-large-10.png");
+
+}
+
 void testRemoveObject()
 {
     const FloatImage input(DATA_DIR "/input/castle-micro.png");
@@ -160,6 +171,7 @@ int main()
 //    testRemoveSeam();
 //    testFindHorizontalSeam();
 //    testFindVerticalSeam();
-    testEnlarge();
+    //testEnlarge();
+    testGrow();
     //testRemoveObject();
 }

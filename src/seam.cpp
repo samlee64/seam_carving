@@ -237,7 +237,87 @@ FloatImage removeSeam(const FloatImage im, vector<int> seam, bool isHorizontal)
     return output;
 }
 
+//hard coded vertical
+FloatImage addSeam(const FloatImage im, vector<int> seam)
+{
+    FloatImage output(im.width() + 1, im.height(), im.depth());
 
+    for (int reverseY = 0; reverseY < output.height(); reverseY++) {
+        int badPixel = seam[reverseY]; //this is the x coord
+        int offsetPixel = 0;
+
+        //adding the seam to the image
+
+        int y = im.height() - 1 - reverseY;
+        for (int x = 0; x < im.width(); x++) {
+            if ( x == badPixel ) {
+                offsetPixel = -1;
+                for (int z = 0; z < im.depth(); z++ ) {
+                    float average = (output.smartAccessor(x - 1, y, z) + output.smartAccessor(x + 1, y, z)) / 2;
+                    output(x, y, 0) = 1; //this is a vertical seam so i take average of left and right pixels
+                    output(x, y, 1) = 0;
+                    output(x, y, 2) = 0;
+                }
+            } else {
+                for (int z = 0; z < output.depth(); z++) {
+                    output(x, y, z) = im(x + offsetPixel, y, z);
+                }
+            }
+        }
+    }
+    return output;
+}
+
+
+//naive expansion function
+// will always pick the same seam
+FloatImage grow(const FloatImage &im, int addWidth, int addHeight, int numSteps)
+{
+    cout << "grow " << endl;
+    FloatImage mid(im);
+    //so keep a seperate image for the emap?
+    // or keep a seperate emap
+    //keep a seperate emap that has all the seams in it
+
+
+    float highValue = 100000;
+    for (int i = 0; i < addWidth; i++) {
+        FloatImage eMap = createEnergyMap(mid);
+
+
+        char buffer[255];
+        sprintf(buffer, DATA_DIR "/output/grow/eMap-%d.png", i);
+        eMap.write(buffer);
+
+        vector<int> seam = findVerticalSeamMap(eMap);
+        for (int j = 0; j < seam.size(); j++) {
+            int y = eMap.height() - 1 - j;
+            //cout << seam[j] << " " << y << endl;
+        }
+
+        mid = addSeam(mid, seam);
+
+    }
+    return mid;
+}
+
+FloatImage expand(const FloatImage &im, int addWidth, int addHeight, int numSteps)
+{
+    cout << "expand" << endl;
+    FloatImage output(im.width() + addWidth, im.height(), im.depth());
+
+    for (int i = 0; i < addWidth; i++) {
+//        vector<int> seam = findVerticalSeam
+
+
+
+    }
+
+
+
+
+
+}
 //I should be adding all the seams at once
 FloatImage enlarge(const FloatImage &im, int addWidth, int addHeight, int numSteps)
 {

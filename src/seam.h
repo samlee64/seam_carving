@@ -21,6 +21,9 @@ FloatImage removeObject(const FloatImage &im, const vector<tuple<int, int>> obje
 
 vector<bool> seamOrientation(FloatImage badArea, int i, bool lockRatio, bool onlyVert, bool onlyHorizontal);
 
-FloatImage enlarge(const FloatImage &im, int addWidth, int addHeight, int numSteps);
+//@params
+// im: float image
+// addWidth: number of pixels to increase the width by
+// addHeight: number of pixels to increase height by
+// numSteps: number of steps to take to increase the image size
 FloatImage grow(const FloatImage &im, int addWidth, int addHeight, int numSteps);
-FloatImage expand(const FloatImage &im, int addWidth, int addHeight, int numSteps);

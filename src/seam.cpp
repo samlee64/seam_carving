@@ -275,6 +275,34 @@ FloatImage addSeam(const FloatImage im, vector<int> seam)
         for (int x = 0; x < im.width(); x++) {
             if ( x == badPixel ) {
                 offsetPixel = -1;
+                for (int z = 0; z < im.depth(); z++) {
+                    float average = (im.smartAccessor(x - 1, y, z) + im.smartAccessor(x + 1, y, z)) / 2;
+                    output(x, y, z) = 1;
+                }
+            } else {
+                for (int z = 0; z < output.depth(); z++) {
+                    output(x, y, z) = im(x + offsetPixel, y, z);
+                }
+            }
+        }
+    }
+    return output;
+}
+
+FloatImage addTrueSeam(const FloatImage im, vector<int> seam)
+{
+    FloatImage output(im.width() + 1, im.height(), im.depth());
+
+    for (int reverseY = 0; reverseY < output.height(); reverseY++) {
+        int badPixel = seam[reverseY]; //this is the x coord
+        int offsetPixel = 0;
+
+        //adding the seam to the image
+
+        int y = im.height() - 1 - reverseY;
+        for (int x = 0; x < im.width(); x++) {
+            if ( x == badPixel ) {
+                offsetPixel = -1;
                 for (int z = 0; z < im.depth(); z++ ) {
                     float average = (im.smartAccessor(x - 1, y, z) + im.smartAccessor(x + 1, y, z)) / 2;
                     output(x, y, z) = average;
@@ -296,6 +324,7 @@ FloatImage grow(const FloatImage &im, int addWidth, int addHeight, int numSteps)
 {
     cout << "grow " << endl;
     FloatImage mid(im);
+    FloatImage output(im);
     //so keep a seperate image for the emap?
     // or keep a seperate emap
     //keep a seperate emap that has all the seams in it
@@ -304,23 +333,25 @@ FloatImage grow(const FloatImage &im, int addWidth, int addHeight, int numSteps)
     FloatImage mask(im.width(), im.height(), 1);
     float highValue = 100000;
     for (int i = 0; i < addWidth; i++) {
-        FloatImage eMap = createMaskedEnergyMap(mid, mask, highValue, false);
+//        FloatImage eMap = createMaskedEnergyMap(mid, mask, highValue, false);
+        //so what i want to do is add high energy streaks to the energyMap
+        FloatImage eMap = createEnergyMap(mid);
 
         char buffer[255];
         sprintf(buffer, DATA_DIR "/output/grow/energyMaps/eMap-%d.png", i);
         eMap.write(buffer);
 
-        vector<int> seam = findVerticalSeamMap(eMap);
-        for (int j = 0; j < seam.size(); j++) {
-            int y = eMap.height() - 1 - j;
-            //cout << seam[j] << " " << y << endl;
-        }
+        char buffer2[255];
+        sprintf(buffer2, DATA_DIR "/output/grow/masks/mask-%d.png", i);
+        mask.write(buffer2);
 
-        mid = addSeam(mid, seam);
-        mask = addSeamToMask(mask, seam);
+        vector<int> seam = findVerticalSeamMap(eMap);
+
+        mid = addSeamToMask(mid, seam);
+        output = addTrueSeam(output, seam);
 
     }
-    return mid;
+    return output;
 }
 
 FloatImage expand(const FloatImage &im, int addWidth, int addHeight, int numSteps)

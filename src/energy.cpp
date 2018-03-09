@@ -73,6 +73,8 @@ FloatImage dualGradientEnergy(const FloatImage &im, bool clamp) {
     return energyMap;
 }
 
+// This funciton adds the mask to the im when calculating the non cumlative energy for each pixel
+// this increases the gradient across the seam, reducing the chances that another seam comes across it.
 //@params
 // im: image to whose energy should be calculated
 // mask: mask image. Assumed to have same dimensions as im
@@ -95,11 +97,7 @@ FloatImage createMaskedEnergyMap(FloatImage im, FloatImage mask, float value, bo
                 float lowestEnergy = numeric_limits<float>::max();
                 for (int change = -1; change <= 1; change++) {
                     if (y + change >= im.height() or y + change < 0) {continue;}
-                    if (mask(x - 1, y + change, 0) == 1) {
                         lowestEnergy = min(energyMap(x - 1, y + change, 0), lowestEnergy);
-                    } else {
-                        lowestEnergy = min(energyMap(x - 1, y + change, 0), lowestEnergy);
-                    }
                 }
                 energyMap(x, y, 0) = energyMap(x, y, 0) + lowestEnergy;
             }
@@ -111,11 +109,7 @@ FloatImage createMaskedEnergyMap(FloatImage im, FloatImage mask, float value, bo
                 float lowestEnergy = numeric_limits<float>::max();
                 for (int change = -1; change <= 1; change++) {
                     if (x + change >= im.width() or x + change < 0) {continue;}
-                    if (mask(x + change, y - 1, 0) == 1) {
                         lowestEnergy = min(energyMap(x + change, y - 1, 0), lowestEnergy);
-                    } else {
-                        lowestEnergy = min(energyMap(x + change, y - 1, 0), lowestEnergy);
-                    }
                 }
                 energyMap(x, y, 0) = energyMap(x, y, 0) + lowestEnergy;
             }
@@ -143,12 +137,11 @@ FloatImage createEnergyMap(FloatImage im)
     return energyMap;
 }
 
+//need to create horizontal for thisj
+//this creates an energy map and zeros anything that is within a sepecific block
 FloatImage createBlockedEnergyMap(FloatImage im, FloatImage block, int value)
 {
     FloatImage energyMap = dualGradientEnergy(im);
-    energyMap.write(DATA_DIR "/output/removal/energyMap.png");
-    block.write(DATA_DIR "/output/removal/energyblock.png");
-
     for (int y = 1; y < im.height(); y++) {
         for (int x = 0; x < im.width(); x++) {
             float lowestEnergy = 10000000; //do i need to change this to be max value?
@@ -167,7 +160,6 @@ FloatImage createBlockedEnergyMap(FloatImage im, FloatImage block, int value)
             }
         }
     }
-    energyMap.write(DATA_DIR "/output/removal/energyMap2.png");
     return energyMap;
 }
 FloatImage energyMap(FloatImage im)

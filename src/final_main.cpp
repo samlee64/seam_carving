@@ -111,33 +111,25 @@ void testCheck()
 
 void testGrow()
 {
-    const FloatImage input(DATA_DIR "/input/castle-small.png");
+    const FloatImage input(DATA_DIR "/input/castle-large.png");
     cout << input.width() << " " << input.height() << endl;
-    FloatImage output = grow(input, 20, 20, 2);
+    FloatImage output = grow(input, 60, 60, 2);
     cout << input.width() << " " << input.height() << endl;
     cout << output.width() << " " << output.height() << endl;
-    output.write(DATA_DIR "/output/grow/castle-small-20-20.png");
+    output.write(DATA_DIR "/output/grow/castle-large-60-60.png");
 }
 
 void testRemoveObject()
 {
-    const FloatImage input(DATA_DIR "/input/castle-large.png");
+    const FloatImage input(DATA_DIR "/input/castle-small.png");
     vector<tuple<int, int>> object = {};
+    vector<tuple<int, int>> protectedObject= {};
 
     FloatImage castle(input);
     //black out the castle
     //large castle
     // x 580, width - 50
     // y 20, 610
-    for (int x = 580; x < input.width() - 50; x++) {
-        for (int y = 20; y < 610; y++) {
-            tuple<int, int> t = make_tuple(x, y);
-            object.push_back(t);
-            castle(x, y, 0) = 1;
-            castle(x, y, 1) = 0;
-            castle(x, y, 2) = 0;
-        }
-    }
 
     castle.write(DATA_DIR "/output/removal/castle-large-blocked.png");
 
@@ -153,18 +145,37 @@ void testRemoveObject()
 //    }
 
 
-    FloatImage output = removeObject(input, object, false, true, false);
+    FloatImage output = removeObject(input, object, protectedObject, false, true, false);
     cout << input.width() << " " << input.height() << endl;
     cout << output.width() << " " << output.height() << endl;
     output.write(DATA_DIR "/output/removal/test-castle-removal-minlow.png");
 }
 
-void testContentAmplification()
+
+void testRemoveandReplaceObject()
 {
     const FloatImage input(DATA_DIR "/input/castle-small.png");
+    //const FloatImage input(DATA_DIR "/input/beach.png");
+    vector<tuple<int, int>> destroyObject = {};
+    vector<tuple<int, int>> protectedObject= {};
+
+    for(int x=78; x<175; x++) {for (int y=35; y <178; y++) {protectedObject.push_back(make_tuple(x, y));}}
+    for(int x=184; x<287; x++) {for (int y=14; y <184; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    FloatImage output = removeObject(input, destroyObject, protectedObject, false, true, false);
     cout << input.width() << " " << input.height() << endl;
-    FloatImage output = contentAmpilification(input, 1.5);
-    output.write(DATA_DIR "/output/amplification/castle-small-2.png");
+    cout << output.width() << " " << output.height() << endl;
+
+
+    output.write(DATA_DIR "/output/removalAndReplace/removal-beach.png");
+
+
+}
+void testContentAmplification()
+{
+    const FloatImage input(DATA_DIR "/input/surf.png");
+    cout << input.width() << " " << input.height() << endl;
+    FloatImage output = contentAmpilification(input, 1.3);
+    output.write(DATA_DIR "/output/amplification/surf-2.png");
 
 }
 
@@ -179,5 +190,6 @@ int main()
 //    testFindVerticalSeam();
     //testGrow();
     //testRemoveObject();
-    testContentAmplification();
+    testRemoveandReplaceObject();
+    //testContentAmplification();
 }

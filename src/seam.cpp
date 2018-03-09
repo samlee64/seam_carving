@@ -10,39 +10,6 @@
 
 using namespace std;
 
-//return the Y coord that has the min value on either neighboring side of the given y coordj
-int getMinY(FloatImage energyMap, int x, int y)
-{
-    int minY;
-    float minEnergy = numeric_limits<float>::max();
-
-    for (int changeY = -1; changeY <= 1; changeY++) {
-        if (y + changeY >= energyMap.height() or y + changeY < 0) {continue;}
-        if (energyMap(x, y + changeY, 0) < minEnergy) {
-            minY = y + changeY;
-            minEnergy = energyMap(x, minY, 0);
-        }
-    }
-    return minY;
-}
-
-
-//return the X coord that has the min value of either neighboring side of the given x coord
-int getMinX(FloatImage energyMap, int x, int y)
-{
-    int minX;
-    float minEnergy = numeric_limits<float>::max();
-
-    for (int changeX = -1; changeX <= 1; changeX++) {
-        if (x + changeX >= energyMap.width() or x + changeX < 0) {continue;}
-        if (energyMap(x + changeX, y, 0) < minEnergy) {
-            minX = x + changeX;
-            minEnergy = energyMap(minX, y, 0);
-        }
-    }
-    return minX;
-}
-
 void debugPrintMap(FloatImage map)
 {
     for (int y = 0; y < map.height(); y++) {
@@ -56,9 +23,9 @@ void debugPrintMap(FloatImage map)
 }
 
 
-
-//finds the lowest energy value in the bottom row
-// returns the index
+// Returns the X index of the lowest energy value in the bottom row
+// @params:
+// energyMap: cumulative energymap
 int lowestRowIndex(FloatImage energyMap)
 {
     int minX;
@@ -74,7 +41,9 @@ int lowestRowIndex(FloatImage energyMap)
     return minX;
 }
 
-//returns the lowest energy value of the last column of the photo
+// Returns the Y index of the lowest energy value in the bottom column
+// @params:
+// energyMap: cumulative energymap
 int lowestColumnIndex(FloatImage energyMap)
 {
     int minY;
@@ -90,6 +59,9 @@ int lowestColumnIndex(FloatImage energyMap)
     return minY;
 }
 
+// Returns a min horizontal seam
+//@params:
+//  energyMap: cumulative energyMap
 vector<int> findHorizontalSeamMap(FloatImage energyMap)
 {
     vector<int> seam;
@@ -104,7 +76,7 @@ vector<int> findHorizontalSeamMap(FloatImage energyMap)
     for (int x = energyMap.width() - 2; x >= 0; x--) {
         float minEnergy = numeric_limits<float>::max();
         for (int changeY = -1; changeY <= 1; changeY++) {
-            if (currentY + changeY >= energyMap.height() or currentY + changeY < 0) {continue;}
+            if (currentY + changeY >= energyMap.height() or currentY + changeY < 0) {continue;} //dont consider items out of bounds
             if (energyMap(x, currentY + changeY, 0) < minEnergy) {
                 nextY = currentY + changeY;
                 minEnergy = energyMap(x, nextY, 0);
@@ -115,11 +87,14 @@ vector<int> findHorizontalSeamMap(FloatImage energyMap)
     }
     return seam;
 }
+
+//Returns a min vertical seam
+// @params:
+// energyMap: cumulative energyMap
 vector<int> findVerticalSeamMap(FloatImage energyMap)
 {
     vector<int> seam;
 
-    //find the root
     int minX = lowestRowIndex(energyMap);
     seam.push_back(minX);
 
@@ -143,11 +118,17 @@ vector<int> findVerticalSeamMap(FloatImage energyMap)
     return seam;
 }
 
+//Returns a min vertical seam
+// computes the energy map and then finds the min vertical seam
+// should technically be slightly faster because there is 1 less mxn operation for image of size mxn
+//@params:
+// im: Float image
 vector<int> findVerticalSeamImage(FloatImage im)
 {
     vector<int> seam;
     FloatImage energyMap(im.width(), im.height(), 1);
 
+    //calculate the cumulative energy
     for (int y = 1; y < energyMap.height(); y++) {
         for (int x = 0; x < energyMap.width(); x++) {
             float minEnergy = numeric_limits<float>::max();
@@ -166,13 +147,25 @@ vector<int> findVerticalSeamImage(FloatImage im)
     int nextX;
 
     for (int y = energyMap.height() - 2; y >= 0; y--) {
-        nextX = getMinX(energyMap, currentX, y);
+        float minEnergy = numeric_limits<float>::max();
+
+        for (int changeX = -1; changeX <= 1; changeX++) {
+            if (currentX + changeX >= energyMap.width() or currentX + changeX < 0) {continue;}
+            if (energyMap(currentX + changeX, y, 0) < minEnergy) {
+                nextX = currentX + changeX;
+                minEnergy = energyMap(currentX, y, 0);
+            }
+        }
         currentX = nextX;
         seam.push_back(nextX);
     }
 
     return seam;
 }
+
+//Returns a min horizontal seam
+//@params:
+// im: Float image
 vector<int> findHorizontalSeamImage(FloatImage im)
 {
     vector<int> seam;
@@ -190,8 +183,6 @@ vector<int> findHorizontalSeamImage(FloatImage im)
             energyMap(x, y, 0) = dualGradientEnergy(im, x, y) + minEnergy;
         }
     }
-
-    energyMap.write(DATA_DIR "/output/new-surf-horizontal-energy.png");
 
     int minY = lowestColumnIndex(energyMap);
     seam.push_back(minY);
@@ -215,89 +206,109 @@ vector<int> findHorizontalSeamImage(FloatImage im)
 }
 
 
-
 //modifies the existing mask
-FloatImage addSeamToMask(FloatImage const mask, vector<int> seam)
+FloatImage addSeamToMask(FloatImage const mask, vector<int> seam, bool isHorizontal)
 {
-    FloatImage output(mask.width() + 1, mask.height(), mask.depth());
-    for (int reverseY = 0; reverseY < output.height(); reverseY++) {
-        int badPixel = seam[reverseY]; //this is the x coord
-        int offsetPixel = 0;
+    if (isHorizontal) {
+        FloatImage output(mask.width(), mask.height() + 1, mask.depth());
+        for (int reverseX = 0; reverseX < output.width(); reverseX++) {
+            int badPixel = seam[reverseX]; //this is a y coord
+            int offsetPixel =0;
 
-        //adding the seam to the image
-        int y = mask.height() - 1 - reverseY;
-        for (int x = 0; x < mask.width(); x++) {
-            if ( x == badPixel ) {
-                offsetPixel = -1;
-                output(x, y, 0) = 1;
-            } else {
-                for (int z = 0; z < output.depth(); z++) {
-                    output(x, y, z) = mask(x + offsetPixel, y, z);
+            int x = mask.width() - 1- reverseX;
+
+            for (int y = 0; y < mask.height(); y++) {
+                if (y == badPixel) {
+                    offsetPixel = -1;
+                    output(x, y, 0) = 1;
+                } else {
+                    for (int z = 0; z < output.depth(); z++) {
+                        output(x, y, z) = mask(x, y + offsetPixel, z);
+                    }
                 }
             }
         }
-    }
-    return output;
-}
-//hard coded vertical
-FloatImage addRedSeam(const FloatImage im, vector<int> seam)
-{
-    FloatImage output(im.width() + 1, im.height(), im.depth());
+        return output;
+    } else {
+        FloatImage output(mask.width() + 1, mask.height(), mask.depth());
+        for (int reverseY = 0; reverseY < output.height(); reverseY++) {
+            int badPixel = seam[reverseY]; //this is the x coord
+            int offsetPixel = 0;
 
-    for (int reverseY = 0; reverseY < output.height(); reverseY++) {
-        int badPixel = seam[reverseY]; //this is the x coord
-        int offsetPixel = 0;
-
-        //adding the seam to the image
-
-        int y = im.height() - 1 - reverseY;
-        for (int x = 0; x < im.width(); x++) {
-            if ( x == badPixel ) {
-                offsetPixel = -1;
-                for (int z = 0; z < im.depth(); z++) {
-                    float average = (im.smartAccessor(x - 1, y, z) + im.smartAccessor(x + 1, y, z)) / 2;
-                    output(x, y, z) = 1;
-                }
-            } else {
-                for (int z = 0; z < output.depth(); z++) {
-                    output(x, y, z) = im(x + offsetPixel, y, z);
+            //adding the seam to the image
+            int y = mask.height() - 1 - reverseY;
+            for (int x = 0; x < mask.width(); x++) {
+                if (x == badPixel) {
+                    offsetPixel = -1;
+                    output(x, y, 0) = 1;
+                } else {
+                    for (int z = 0; z < output.depth(); z++) {
+                        output(x, y, z) = mask(x + offsetPixel, y, z);
+                    }
                 }
             }
         }
+        return output;
     }
-    return output;
 }
 
-FloatImage addSeam(const FloatImage im, vector<int> seam)
+FloatImage addSeam(const FloatImage im, vector<int> seam, bool isHorizontal)
 {
-    FloatImage output(im.width() + 1, im.height(), im.depth());
+    if (isHorizontal) {
+        FloatImage output(im.width(), im.height() + 1, im.depth());
+        for (int reverseX = 0; reverseX < output.width(); reverseX++) {
+            int badPixel = seam[reverseX]; //this is a y coord
+            int offsetPixel =0;
 
-    for (int reverseY = 0; reverseY < output.height(); reverseY++) {
-        int badPixel = seam[reverseY]; //this is the x coord
-        int offsetPixel = 0;
+            int x = im.width() - 1- reverseX;
 
-        //adding the seam to the image
-
-        int y = im.height() - 1 - reverseY;
-        for (int x = 0; x < im.width(); x++) {
-            if ( x == badPixel ) {
-                offsetPixel = -1;
-                for (int z = 0; z < im.depth(); z++ ) {
-                    float average = (im.smartAccessor(x - 1, y, z) + im.smartAccessor(x + 1, y, z)) / 2;
-                    output(x, y, z) = average;
-                }
-            } else {
-                for (int z = 0; z < output.depth(); z++) {
-                    output(x, y, z) = im(x + offsetPixel, y, z);
+            for (int y = 0; y < im.height(); y++) {
+                if (y == badPixel) {
+                    offsetPixel = -1;
+                    for (int z = 0; z < output.depth(); z++) {
+                        float average = (im.smartAccessor(x, y - 1, z, false) + im.smartAccessor(x, y + 1, z, false)) / 2;
+                        output(x, y, z) = average;
+                    }
+                } else {
+                    for (int z = 0; z < output.depth(); z++) {
+                        output(x, y, z) = im(x, y + offsetPixel, z);
+                    }
                 }
             }
         }
+        return output;
+    } else {
+        FloatImage output(im.width() + 1, im.height(), im.depth());
+
+        for (int reverseY = 0; reverseY < output.height(); reverseY++) {
+            int badPixel = seam[reverseY]; //this is the x coord
+            int offsetPixel = 0;
+
+            //adding the seam to the image
+
+            int y = im.height() - 1 - reverseY;
+            for (int x = 0; x < im.width(); x++) {
+                if ( x == badPixel ) {
+                    offsetPixel = -1;
+                    for (int z = 0; z < im.depth(); z++ ) {
+                        float average = (im.smartAccessor(x - 1, y, z, false) + im.smartAccessor(x + 1, y, z, false)) / 2;
+                        output(x, y, z) = average;
+                    }
+                } else {
+                    for (int z = 0; z < output.depth(); z++) {
+                        output(x, y, z) = im(x + offsetPixel, y, z);
+                    }
+                }
+            }
+        }
+        return output;
     }
-    return output;
 }
 
 
-//just hardcoding vertical seams right now
+//Removes a seam from an image
+//@params
+
 FloatImage removeSeam(const FloatImage im, vector<int> seam, bool isHorizontal)
 {
     if (isHorizontal) {
@@ -342,20 +353,17 @@ FloatImage removeSeam(const FloatImage im, vector<int> seam, bool isHorizontal)
 // will always pick the same seam
 FloatImage grow(const FloatImage &im, int addWidth, int addHeight, int numSteps)
 {
-    cout << "grow " << endl;
     FloatImage mid(im);
-    FloatImage output(im);
-    //so keep a seperate image for the emap?
-    // or keep a seperate emap
-    //keep a seperate emap that has all the seams in it
-
 
     FloatImage mask(im.width(), im.height(), 1);
-    float highValue = 50;
+    float highValue = 1;
     for (int i = 0; i < addWidth; i++) {
+        if (i % (addWidth/numSteps) == 0) {
+            for (int i =0; i < mask.size(); i++) {
+                mask(i) = 0;
+            }
+        }
         FloatImage eMap = createMaskedEnergyMap(mid, mask, highValue, false);
-        //so what i want to do is add high energy streaks to the energyMap
-   //     FloatImage eMap = createEnergyMap(mid);
 
         char buffer[255];
         sprintf(buffer, DATA_DIR "/output/grow/energyMaps/eMap-%d.png", i);
@@ -367,9 +375,33 @@ FloatImage grow(const FloatImage &im, int addWidth, int addHeight, int numSteps)
 
         vector<int> seam = findVerticalSeamMap(eMap);
 
-        mask = addSeamToMask(mask, seam);
-        mid = addSeam(mid, seam);
+        mask = addSeamToMask(mask, seam, false); //vertical
+        mid = addSeam(mid, seam, false);
     }
+
+    for (int i = 0; i < addHeight; i++) {
+        if (i %(addHeight/numSteps) == 0 ) {
+            for (int i =0; i < mask.size(); i++) {
+                mask(i) = 0;
+            }
+        }
+        FloatImage eMap = createMaskedEnergyMap(mid, mask, highValue, true);
+
+        char buffer[255];
+        sprintf(buffer, DATA_DIR "/output/grow/energyMaps/eMap-%d.png", i + addWidth);
+        eMap.write(buffer);
+
+        char buffer2[255];
+        sprintf(buffer2, DATA_DIR "/output/grow/masks/mask-%d.png", i + addWidth);
+        mask.write(buffer2);
+
+        vector<int> seam = findHorizontalSeamMap(eMap);
+
+        mask = addSeamToMask(mask, seam, true);
+        mid = addSeam(mid, seam, true);
+    }
+
+
 
     return mid;
 }
@@ -427,35 +459,37 @@ FloatImage contentAmpilification(const FloatImage &im, float factor)
 //lets just remove objects vertically
 // system should be able to automatically calculate the smaller of th evertical or horizontal diameters
 //perform vertical or horizontal removals
+// destroy object takes precedance over protected object
 //@params
 // im: float image that has the object to remove
 // object: vector of tuples that have x, y coordinates of the object
 // lockRatio: true -> locks aspect ratio
 // onlyVert: true -> will only remove vertical seams. Overridden by lockRatio
 // onlyHorizontal: true -> will only remove horizontal seems. Overriden by lockRatio and onlyVert
-FloatImage removeObject(const FloatImage &im, const vector<tuple<int, int>> object, bool lockRatio, bool onlyVert, bool onlyHorizontal)
+FloatImage removeObject(const FloatImage &im, const vector<tuple<int, int>> destroyObject, const vector<tuple<int, int>> protectedObject, bool lockRatio, bool onlyVert, bool onlyHorizontal)
 {
     //alright now lets see if we can alternate between vertical and horizontal rips
     const int MAXTRIES = min(im.width(), im.height());
     FloatImage output(im);
-    FloatImage test(DATA_DIR "/input/test4.png");
-    for (int x = 6; x < 11; x++) {
-        for (int y = 50; y < 57; y++) {
-            test(x, y, 0) = 1;
-            test(x, y, 1) = 0;
-            test(x, y, 2) = 0;
-        }
-    }
-
     const float lowValue = -1000000000000;
     //the trouble i was having was getting a properly low enough value
 //    const float lowValue = numeric_limits<float>::min();
     FloatImage badArea(im.width(), im.height(), 1); //values are inited to 0
-    for (int i = 0; i < object.size(); i++) {
-        int x = get<0>(object[i]);
-        int y = get<1>(object[i]);
-        badArea(x, y, 0) = 1;
+    FloatImage copy(im);
+    //in order to protect an area i need to make sure that its values are super high so that no seams want to go through it
+    for (int i = 0; i < protectedObject.size(); i++) {
+        int x = get<0>(protectedObject[i]);
+        int y = get<1>(protectedObject[i]);
+        copy(x, y, 1) = 1;
     }
+
+    for (int i = 0; i < destroyObject.size(); i++) {
+        int x = get<0>(destroyObject[i]);
+        int y = get<1>(destroyObject[i]);
+        badArea(x, y, 0) = 1;
+        copy(x, y, 0) = 1;
+    }
+    copy.write(DATA_DIR "/output/removal/badarea2.png");
     badArea.write(DATA_DIR "/output/removal/badarea.png");
 
     FloatImage eMap;

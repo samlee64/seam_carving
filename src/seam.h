@@ -27,3 +27,4 @@ vector<bool> seamOrientation(FloatImage badArea, int i, bool lockRatio, bool onl
 // addHeight: number of pixels to increase height by
 // numSteps: number of steps to take to increase the image size
 FloatImage grow(const FloatImage &im, int addWidth, int addHeight, int numSteps);
+FloatImage contentAmpilification(const FloatImage &im, float factor);

@@ -111,12 +111,12 @@ void testCheck()
 
 void testGrow()
 {
-    const FloatImage input(DATA_DIR "/input/castle-large.png");
+    const FloatImage input(DATA_DIR "/input/castle-small.png");
     cout << input.width() << " " << input.height() << endl;
-    FloatImage output = grow(input, 40, 0, 2);
+    FloatImage output = grow(input, 20, 20, 2);
     cout << input.width() << " " << input.height() << endl;
     cout << output.width() << " " << output.height() << endl;
-    output.write(DATA_DIR "/output/grow/castle-large-40.png");
+    output.write(DATA_DIR "/output/grow/castle-small-20-20.png");
 }
 
 void testRemoveObject()
@@ -159,6 +159,15 @@ void testRemoveObject()
     output.write(DATA_DIR "/output/removal/test-castle-removal-minlow.png");
 }
 
+void testContentAmplification()
+{
+    const FloatImage input(DATA_DIR "/input/castle-small.png");
+    cout << input.width() << " " << input.height() << endl;
+    FloatImage output = contentAmpilification(input, 1.5);
+    output.write(DATA_DIR "/output/amplification/castle-small-2.png");
+
+}
+
 int main()
 {
     //createTestImage();
@@ -168,6 +177,7 @@ int main()
 //    testRemoveSeam();
 //    testFindHorizontalSeam();
 //    testFindVerticalSeam();
-    testGrow();
-    testRemoveObject();
+    //testGrow();
+    //testRemoveObject();
+    testContentAmplification();
 }

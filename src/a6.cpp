@@ -29,7 +29,7 @@ FloatImage scaleNN(const FloatImage &im, float factor)
     for (int y = 0; y < output.height(); y++) {
         for (int x = 0; x < output.width(); x++) {
            for (int z = 0; z < output.depth(); z++) {
-               output(x, y, z) = im(round(x/factor), round(y/factor), z);
+               output(x, y, z) = im(floor(x/factor), floor(y/factor), z);
            }
         }
     }

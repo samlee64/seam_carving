@@ -215,27 +215,6 @@ vector<int> findHorizontalSeamImage(FloatImage im)
 }
 
 
-//just hardcoding vertical seams right now
-FloatImage removeSeam(const FloatImage im, vector<int> seam, bool isHorizontal)
-{
-    FloatImage output(im.width() - 1, im.height(), im.depth());
-    //seam goes from high to low
-    for (int reverseY = 0; reverseY < output.height(); reverseY++) {
-        int badPixel = seam[reverseY]; //this is the x coord
-        int offsetPixel = 0;
-
-        for (int x = 0; x < output.width(); x++) {
-            if ( x == badPixel) { //this is correct. I tried x + 1 and it removed from the wrong side of the seam during object removal
-                offsetPixel = 1;
-            }
-            for (int z = 0; z < output.depth(); z++) {
-                int y = im.height() - 1 - reverseY;
-                output(x, y, z) = im(x + offsetPixel, y, z);
-            }
-        }
-    }
-    return output;
-}
 
 //modifies the existing mask
 FloatImage addSeamToMask(FloatImage const mask, vector<int> seam)
@@ -261,7 +240,7 @@ FloatImage addSeamToMask(FloatImage const mask, vector<int> seam)
     return output;
 }
 //hard coded vertical
-FloatImage addSeam(const FloatImage im, vector<int> seam)
+FloatImage addRedSeam(const FloatImage im, vector<int> seam)
 {
     FloatImage output(im.width() + 1, im.height(), im.depth());
 
@@ -289,7 +268,7 @@ FloatImage addSeam(const FloatImage im, vector<int> seam)
     return output;
 }
 
-FloatImage addTrueSeam(const FloatImage im, vector<int> seam)
+FloatImage addSeam(const FloatImage im, vector<int> seam)
 {
     FloatImage output(im.width() + 1, im.height(), im.depth());
 
@@ -317,6 +296,47 @@ FloatImage addTrueSeam(const FloatImage im, vector<int> seam)
     return output;
 }
 
+
+//just hardcoding vertical seams right now
+FloatImage removeSeam(const FloatImage im, vector<int> seam, bool isHorizontal)
+{
+    if (isHorizontal) {
+        FloatImage output(im.width(), im.height() - 1, im.depth());
+        for (int reverseX = 0; reverseX < output.width(); reverseX++) {
+            int badPixel = seam[reverseX]; //this is the y coord
+            int offsetPixel = 0;
+
+            for (int y = 0; y < output.height(); y++) {
+                if ( y == badPixel) {
+                    offsetPixel = 1;
+                }
+                for (int z = 0; z < output.depth(); z++) {
+                    int x = im.width() - 1 - reverseX;
+                    output(x, y, z) = im(x, y + offsetPixel, z);
+                }
+            }
+        }
+        return output;
+    } else {
+        FloatImage output(im.width() - 1, im.height(), im.depth());
+        //seam goes from high to low
+        for (int reverseY = 0; reverseY < output.height(); reverseY++) {
+            int badPixel = seam[reverseY]; //this is the x coord
+            int offsetPixel = 0;
+
+            for (int x = 0; x < output.width(); x++) {
+                if ( x == badPixel) { //this is correct. I tried x + 1 and it removed from the wrong side of the seam during object removal
+                    offsetPixel = 1;
+                }
+                for (int z = 0; z < output.depth(); z++) {
+                    int y = im.height() - 1 - reverseY;
+                    output(x, y, z) = im(x + offsetPixel, y, z);
+                }
+            }
+        }
+        return output;
+    }
+}
 
 //naive expansion function
 // will always pick the same seam
@@ -348,7 +368,7 @@ FloatImage grow(const FloatImage &im, int addWidth, int addHeight, int numSteps)
         vector<int> seam = findVerticalSeamMap(eMap);
 
         mask = addSeamToMask(mask, seam);
-        mid = addTrueSeam(mid, seam);
+        mid = addSeam(mid, seam);
     }
 
     return mid;
@@ -360,8 +380,48 @@ FloatImage grow(const FloatImage &im, int addWidth, int addHeight, int numSteps)
 // im: float image
 // factor: factor to increase the content by. 2 would double it.
 
-FloatImage contentAmpfliication(const FloatImage &im, int factor)
+FloatImage contentAmpilification(const FloatImage &im, float factor)
 {
+    if (factor < 1) {
+        return im;
+    }
+
+    //1.5 ratio
+    // widht is bigger than height
+    //this means that I have to take out more vertical lines than horizontal
+    // in order to reduce the width
+    // for every 1 horizontal line, i need to take out 1.5 verticals
+    // h, v, h, v, v;
+
+    FloatImage scaledImageNN = scaleNN(im, factor);
+    FloatImage scaledImageLin = scaleLin(im, factor);
+    cout << factor << endl;
+    cout << im.width() << " " << im.height() << endl;
+    cout << scaledImageLin.width() << " " << scaledImageLin.height() << endl;
+
+    int reduceWidth = scaledImageLin.width() - im.width();
+    int reduceHeight = scaledImageLin.height() - im.height();
+    cout << reduceWidth << " " << reduceHeight << endl;
+
+    scaledImageLin.write(DATA_DIR "/output/amplification/scaledImage.png");
+    bool isHorizontal = false;
+    for (int i = 0; i < reduceWidth; i++) {
+        cout << "reducing width " <<  i << endl;
+
+        isHorizontal = (i % 2 == 0);
+        isHorizontal = false;
+        vector<int> seam = isHorizontal ? findHorizontalSeamImage(scaledImageLin) : findVerticalSeamImage(scaledImageLin);
+        scaledImageLin = removeSeam(scaledImageLin, seam, isHorizontal);
+        scaledImageLin.write(DATA_DIR "/output/amplification/sca.png");
+    }
+    for (int i = 0; i < reduceHeight; i++ ) {
+        cout << "reducing height " <<  i << endl;
+        isHorizontal = true;
+        vector<int> seam = isHorizontal ? findHorizontalSeamImage(scaledImageLin) : findVerticalSeamImage(scaledImageLin);
+        scaledImageLin = removeSeam(scaledImageLin, seam, isHorizontal);
+    }
+
+    return scaledImageLin;
 }
 
 //lets just remove objects vertically
@@ -462,8 +522,6 @@ FloatImage removeObject(const FloatImage &im, const vector<tuple<int, int>> obje
         badArea = removeSeam(badArea, seam, isHorizontal);
         //no junk
     }
-
-
 
     return output;
 }

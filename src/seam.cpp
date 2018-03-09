@@ -331,11 +331,11 @@ FloatImage grow(const FloatImage &im, int addWidth, int addHeight, int numSteps)
 
 
     FloatImage mask(im.width(), im.height(), 1);
-    float highValue = 100000;
+    float highValue = 50;
     for (int i = 0; i < addWidth; i++) {
-//        FloatImage eMap = createMaskedEnergyMap(mid, mask, highValue, false);
+        FloatImage eMap = createMaskedEnergyMap(mid, mask, highValue, false);
         //so what i want to do is add high energy streaks to the energyMap
-        FloatImage eMap = createEnergyMap(mid);
+   //     FloatImage eMap = createEnergyMap(mid);
 
         char buffer[255];
         sprintf(buffer, DATA_DIR "/output/grow/energyMaps/eMap-%d.png", i);
@@ -347,11 +347,11 @@ FloatImage grow(const FloatImage &im, int addWidth, int addHeight, int numSteps)
 
         vector<int> seam = findVerticalSeamMap(eMap);
 
-        mid = addSeamToMask(mid, seam);
-        output = addTrueSeam(output, seam);
-
+        mask = addSeamToMask(mask, seam);
+        mid = addTrueSeam(mid, seam);
     }
-    return output;
+
+    return mid;
 }
 
 FloatImage expand(const FloatImage &im, int addWidth, int addHeight, int numSteps)

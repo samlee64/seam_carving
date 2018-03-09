@@ -122,7 +122,7 @@ void testGrow()
     FloatImage output = grow(input, 60, 0, 0);
     cout << input.width() << " " << input.height() << endl;
     cout << output.width() << " " << output.height() << endl;
-    output.write(DATA_DIR "/output/grow/castle-large-10.png");
+    output.write(DATA_DIR "/output/grow/castle-large-60.png");
 
 }
 

@@ -237,6 +237,29 @@ FloatImage removeSeam(const FloatImage im, vector<int> seam, bool isHorizontal)
     return output;
 }
 
+//modifies the existing mask
+FloatImage addSeamToMask(FloatImage const mask, vector<int> seam)
+{
+    FloatImage output(mask.width() + 1, mask.height(), mask.depth());
+    for (int reverseY = 0; reverseY < output.height(); reverseY++) {
+        int badPixel = seam[reverseY]; //this is the x coord
+        int offsetPixel = 0;
+
+        //adding the seam to the image
+        int y = mask.height() - 1 - reverseY;
+        for (int x = 0; x < mask.width(); x++) {
+            if ( x == badPixel ) {
+                offsetPixel = -1;
+                output(x, y, 0) = 1;
+            } else {
+                for (int z = 0; z < output.depth(); z++) {
+                    output(x, y, z) = mask(x + offsetPixel, y, z);
+                }
+            }
+        }
+    }
+    return output;
+}
 //hard coded vertical
 FloatImage addSeam(const FloatImage im, vector<int> seam)
 {
@@ -253,10 +276,8 @@ FloatImage addSeam(const FloatImage im, vector<int> seam)
             if ( x == badPixel ) {
                 offsetPixel = -1;
                 for (int z = 0; z < im.depth(); z++ ) {
-                    float average = (output.smartAccessor(x - 1, y, z) + output.smartAccessor(x + 1, y, z)) / 2;
-                    output(x, y, 0) = 1; //this is a vertical seam so i take average of left and right pixels
-                    output(x, y, 1) = 0;
-                    output(x, y, 2) = 0;
+                    float average = (im.smartAccessor(x - 1, y, z) + im.smartAccessor(x + 1, y, z)) / 2;
+                    output(x, y, z) = average;
                 }
             } else {
                 for (int z = 0; z < output.depth(); z++) {
@@ -280,13 +301,13 @@ FloatImage grow(const FloatImage &im, int addWidth, int addHeight, int numSteps)
     //keep a seperate emap that has all the seams in it
 
 
+    FloatImage mask(im.width(), im.height(), 1);
     float highValue = 100000;
     for (int i = 0; i < addWidth; i++) {
-        FloatImage eMap = createEnergyMap(mid);
-
+        FloatImage eMap = createMaskedEnergyMap(mid, mask, highValue, false);
 
         char buffer[255];
-        sprintf(buffer, DATA_DIR "/output/grow/eMap-%d.png", i);
+        sprintf(buffer, DATA_DIR "/output/grow/energyMaps/eMap-%d.png", i);
         eMap.write(buffer);
 
         vector<int> seam = findVerticalSeamMap(eMap);
@@ -296,6 +317,7 @@ FloatImage grow(const FloatImage &im, int addWidth, int addHeight, int numSteps)
         }
 
         mid = addSeam(mid, seam);
+        mask = addSeamToMask(mask, seam);
 
     }
     return mid;

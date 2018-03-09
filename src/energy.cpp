@@ -81,6 +81,7 @@ FloatImage dualGradientEnergy(const FloatImage &im, bool clamp) {
 //              false -> calculate the energy from top to bottom
 FloatImage createMaskedEnergyMap(FloatImage im, FloatImage mask, float value, bool isHorizontal)
 {
+    if (im.sizeX() != mask.sizeX() || im.sizeY() != mask.sizeY()) throw runtime_error("Image and mask are different dimensions");
     FloatImage energyMap = dualGradientEnergy(im);
 
     //Add the additional value to the masked areas
@@ -91,15 +92,20 @@ FloatImage createMaskedEnergyMap(FloatImage im, FloatImage mask, float value, bo
             }
         }
     }
+    //alright so the problem that I am running into right now is that areas are getting blocked off
 
     //calculate the aggregated energyMap
     if (isHorizontal) {
         for (int x = 1; x < im.width(); x++) {
-        for(int y = 0; y < im.height(); y++) {
+            for(int y = 0; y < im.height(); y++) {
                 float lowestEnergy = numeric_limits<float>::max();
                 for (int change = -1; change <= 1; change++) {
                     if (y + change >= im.height() or y + change < 0) {continue;}
-                    lowestEnergy = min(energyMap(x - 1, y + change, 0), lowestEnergy);
+                    if (mask(x - 1, y + change, 0) == 1) {
+                        lowestEnergy = min(energyMap(x - 1, y + change, 0) - value, lowestEnergy);
+                    } else {
+                        lowestEnergy = min(energyMap(x - 1, y + change, 0), lowestEnergy);
+                    }
                 }
                 energyMap(x, y, 0) = energyMap(x, y, 0) + lowestEnergy;
             }
@@ -108,11 +114,14 @@ FloatImage createMaskedEnergyMap(FloatImage im, FloatImage mask, float value, bo
     } else {
         for(int y = 1; y < im.height(); y++) {
             for (int x = 0; x < im.width(); x++) {
-                //float lowestEnergy = numeric_limits<float>::max();
                 float lowestEnergy = numeric_limits<float>::max();
                 for (int change = -1; change <= 1; change++) {
                     if (x + change >= im.width() or x + change < 0) {continue;}
-                    lowestEnergy = min(energyMap(x + change, y - 1, 0), lowestEnergy);
+                    if (mask(x + change, y - 1, 0) == 1) {
+                        lowestEnergy = min(energyMap(x + change, y - 1, 0) - value, lowestEnergy);
+                    } else {
+                        lowestEnergy = min(energyMap(x + change, y - 1, 0), lowestEnergy);
+                    }
                 }
                 energyMap(x, y, 0) = energyMap(x, y, 0) + lowestEnergy;
             }

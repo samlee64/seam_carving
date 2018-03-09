@@ -143,6 +143,34 @@ FloatImage createEnergyMap(FloatImage im)
     return energyMap;
 }
 
+FloatImage createBlockedEnergyMap(FloatImage im, FloatImage block, int value)
+{
+    FloatImage energyMap = dualGradientEnergy(im);
+    energyMap.write(DATA_DIR "/output/removal/energyMap.png");
+    block.write(DATA_DIR "/output/removal/energyblock.png");
+
+    for (int y = 1; y < im.height(); y++) {
+        for (int x = 0; x < im.width(); x++) {
+            float lowestEnergy = 10000000; //do i need to change this to be max value?
+            for (int change = -1; change <= 1; change++) {
+                if (x + change >= im.width() or x + change < 0) {
+                    continue;
+                }
+                lowestEnergy = min(energyMap(x + change, y - 1, 0), lowestEnergy);
+            }
+
+            if (block(x, y , 0) == 1) {
+                //energyMap(x, y, 0) = energyMap(x, y, 0)+ lowestEnergy - 100000000000 + value;
+                //energyMap(x, y, 0) = 0;
+                energyMap(x, y, 0) = 0;
+            } else {
+                energyMap(x, y, 0) = energyMap(x, y, 0)+ lowestEnergy;
+            }
+        }
+    }
+    energyMap.write(DATA_DIR "/output/removal/energyMap2.png");
+    return energyMap;
+}
 FloatImage energyMap(FloatImage im)
 {
     FloatImage energyMap = dualGradientEnergy(im);

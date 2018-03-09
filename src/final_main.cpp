@@ -117,18 +117,20 @@ void testGrow()
     cout << input.width() << " " << input.height() << endl;
     cout << output.width() << " " << output.height() << endl;
     output.write(DATA_DIR "/output/grow/castle-large-40.png");
-
 }
 
 void testRemoveObject()
 {
-    const FloatImage input(DATA_DIR "/input/castle-micro.png");
+    const FloatImage input(DATA_DIR "/input/castle-large.png");
     vector<tuple<int, int>> object = {};
 
     FloatImage castle(input);
     //black out the castle
-    for (int x = 60; x < input.width() - 5; x++) {
-        for (int y = 10; y < 60; y++) {
+    //large castle
+    // x 580, width - 50
+    // y 20, 610
+    for (int x = 580; x < input.width() - 50; x++) {
+        for (int y = 20; y < 610; y++) {
             tuple<int, int> t = make_tuple(x, y);
             object.push_back(t);
             castle(x, y, 0) = 1;
@@ -136,6 +138,8 @@ void testRemoveObject()
             castle(x, y, 2) = 0;
         }
     }
+
+    castle.write(DATA_DIR "/output/removal/castle-large-blocked.png");
 
     //black out the person
 //    for (int x = 6; x < 11; x++) {
@@ -148,12 +152,11 @@ void testRemoveObject()
 //        }
 //    }
 
-    castle.write(DATA_DIR "/output/removal/test.png");
 
-    FloatImage output = removeObject(input, object);
+    FloatImage output = removeObject(input, object, false, true, false);
     cout << input.width() << " " << input.height() << endl;
     cout << output.width() << " " << output.height() << endl;
-    output.write(DATA_DIR "/output/removal/test-castle-removal.png");
+    output.write(DATA_DIR "/output/removal/test-castle-removal-minlow.png");
 }
 
 int main()
@@ -165,6 +168,6 @@ int main()
 //    testRemoveSeam();
 //    testFindHorizontalSeam();
 //    testFindVerticalSeam();
-    testGrow();
-    //testRemoveObject();
+    //testGrow();
+    testRemoveObject();
 }

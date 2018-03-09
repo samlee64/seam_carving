@@ -371,121 +371,6 @@ FloatImage expand(const FloatImage &im, int addWidth, int addHeight, int numStep
 
 
 }
-//I should be adding all the seams at once
-FloatImage enlarge(const FloatImage &im, int addWidth, int addHeight, int numSteps)
-{
-//    FloatImage output(im.width() + addWidth, im.height() + addHeight, im.depth());
-    FloatImage output(im);
-
-    vector<vector<int>> seams;
-
-    FloatImage energyMap(im.width(), im.height(), 1);
-    FloatImage mask(im.width(), im.height(), 1);
-    //select which seams to add onto
-
-    for(int i = 0; i < addWidth; i++) {
-        //so i need to add in whatever seams and give them max values
-        // so that these pixels don't get repeated in other seams
-        //maybe not max values
-        //but super high ones
-        //only have to do this for the most resent one actually. Should do this at the end of the function
-        int highValue = 1000000;
-        for (int j = 0; j < seams.size(); j++) {
-            for (int y = 0; y < seams[j].size(); y++) {
-                int x = seams[j][y];
-                energyMap(x, energyMap.height() - 1 - y, 0) = highValue;
-            }
-        }
-
-        //recalculate the energy map
-        // skipping over the recalculation of pixels that have super high energies to not overwrite them
-        for (int y = 1; y < energyMap.height(); y++) {
-            for (int x = 0; x < energyMap.width(); x++) {
-                if (energyMap(x, y, 0) >= highValue) {continue;} else {
-                    float minEnergy = numeric_limits<float>::max();
-                    for (int changeX = -1; changeX <= 1; changeX++) {
-                        if (x + changeX >= energyMap.width() or x + changeX < 0) { continue; }
-                        minEnergy = min(energyMap(x + changeX, y - 1, 0), minEnergy);
-                    }
-                    energyMap(x, y, 0) = dualGradientEnergy(im, x, y) + minEnergy;
-                }
-            }
-        }
-
-        char buffer[255];
-        sprintf(buffer, DATA_DIR "/output/enlarge/energyMaps/adding-seams-%d.png", i);
-        energyMap.write(buffer);
-
-        //so lets find a new seam
-        //optimize this later
-        vector<int> seam;
-        int minX;
-        float minValue = numeric_limits<float>::max();
-        //so first lets find minX;
-
-        for (int x = 0; x < energyMap.width(); x++) {
-            //check to make sure that this seam already isn't in the seams
-            bool newSeam = true;
-            if (energyMap(x, energyMap.height() - 1, 0) < minValue) {
-                for (int i = 0; i < seams.size(); i++) {
-                    if ( x == seams[i][0]) {
-                        newSeam = false;
-                        break;
-                    }
-                }
-                if (newSeam){
-                    minValue = energyMap(x, energyMap.height() - 1, 0);
-                    minX = x;
-                }
-                //this breaks if we are doubling the size of the image
-                // because at some point every seam would have been added
-            }
-        }
-        seam.push_back(minX);
-
-        int currentX = minX;
-        int nextX;
-        for (int y = energyMap.height() - 2; y >= 0; y--) {
-            float minEnergy = numeric_limits<float>::max();
-            for (int changeX = -1; changeX <= 1; changeX++) {
-                if (currentX + changeX >= energyMap.width() or currentX + changeX < 0) {
-                    continue;
-                }
-                if (energyMap(currentX + changeX, y, 0) < minEnergy) {
-                    nextX = currentX + changeX;
-                    minEnergy = energyMap(nextX, y, 0);
-                }
-            }
-            currentX = nextX;
-            seam.push_back(nextX);
-        }
-
-        seams.push_back(seam);
-    }
-
-    cout << "seam information" << endl;
-    cout << seams.size() << endl;
-    cout << seams[1].size() << endl;
-    //draw the seams onto the output image
-
-    for (int u = 0; u < seams.size(); u++) {
-        for (int o = 0; o < seams[u].size(); o++) {
-            int y = energyMap.height() - 1 - o;
-            int x = seams[u][o];
-            cout << seams[u][o] << " " << y << endl;
-            output(x, y, 0) = 1;
-            output(x, y, 1) = 0;
-            output(x, y, 2) = 0;
-        }
-        cout << endl;
-    }
-
-
-
-
-
-    return output;
-}
 
 //increase the image size by factor
 // scale back to orignal size
@@ -516,6 +401,9 @@ FloatImage removeObject(const FloatImage &im, const vector<tuple<int, int>> obje
         }
     }
 
+    const float lowValue = -1000000000000;
+    //the trouble i was having was getting a properly low enough value
+//    const float lowValue = numeric_limits<float>::min();
     FloatImage badArea(im.width(), im.height(), 1); //values are inited to 0
     for (int i = 0; i < object.size(); i++) {
         int x = get<0>(object[i]);
@@ -524,8 +412,6 @@ FloatImage removeObject(const FloatImage &im, const vector<tuple<int, int>> obje
     }
     badArea.write(DATA_DIR "/output/removal/badarea.png");
 
-    //const float lowValue = numeric_limits<float>::min();
-    const float lowValue = -10000000;
     FloatImage eMap;
 
     bool isHorizontal = false;
@@ -540,6 +426,7 @@ FloatImage removeObject(const FloatImage &im, const vector<tuple<int, int>> obje
         //calculate the larger difference in area and perform the vertical or horizontal removal accordingly
         continueAndOrientation= seamOrientation(badArea, i, lockRatio, onlyVert, onlyHorizontal);
         isHorizontal = continueAndOrientation[1];
+
         if (isHorizontal) {
             cout << "removing horizontal at " << i << endl;
         } else {
@@ -551,12 +438,15 @@ FloatImage removeObject(const FloatImage &im, const vector<tuple<int, int>> obje
             break;
         }
 
-        eMap = createMaskedEnergyMap(output, badArea, lowValue, isHorizontal);
+//        eMap = createMaskedEnergyMap(output, badArea, lowValue, isHorizontal);
+        eMap = createBlockedEnergyMap(output, badArea, lowValue);
 
         //junk
-        char buffer[255];
-        sprintf(buffer, DATA_DIR "/output/removal/energy/energyMap-%d.png", i);
-        eMap.write(buffer);
+        if (i % 3 == 0) {
+            char buffer[255];
+            sprintf(buffer, DATA_DIR "/output/removal/energy/energyMap-%d.png", i);
+            eMap.write(buffer);
+        }
 
         vector<int> seam;
         if (isHorizontal) {
@@ -566,32 +456,25 @@ FloatImage removeObject(const FloatImage &im, const vector<tuple<int, int>> obje
         }
 
         FloatImage med = drawSeam(output, seam, isHorizontal);
-        char buffer5[255];
-        sprintf(buffer5, DATA_DIR "/output/removal/seam-%d.png", i);
-        med.write(buffer5);
+        if (i % 3 == 0) {
+            char buffer5[255];
+            sprintf(buffer5, DATA_DIR "/output/removal/seams/seam-%d.png", i);
+            med.write(buffer5);
+        }
 
         //no junk
         output = removeSeam(output, seam, isHorizontal);
         //no junk
 
-        char buffer2[255];
-        sprintf(buffer2, DATA_DIR "/output/removal/medoutput-%d.png", i);
-        output.write(buffer2);
-
-
-        test = removeSeam(test, seam, isHorizontal);
-        char buffer6[255];
-        sprintf(buffer6, DATA_DIR "/output/removal/test-%d.png", i);
-        test.write(buffer6);
-
+        if (i % 3 == 0) {
+            char buffer2[255];
+            sprintf(buffer2, DATA_DIR "/output/removal/midOut/mid-output-%d.png", i);
+            output.write(buffer2);
+        }
 
         //no junk
         badArea = removeSeam(badArea, seam, isHorizontal);
         //no junk
-
-        char buffer3[255];
-        sprintf(buffer3, DATA_DIR "/output/removal/medoutput-%d.png", i);
-        badArea.write(buffer3);
     }
 
 

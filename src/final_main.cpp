@@ -110,9 +110,7 @@ void testCheck()
 
 void testEnlarge()
 {
-
     const FloatImage input(DATA_DIR "/input/castle-micro.png");
-
     FloatImage output = enlarge(input, 10, 0, 0);
     output.write(DATA_DIR "/output/enlarge/castle-micro.png");
 }
@@ -162,6 +160,6 @@ int main()
 //    testRemoveSeam();
 //    testFindHorizontalSeam();
 //    testFindVerticalSeam();
-    //testEnlarge();
-    testRemoveObject();
+    testEnlarge();
+    //testRemoveObject();
 }

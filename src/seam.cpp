@@ -215,7 +215,6 @@ vector<int> findHorizontalSeamImage(FloatImage im)
 }
 
 
-
 //just hardcoding vertical seams right now
 FloatImage removeSeam(const FloatImage im, vector<int> seam, bool isHorizontal)
 {
@@ -239,39 +238,29 @@ FloatImage removeSeam(const FloatImage im, vector<int> seam, bool isHorizontal)
 }
 
 
-//Adds a seam to the image
-//Averages the left and right neighbors
-FloatImage addSeam(const FloatImage &im, const vector<int> seam)
-{
-    //given
-
-
-}
 //I should be adding all the seams at once
 FloatImage enlarge(const FloatImage &im, int addWidth, int addHeight, int numSteps)
 {
-    //lets just do horizontal scaling first
-    //we need to find the number of vertical seams
-    //ive really gotta keep these lines distinct
-
 //    FloatImage output(im.width() + addWidth, im.height() + addHeight, im.depth());
     FloatImage output(im);
+
     vector<vector<int>> seams;
+
     FloatImage energyMap(im.width(), im.height(), 1);
+    FloatImage mask(im.width(), im.height(), 1);
+    //select which seams to add onto
 
     for(int i = 0; i < addWidth; i++) {
-
         //so i need to add in whatever seams and give them max values
         // so that these pixels don't get repeated in other seams
         //maybe not max values
         //but super high ones
         //only have to do this for the most resent one actually. Should do this at the end of the function
-
-        int highValue = 100000000000;
+        int highValue = 1000000;
         for (int j = 0; j < seams.size(); j++) {
             for (int y = 0; y < seams[j].size(); y++) {
                 int x = seams[j][y];
-                energyMap(x, y, 0) = highValue;
+                energyMap(x, energyMap.height() - 1 - y, 0) = highValue;
             }
         }
 
@@ -291,14 +280,16 @@ FloatImage enlarge(const FloatImage &im, int addWidth, int addHeight, int numSte
         }
 
         char buffer[255];
-        sprintf(buffer, DATA_DIR "/output/energyMaps/adding-seams-%d.png", i);
+        sprintf(buffer, DATA_DIR "/output/enlarge/energyMaps/adding-seams-%d.png", i);
         energyMap.write(buffer);
 
         //so lets find a new seam
         //optimize this later
         vector<int> seam;
-        float minValue = numeric_limits<float>::max();
         int minX;
+        float minValue = numeric_limits<float>::max();
+        //so first lets find minX;
+
         for (int x = 0; x < energyMap.width(); x++) {
             //check to make sure that this seam already isn't in the seams
             bool newSeam = true;
@@ -309,20 +300,29 @@ FloatImage enlarge(const FloatImage &im, int addWidth, int addHeight, int numSte
                         break;
                     }
                 }
-                //this breaks if we are doubling the size of the image
-                // because at some point every seam would have been added
                 if (newSeam){
                     minValue = energyMap(x, energyMap.height() - 1, 0);
                     minX = x;
                 }
+                //this breaks if we are doubling the size of the image
+                // because at some point every seam would have been added
             }
         }
-
         seam.push_back(minX);
+
         int currentX = minX;
         int nextX;
         for (int y = energyMap.height() - 2; y >= 0; y--) {
-            nextX = getMinX(energyMap, currentX, y);
+            float minEnergy = numeric_limits<float>::max();
+            for (int changeX = -1; changeX <= 1; changeX++) {
+                if (currentX + changeX >= energyMap.width() or currentX + changeX < 0) {
+                    continue;
+                }
+                if (energyMap(currentX + changeX, y, 0) < minEnergy) {
+                    nextX = currentX + changeX;
+                    minEnergy = energyMap(nextX, y, 0);
+                }
+            }
             currentX = nextX;
             seam.push_back(nextX);
         }
@@ -330,8 +330,10 @@ FloatImage enlarge(const FloatImage &im, int addWidth, int addHeight, int numSte
         seams.push_back(seam);
     }
 
+    cout << "seam information" << endl;
     cout << seams.size() << endl;
     cout << seams[1].size() << endl;
+    //draw the seams onto the output image
 
     for (int u = 0; u < seams.size(); u++) {
         for (int o = 0; o < seams[u].size(); o++) {
@@ -350,8 +352,6 @@ FloatImage enlarge(const FloatImage &im, int addWidth, int addHeight, int numSte
 
 
     return output;
-
-
 }
 
 //increase the image size by factor

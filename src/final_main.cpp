@@ -511,11 +511,11 @@ void testBeer()
 
 int main()
 {
-    testBeer();
+    //testBeer();
     //testRemoveObject();
     //testRemoveandReplaceObject();
     //testRemoveGirlfriend();
-    //testContentAmplification();
+    testContentAmplification();
     //testCastleAll();
     //testBeachAll();
     //testRemoveGirlBird();

@@ -388,7 +388,6 @@ FloatImage grow(const FloatImage &im, int addWidth, int addHeight, int numSteps)
         char buffer3[255];
         sprintf(buffer3, DATA_DIR "/output/grow/mid/mid-%d.png", i);
         drawSeam(mid, seam, false).write(buffer3);
-
         mid = addSeam(mid, seam, false);
     }
 

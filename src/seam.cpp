@@ -204,7 +204,12 @@ vector<int> findHorizontalSeamImage(FloatImage im)
 }
 
 
-//modifies the existing mask
+//Adds a seam to the mask
+// Areas where the seam is are set to 1
+//@params
+// mask: float image mask that is going to have the seam added to i
+// seam: the seam
+// isHorizontal: whether the seam is vertical or horizontal
 FloatImage addSeamToMask(FloatImage const mask, vector<int> seam, bool isHorizontal)
 {
     if (isHorizontal) {
@@ -250,6 +255,12 @@ FloatImage addSeamToMask(FloatImage const mask, vector<int> seam, bool isHorizon
     }
 }
 
+//Adds the a seam to the im
+// calculates the value of the seam by averaging its adajacent neighbors
+//@params
+// im: float image that is going to have a seam added to it
+// seam: the seam
+// isHorizontal: whether the seam is vertical or horizontal
 FloatImage addSeam(const FloatImage im, vector<int> seam, bool isHorizontal)
 {
     if (isHorizontal) {

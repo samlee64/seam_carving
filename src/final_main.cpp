@@ -329,9 +329,9 @@ void testBeachAll()
     //both surf and beach photos
 
     //content amplification
-    //const FloatImage surf(DATA_DIR "/input/surf.png");
-    //FloatImage output1 = contentAmpilification(surf, 2);
-    //output1.write(DATA_DIR "/output/full/beach/amplified-surf.png");
+    const FloatImage surf(DATA_DIR "/input/surf.png");
+    FloatImage output1 = contentAmpilification(surf, 2);
+    output1.write(DATA_DIR "/output/full/beach/amplified-surf.png");
 
     //Object removal
     const FloatImage beach(DATA_DIR "/input/beach.png");

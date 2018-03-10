@@ -3,13 +3,20 @@
 
 using namespace std;
 
+int lowestRowIndex(FloatImage energyMap);
+int lowestColumnIndex(FloatImage energyMap);
+
 vector<int> findVerticalSeamMap(FloatImage energyMap);
 vector<int> findHorizontalSeamMap(FloatImage energyMap);
 vector<int> findVerticalSeamImage(FloatImage im);
 vector<int> findHorizontalSeamImage(FloatImage im);
 
-FloatImage drawSeam(const FloatImage &im, const vector<int> seam, bool isHorizontal);
+
+FloatImage addSeamToMask(FloatImage const mask, vector<int> seam, bool isHorizontal);
+FloatImage addSeam(const FloatImage im, vector<int> seam, bool isHorizontal);
+
 FloatImage removeSeam(const FloatImage &im, vector<int> seam, bool isHorizontal);
+FloatImage drawSeam(const FloatImage &im, const vector<int> seam, bool isHorizontal);
 
 FloatImage removeObject(const FloatImage &im, const vector<tuple<int, int>> object, const vector<tuple<int, int>> protectedObject, bool lockRatio=false, bool onlyVert=false, bool onlyHorizontal=false);
 
@@ -17,3 +24,4 @@ vector<bool> seamOrientation(FloatImage badArea, int i, bool lockRatio, bool onl
 
 FloatImage grow(const FloatImage &im, int addWidth, int addHeight, int numSteps);
 FloatImage contentAmpilification(const FloatImage &im, float factor);
+

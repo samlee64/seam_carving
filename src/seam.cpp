@@ -358,6 +358,7 @@ FloatImage removeSeam(const FloatImage &im, vector<int> seam, bool isHorizontal)
 //
 FloatImage grow(const FloatImage &im, int addWidth, int addHeight, int numSteps)
 {
+    if (numSteps < 1 ) {throw runtime_error("Min number of steps is 1");}
     cout << "Growing" << endl;
     FloatImage mid(im);
 
@@ -379,9 +380,15 @@ FloatImage grow(const FloatImage &im, int addWidth, int addHeight, int numSteps)
         sprintf(buffer2, DATA_DIR "/output/grow/masks/mask-%d.png", i);
         mask.write(buffer2);
 
+
         vector<int> seam = findVerticalSeamMap(eMap);
 
         mask = addSeamToMask(mask, seam, false); //vertical
+
+        char buffer3[255];
+        sprintf(buffer3, DATA_DIR "/output/grow/mid/mid-%d.png", i);
+        drawSeam(mid, seam, false).write(buffer3);
+
         mid = addSeam(mid, seam, false);
     }
 
@@ -406,8 +413,6 @@ FloatImage grow(const FloatImage &im, int addWidth, int addHeight, int numSteps)
         mask = addSeamToMask(mask, seam, true);
         mid = addSeam(mid, seam, true);
     }
-
-
 
     return mid;
 }
@@ -528,12 +533,7 @@ FloatImage removeObject(const FloatImage &im, const vector<tuple<int, int>> dest
         if (i % 3 == 0) {
             char buffer[255];
             sprintf(buffer, DATA_DIR "/output/removal/energy/energyMap-%d.png", i);
-            FloatImage normalized(eMap);
-            float maxValue = normalized.max();
-            cout << maxValue << endl;
-            normalized = normalized/maxValue;
-            normalized.write(buffer);
-
+            eMap.write(buffer);
         }
 
         vector<int> seam;

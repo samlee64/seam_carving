@@ -39,6 +39,8 @@ Potential issues with your solution and explanation of partial completion (for p
 A very specific structure is needed for the output files. I write out a lot of the energyMaps and such.
 There is a lot of intuition that is required when configuring the parameters for the different functions.
 
+The HTML/JS app outputs the best objects when you drag from left to right.
+
 Collaboration acknowledgment (you must write your own code)
 None. I just used the resources that were listed in my project proposal.
 

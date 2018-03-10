@@ -7,22 +7,8 @@
 
 using namespace std;
 
-void createTestImage()
-{
-    FloatImage test(100, 68, 1);
-    for (int x = 0; x <test.width(); x++) {
-        for (int y = 0; y < test.height(); y++) {
-            test(x, y, 0) = 1;
-        }
-    }
-    for (int x = 0; x <test.width(); x+= 10) {
-        for (int y = 0; y < test.height(); y++) {
-            test(x, y, 0) = 0;
-        }
-    }
-    test.write(DATA_DIR "/input/test4.png");
-}
 
+//writes out energy maps
 void testEnergy()
 {
     const FloatImage input(DATA_DIR "/input/test2.png");
@@ -38,13 +24,8 @@ void testEnergy()
     output3.write(DATA_DIR "/output/surf-dualgradient.png");
 }
 
-void testEnergyMap()
-{
-    const FloatImage input2(DATA_DIR "/input/surf.png");
-    FloatImage output2 = energyMap(input2);
-    output2.write(DATA_DIR "/output/surf-energyMap.png");
-}
 
+//finds a single horizontal seam
 void testFindHorizontalSeam()
 {
     const FloatImage input(DATA_DIR "/input/surf.png");
@@ -53,6 +34,7 @@ void testFindHorizontalSeam()
     output.write(DATA_DIR "/output/surf-horizontal.png");
 }
 
+//finds a single vertical seam
 void testFindVerticalSeam()
 {
     const FloatImage input(DATA_DIR "/input/surf.png");
@@ -61,19 +43,10 @@ void testFindVerticalSeam()
     output.write(DATA_DIR "/output/surf-vertical.png");
 }
 
-void testFindSeam()
-{
-    const FloatImage input(DATA_DIR "/input/surf.png");
-    FloatImage eMap = energyMap(input);
-    eMap.write(DATA_DIR "/output/surf-energyMap.png");
-    const vector<int> seam = findVerticalSeamMap(eMap);
-    FloatImage output = drawSeam(eMap, seam, false);
-    output.write(DATA_DIR "/output/surf-energyMap-seam.png");
-}
-
+//removes 50 vertical seams from an image
 void testRemoveSeam()
 {
-    const FloatImage input(DATA_DIR "/input/castle-small.png");
+    const FloatImage input(DATA_DIR "/input/castle-medium.png");
     FloatImage mid(input);
 
     for (int i = 0; i < 50; i++) {
@@ -81,19 +54,21 @@ void testRemoveSeam()
         const vector<int> seam = findVerticalSeamMap(eMap);
         mid = removeSeam(mid, seam, false);
     }
-    mid.write(DATA_DIR "/output/removed-castle-small.png");
+    mid.write(DATA_DIR "/output/removed-castle-medium.png");
 }
 
+//Inserts seams into an image
 void testGrow()
 {
     const FloatImage input(DATA_DIR "/input/castle-large.png");
     cout << input.width() << " " << input.height() << endl;
-    FloatImage output = grow(input, 60, 0, 2);
+    FloatImage output = grow(input, 60, 0, 2); //60 vertical seams, 0 horizontal, in two steps
     cout << input.width() << " " << input.height() << endl;
     cout << output.width() << " " << output.height() << endl;
     output.write(DATA_DIR "/output/grow/castle-large-60-0-2.png");
 }
 
+//Removes an object
 void testRemoveObject()
 {
     //vert only
@@ -101,56 +76,15 @@ void testRemoveObject()
     vector<tuple<int, int>> destroyObject = {};
     vector<tuple<int, int>> protectedObject= {};
 
-    FloatImage output = removeObject(input, destroyObject, protectedObject, false, true, false);
+    //Insert items from JS app here//
+
+    FloatImage output = removeObject(input, destroyObject, protectedObject, false, true, false); //no aspect ratio lock, vert seams only, no horizontal seams
     cout << input.width() << " " << input.height() << endl;
     cout << output.width() << " " << output.height() << endl;
-    output.write(DATA_DIR "/output/removal/test-castle-removal-minlow.png");
+    output.write(DATA_DIR "/output/removal/castle-removal.png");
 }
 
-
-void testRemoveandReplaceObject()
-{
-    const FloatImage input(DATA_DIR "/input/beach.png");
-    vector<tuple<int, int>> destroyObject = {};
-    vector<tuple<int, int>> protectedObject= {};
-
-    for(int x=298; x<308; x++) {for (int y=203; y <228; y++) {destroyObject.push_back(make_tuple(x, y));}}
-    for(int x=308; x<316; x++) {for (int y=213; y <229; y++) {destroyObject.push_back(make_tuple(x, y));}}
-    for(int x=315; x<325; x++) {for (int y=219; y <229; y++) {destroyObject.push_back(make_tuple(x, y));}}
-    for(int x=299; x<324; x++) {for (int y=228; y <235; y++) {destroyObject.push_back(make_tuple(x, y));}}
-    for(int x=325; x<332; x++) {for (int y=223; y <232; y++) {destroyObject.push_back(make_tuple(x, y));}}
-    for(int x=323; x<335; x++) {for (int y=226; y <235; y++) {destroyObject.push_back(make_tuple(x, y));}}
-    for(int x=306; x<315; x++) {for (int y=235; y <238; y++) {destroyObject.push_back(make_tuple(x, y));}}
-    for(int x=335; x<345; x++) {for (int y=227; y <234; y++) {destroyObject.push_back(make_tuple(x, y));}}
-    for(int x=295; x<302; x++) {for (int y=211; y <222; y++) {destroyObject.push_back(make_tuple(x, y));}}
-    for(int x=299; x<307; x++) {for (int y=201; y <205; y++) {destroyObject.push_back(make_tuple(x, y));}}
-    for(int x=308; x<312; x++) {for (int y=209; y <215; y++) {destroyObject.push_back(make_tuple(x, y));}}
-    for(int x=315; x<319; x++) {for (int y=217; y <220; y++) {destroyObject.push_back(make_tuple(x, y));}}
-    for(int x=333; x<340; x++) {for (int y=224; y <230; y++) {destroyObject.push_back(make_tuple(x, y));}}
-    for(int x=344; x<352; x++) {for (int y=231; y <235; y++) {destroyObject.push_back(make_tuple(x, y));}}
-    for(int x=343; x<349; x++) {for (int y=227; y <232; y++) {destroyObject.push_back(make_tuple(x, y));}}
-    for(int x=304; x<306; x++) {for (int y=236; y <241; y++) {destroyObject.push_back(make_tuple(x, y));}}
-    for(int x=308; x<301; x++) {for (int y=240; y <243; y++) {destroyObject.push_back(make_tuple(x, y));}}
-    for(int x=295; x<302; x++) {for (int y=245; y <245; y++) {destroyObject.push_back(make_tuple(x, y));}}
-    for(int x=314; x<325; x++) {for (int y=234; y <239; y++) {destroyObject.push_back(make_tuple(x, y));}}
-    for(int x=322; x<327; x++) {for (int y=239; y <244; y++) {destroyObject.push_back(make_tuple(x, y));}}
-    for(int x=312; x<332; x++) {for (int y=215; y <226; y++) {destroyObject.push_back(make_tuple(x, y));}}
-    FloatImage output = removeObject(input, destroyObject, protectedObject, false, false, false);
-    cout << input.width() << " " << input.height() << endl;
-    cout << output.width() << " " << output.height() << endl;
-
-    output.write(DATA_DIR "/output/removalAndReplace/removal-auto-pigeon-beach.png");
-
-    int widthDiff = input.width() - output.width();
-    int heightDiff = input.height() - output.height();
-
-    output = grow(output, widthDiff, heightDiff, 2);
-    output.write(DATA_DIR "/output/removalAndReplace/replace-pigeon-beach.png");
-
-
-}
-
-
+//Removes girlfriend from photo and inserts seams to restore regular photo size
 void testRemoveGirlfriend()
 {
     const FloatImage input(DATA_DIR "/input/couple.png");
@@ -261,10 +195,9 @@ void testRemoveGirlfriend()
     cout << "Done" << endl;
 
 }
-void testRemoveArtifacts()
-{
 
-}
+//Doubles the size of the important content in the photo
+//Takes a while to run
 void testContentAmplification()
 {
     const FloatImage input(DATA_DIR "/input/surf.png");
@@ -273,6 +206,7 @@ void testContentAmplification()
     output.write(DATA_DIR "/output/amplification/surf-2.png");
 }
 
+//Runs a large number of functions on the castle-medium.png image
 void testCastleAll()
 {
 //    //test energy functions
@@ -373,6 +307,7 @@ void testCastleAll()
 
 }
 
+//Runs a large number of functions on the surf.png and beach.png images
 void testBeachAll()
 {
     //both surf and beach photos
@@ -437,6 +372,7 @@ void testBeachAll()
     output2.write(DATA_DIR "/output/full/beach/replace-girl-beach.png");
 }
 
+//Removes the bird from the beach.png using vertical seams and then restores the image size
 void testRemoveBird()
 {
     const FloatImage beach(DATA_DIR "/input/beach.png");
@@ -468,14 +404,7 @@ void testRemoveBird()
     output2.write(DATA_DIR "/output/full/beach/replace-bird-beach.png");
 }
 
-void testDolphinStretch()
-{
-
-
-
-
-
-}
+//Removes the girl and the bird from the beach.png using vertical seams and then restores the image size
 void testRemoveGirlBird()
 {
 
@@ -548,11 +477,41 @@ void testRemoveGirlBird()
 
 }
 
+//Removes a beer can from the beer.png using both horizontal and vertical seams
+void testBeer()
+{
+    const FloatImage input(DATA_DIR "/input/beer.png");
+    vector<tuple<int, int>> destroyObject = {};
+    vector<tuple<int, int>> protectedObject= {};
+
+
+    for(int x=191; x<237; x++) {for (int y=285; y <383; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=193; x<227; x++) {for (int y=379; y <393; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=263; x<308; x++) {for (int y=286; y <397; y++) {protectedObject.push_back(make_tuple(x, y));}}
+    for(int x=87; x<152; x++) {for (int y=326; y <392; y++) {protectedObject.push_back(make_tuple(x, y));}}
+    for(int x=70; x<90; x++) {for (int y=339; y <373; y++) {protectedObject.push_back(make_tuple(x, y));}}
+    for(int x=71; x<90; x++) {for (int y=369; y <379; y++) {protectedObject.push_back(make_tuple(x, y));}}
+    for(int x=78; x<90; x++) {for (int y=376; y <384; y++) {protectedObject.push_back(make_tuple(x, y));}}
+    for(int x=88; x<148; x++) {for (int y=385; y <396; y++) {protectedObject.push_back(make_tuple(x, y));}}
+    for(int x=90; x<143; x++) {for (int y=395; y <399; y++) {protectedObject.push_back(make_tuple(x, y));}}
+    for(int x=147; x<157; x++) {for (int y=321; y <329; y++) {protectedObject.push_back(make_tuple(x, y));}}
+    for(int x=155; x<163; x++) {for (int y=314; y <323; y++) {protectedObject.push_back(make_tuple(x, y));}}
+    for(int x=155; x<167; x++) {for (int y=312; y <316; y++) {protectedObject.push_back(make_tuple(x, y));}}
+    for(int x=161; x<170; x++) {for (int y=308; y <313; y++) {protectedObject.push_back(make_tuple(x, y));}}
+    for(int x=167; x<174; x++) {for (int y=304; y <307; y++) {protectedObject.push_back(make_tuple(x, y));}}
+    for(int x=166; x<176; x++) {for (int y=298; y <309; y++) {protectedObject.push_back(make_tuple(x, y));}}
+    for(int x=171; x<179; x++) {for (int y=296; y <301; y++) {protectedObject.push_back(make_tuple(x, y));}}
+
+    FloatImage output = removeObject(input, destroyObject, protectedObject, false, false, false);
+    cout << input.width() << " " << input.height() << endl;
+    cout << output.width() << " " << output.height() << endl;
+    output.write(DATA_DIR "/output/removal/beer.png");
+}
 
 
 int main()
 {
-    testGrow();
+    testBeer();
     //testRemoveObject();
     //testRemoveandReplaceObject();
     //testRemoveGirlfriend();

@@ -428,37 +428,24 @@ FloatImage contentAmpilification(const FloatImage &im, float factor)
         return im;
     }
 
-    //1.5 ratio
-    // widht is bigger than height
-    //this means that I have to take out more vertical lines than horizontal
-    // in order to reduce the width
-    // for every 1 horizontal line, i need to take out 1.5 verticals
-    // h, v, h, v, v;
-
     FloatImage scaledImageNN = scaleNN(im, factor);
     FloatImage scaledImageLin = scaleLin(im, factor);
-    cout << factor << endl;
-    cout << im.width() << " " << im.height() << endl;
-    cout << scaledImageLin.width() << " " << scaledImageLin.height() << endl;
 
     int reduceWidth = scaledImageLin.width() - im.width();
     int reduceHeight = scaledImageLin.height() - im.height();
-    cout << reduceWidth << " " << reduceHeight << endl;
 
     scaledImageLin.write(DATA_DIR "/output/amplification/scaledImage.png");
-    bool isHorizontal = false;
-    for (int i = 0; i < reduceWidth; i++) {
-        cout << "reducing width " <<  i << endl;
 
-        isHorizontal = (i % 2 == 0);
-        isHorizontal = false;
+    for (int i = 0; i < reduceWidth; i++) {
+        cout << "Reducing width " <<  i << endl;
+        bool isHorizontal = false;
         vector<int> seam = isHorizontal ? findHorizontalSeamImage(scaledImageLin) : findVerticalSeamImage(scaledImageLin);
         scaledImageLin = removeSeam(scaledImageLin, seam, isHorizontal);
         scaledImageLin.write(DATA_DIR "/output/amplification/sca.png");
     }
     for (int i = 0; i < reduceHeight; i++ ) {
-        cout << "reducing height " <<  i << endl;
-        isHorizontal = true;
+        cout << "Reducing height " <<  i << endl;
+        bool isHorizontal = true;
         vector<int> seam = isHorizontal ? findHorizontalSeamImage(scaledImageLin) : findVerticalSeamImage(scaledImageLin);
         scaledImageLin = removeSeam(scaledImageLin, seam, isHorizontal);
     }
@@ -620,6 +607,8 @@ vector<bool> seamOrientation(FloatImage badArea, int i, bool lockRatio, bool onl
     }
 }
 
+
+//Draws a red seam on the image
 FloatImage drawSeam(const FloatImage &im, const vector<int> seam, bool isHorizontal)
 {
     FloatImage output(im);

@@ -524,10 +524,44 @@ void testBeer()
     output.write(DATA_DIR "/output/removal/beer.png");
 }
 
+//Expands the dolphin by 50% in 1 and 2 step growths
+void testDolphin()
+{
+    const FloatImage input(DATA_DIR "/input/dolphin.png");
+
+    FloatImage output1 = grow(input, input.width()/2, 0, 2); //50% expansion vert, 0 horizontal, in 2 steps
+    cout << input.width() << " " << input.height() << endl;
+    cout << output1.width() << " " << output1.height() << endl;
+    output1.write(DATA_DIR "/output/grow/dolphin-120-0-2.png");
+}
+
+void testEdo()
+{
+    const FloatImage input(DATA_DIR "/input/edo.png");
+
+    FloatImage output = grow(input, input.width()/2, 0, 2); //50% expansion vert, 0 horizontal, in 1 steps
+    cout << input.width() << " " << input.height() << endl;
+    cout << output.width() << " " << output.height() << endl;
+    output.write(DATA_DIR "/output/grow/edo-96-0-2.png");
+}
+
+void testFuji()
+{
+    const FloatImage input(DATA_DIR "/input/fuji.png");
+
+    FloatImage output = grow(input, input.width()/2, 0, 1); //50% expansion vert, 0 horizontal, in 1 steps
+    cout << input.width() << " " << input.height() << endl;
+    cout << output.width() << " " << output.height() << endl;
+    output.write(DATA_DIR "/output/grow/fuji-98-0-1.png");
+
+}
 
 int main()
 {
-    testRemoveSeam();
+    //testDolphin();
+    //testEdo();
+    //testFuji();
+    //testRemoveSeam();
     //testGrow();
     //testBeer();
     //testRemoveObject();

@@ -138,30 +138,60 @@ FloatImage createEnergyMap(FloatImage im)
 }
 
 //need to create horizontal for thisj
-//this creates an energy map and zeros anything that is within a sepecific block
-FloatImage createBlockedEnergyMap(FloatImage im, FloatImage block, int value)
-{
-    FloatImage energyMap = dualGradientEnergy(im);
-    for (int y = 1; y < im.height(); y++) {
-        for (int x = 0; x < im.width(); x++) {
-            float lowestEnergy = 10000000; //do i need to change this to be max value?
-            for (int change = -1; change <= 1; change++) {
-                if (x + change >= im.width() or x + change < 0) {
-                    continue;
-                }
-                lowestEnergy = min(energyMap(x + change, y - 1, 0), lowestEnergy);
-            }
+//this creates an energy map and throws value param into anyplace where the block param has a 1
+//@params
+// im: float image
+// block: float image. Has 1s wherever value should be placed on energyMap. Has -1s wherever -value should be placed on energyMap
+// value: value to place into the blocked out areas
+// isHorizontal: true -> sum left to right
+//              false -> sum top to bottom
 
-            if (block(x, y , 0) == 1) {
-                //energyMap(x, y, 0) = energyMap(x, y, 0)+ lowestEnergy - 100000000000 + value;
-                energyMap(x, y, 0) = 0;
-            } else {
-                energyMap(x, y, 0) = energyMap(x, y, 0)+ lowestEnergy;
+
+FloatImage createBlockedEnergyMap(FloatImage im, FloatImage block, int value, bool isHorizontal)
+{
+    if (im.sizeX() != block.sizeX() || im.sizeY() != block.sizeY()) throw runtime_error("Image and block are different dimensions");
+    FloatImage energyMap = dualGradientEnergy(im);
+    if (isHorizontal) {
+        for (int x = 1; x < im.width(); x++) {
+            for (int y = 0; y < im.height(); y++) {
+                float lowestEnergy = 1000;
+                for (int change = -1; change <= 1; change++) {
+                    if (y + change >= im.height() or y + change < 0) {continue;}
+                    lowestEnergy = min(energyMap(x - 1, y + change,0), lowestEnergy);
+                }
+
+                if (block(x, y , 0) == 1) {
+                    energyMap(x, y, 0) = value;
+                } else if (block(x, y, 0) == -1 ){
+                    energyMap(x, y, 0) = -value;
+                } else {
+                    energyMap(x, y, 0) = energyMap(x, y, 0) + lowestEnergy;
+                }
             }
         }
+        return energyMap;
+    } else {
+        for (int y = 1; y < im.height(); y++) {
+            for (int x = 0; x < im.width(); x++) {
+                float lowestEnergy = 1000; //do i need to change this to be max value?
+                for (int change = -1; change <= 1; change++) {
+                    if (x + change >= im.width() or x + change < 0) {continue;}
+                    lowestEnergy = min(energyMap(x + change, y - 1, 0), lowestEnergy);
+                }
+
+                if (block(x, y , 0) == 1) {
+                    energyMap(x, y, 0) = value;
+                } else if (block(x, y, 0) == -1 ){
+                    energyMap(x, y, 0) = -value;
+                } else {
+                    energyMap(x, y, 0) = energyMap(x, y, 0)+ lowestEnergy;
+                }
+            }
+        }
+        return energyMap;
     }
-    return energyMap;
 }
+
 FloatImage energyMap(FloatImage im)
 {
     FloatImage energyMap = dualGradientEnergy(im);

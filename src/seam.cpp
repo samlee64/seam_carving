@@ -353,6 +353,7 @@ FloatImage removeSeam(const FloatImage im, vector<int> seam, bool isHorizontal)
 // will always pick the same seam
 FloatImage grow(const FloatImage &im, int addWidth, int addHeight, int numSteps)
 {
+    cout << "Growing" << endl;
     FloatImage mid(im);
 
     FloatImage mask(im.width(), im.height(), 1);
@@ -468,21 +469,23 @@ FloatImage contentAmpilification(const FloatImage &im, float factor)
 // onlyHorizontal: true -> will only remove horizontal seems. Overriden by lockRatio and onlyVert
 FloatImage removeObject(const FloatImage &im, const vector<tuple<int, int>> destroyObject, const vector<tuple<int, int>> protectedObject, bool lockRatio, bool onlyVert, bool onlyHorizontal)
 {
-    //alright now lets see if we can alternate between vertical and horizontal rips
-    const int MAXTRIES = min(im.width(), im.height());
+    const int MAXTRIES = min(im.width(), im.height()); //Stop before removing more than 50% of the photo
+    const float lowValue = -1;
+
     FloatImage output(im);
-    const float lowValue = -1000000000000;
-    //the trouble i was having was getting a properly low enough value
-//    const float lowValue = numeric_limits<float>::min();
-    FloatImage badArea(im.width(), im.height(), 1); //values are inited to 0
-    FloatImage copy(im);
-    //in order to protect an area i need to make sure that its values are super high so that no seams want to go through it
+
+    FloatImage badArea(im.width(), im.height(), 1); //area to destroy/protect
+    FloatImage copy(im); //copy of the image to
+
+    //Set protected areas to -1
     for (int i = 0; i < protectedObject.size(); i++) {
         int x = get<0>(protectedObject[i]);
         int y = get<1>(protectedObject[i]);
+        badArea(x, y, 0) = -1;
         copy(x, y, 1) = 1;
     }
 
+    //Set destroy areas to 1
     for (int i = 0; i < destroyObject.size(); i++) {
         int x = get<0>(destroyObject[i]);
         int y = get<1>(destroyObject[i]);
@@ -494,32 +497,27 @@ FloatImage removeObject(const FloatImage &im, const vector<tuple<int, int>> dest
 
     FloatImage eMap;
 
-    bool isHorizontal = false;
-
     //index 0 holds bool for stopping, index 1 holds bool for orientation
     vector<bool> continueAndOrientation = {};
-    //remove the seam from the photo and the energyMap
-    //I think that this also means that I need to recaluclate the energy map
-    //so I should technically just do this until there is no more bad area
 
     for (int i = 0; i < MAXTRIES; i++) {
         //calculate the larger difference in area and perform the vertical or horizontal removal accordingly
         continueAndOrientation= seamOrientation(badArea, i, lockRatio, onlyVert, onlyHorizontal);
-        isHorizontal = continueAndOrientation[1];
+        bool isHorizontal = continueAndOrientation[1];
 
         if (isHorizontal) {
-            cout << "removing horizontal at " << i << endl;
+            cout << "Removing horizontal: " << i << endl;
         } else {
-            cout << "removing vertical at " << i << endl;
+            cout << "Removing vertical: " << i << endl;
         }
 
         if (not continueAndOrientation[0]) {
-            cout << "done removing bad area after " << i << " iterations" << endl;
+            cout << "Done removing bad area after " << i << " iterations" << endl;
             break;
         }
 
-//        eMap = createMaskedEnergyMap(output, badArea, lowValue, isHorizontal);
-        eMap = createBlockedEnergyMap(output, badArea, lowValue);
+        //create the EnergyMap
+        eMap = createBlockedEnergyMap(output, badArea, lowValue, isHorizontal);
 
         //junk
         if (i % 3 == 0) {
@@ -560,6 +558,7 @@ FloatImage removeObject(const FloatImage &im, const vector<tuple<int, int>> dest
     return output;
 }
 
+
 //Returns true, true if a horizontal seam should be removed
 // returns true, false if a vertical seam should be removed
 // returns false, * if no seam should be removed
@@ -583,8 +582,8 @@ vector<bool> seamOrientation(FloatImage badArea, int i, bool lockRatio, bool onl
 
     for (int y = 0; y < badArea.height(); y++ ) {
         for (int x = 0; x < badArea.width(); x++) {
-            checkSum += badArea(x, y, 0);
             if (badArea(x, y, 0) == 1) {
+                checkSum += badArea(x, y, 0);
                 minX = min(minX, x);
                 maxX = max(maxX, x);
                 minY = min(minY, y);
@@ -592,7 +591,8 @@ vector<bool> seamOrientation(FloatImage badArea, int i, bool lockRatio, bool onl
             }
         }
     }
-    if (checkSum == 0) {
+
+    if (checkSum <= 0) {
         return {false, false};
     } else if (lockRatio) {
         if (i % 2 == 1) {

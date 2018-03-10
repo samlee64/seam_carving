@@ -154,19 +154,43 @@ void testRemoveObject()
 
 void testRemoveandReplaceObject()
 {
-    const FloatImage input(DATA_DIR "/input/castle-small.png");
+    const FloatImage input(DATA_DIR "/input/beach.png");
     //const FloatImage input(DATA_DIR "/input/beach.png");
     vector<tuple<int, int>> destroyObject = {};
     vector<tuple<int, int>> protectedObject= {};
 
-    for(int x=78; x<175; x++) {for (int y=35; y <178; y++) {protectedObject.push_back(make_tuple(x, y));}}
-    for(int x=184; x<287; x++) {for (int y=14; y <184; y++) {destroyObject.push_back(make_tuple(x, y));}}
-    FloatImage output = removeObject(input, destroyObject, protectedObject, false, true, false);
+    for(int x=298; x<308; x++) {for (int y=203; y <228; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=308; x<316; x++) {for (int y=213; y <229; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=315; x<325; x++) {for (int y=219; y <229; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=299; x<324; x++) {for (int y=228; y <235; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=325; x<332; x++) {for (int y=223; y <232; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=323; x<335; x++) {for (int y=226; y <235; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=306; x<315; x++) {for (int y=235; y <238; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=335; x<345; x++) {for (int y=227; y <234; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=295; x<302; x++) {for (int y=211; y <222; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=299; x<307; x++) {for (int y=201; y <205; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=308; x<312; x++) {for (int y=209; y <215; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=315; x<319; x++) {for (int y=217; y <220; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=333; x<340; x++) {for (int y=224; y <230; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=344; x<352; x++) {for (int y=231; y <235; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=343; x<349; x++) {for (int y=227; y <232; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=304; x<306; x++) {for (int y=236; y <241; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=308; x<301; x++) {for (int y=240; y <243; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=295; x<302; x++) {for (int y=245; y <245; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=314; x<325; x++) {for (int y=234; y <239; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=322; x<327; x++) {for (int y=239; y <244; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=312; x<332; x++) {for (int y=215; y <226; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    FloatImage output = removeObject(input, destroyObject, protectedObject, false, false, false);
     cout << input.width() << " " << input.height() << endl;
     cout << output.width() << " " << output.height() << endl;
 
+    output.write(DATA_DIR "/output/removalAndReplace/removal-auto-pigeon-beach.png");
 
-    output.write(DATA_DIR "/output/removalAndReplace/removal-beach.png");
+    int widthDiff = input.width() - output.width();
+    int heightDiff = input.height() - output.height();
+
+    output = grow(output, widthDiff, heightDiff, 2);
+    output.write(DATA_DIR "/output/removalAndReplace/replace-pigeon-beach.png");
 
 
 }
@@ -176,6 +200,13 @@ void testContentAmplification()
     cout << input.width() << " " << input.height() << endl;
     FloatImage output = contentAmpilification(input, 1.3);
     output.write(DATA_DIR "/output/amplification/surf-2.png");
+
+}
+
+void testAll()
+{
+
+
 
 }
 

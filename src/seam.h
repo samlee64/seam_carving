@@ -4,6 +4,7 @@
 using namespace std;
 
 vector<int> findVerticalSeamMap(FloatImage energyMap);
+vector<int> findHorizontalSeamMap(FloatImage energyMap);
 vector<int> findVerticalSeamImage(FloatImage im);
 vector<int> findHorizontalSeamImage(FloatImage im);
 

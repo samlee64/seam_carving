@@ -46,26 +46,42 @@ void testFindVerticalSeam()
 //removes 50 vertical seams from an image
 void testRemoveSeam()
 {
-    const FloatImage input(DATA_DIR "/input/castle-medium.png");
+//    const FloatImage input(DATA_DIR "/input/castle-medium.png");
+    const FloatImage input(DATA_DIR "/input/surf.png");
     FloatImage mid(input);
 
-    for (int i = 0; i < 50; i++) {
-        FloatImage eMap = energyMap(mid);
+    for (int i = 0; i < 250; i++) {
+        FloatImage eMap = energyMap(mid, false);
         const vector<int> seam = findVerticalSeamMap(eMap);
         mid = removeSeam(mid, seam, false);
     }
-    mid.write(DATA_DIR "/output/removed-castle-medium.png");
+    mid.write(DATA_DIR "/output/removed-vert-surf.png");
+
+    for (int i = 0; i < (285/2); i++) {
+        FloatImage eMap = energyMap(mid, true);
+        char buffer[255];
+        sprintf(buffer, DATA_DIR "/output/%d.png", i);
+        eMap.write(buffer);
+
+        const vector<int> seam = findHorizontalSeamMap(eMap);
+        mid = removeSeam(mid, seam, true);
+    }
+
+    cout << input.width() << " " << input.height() << endl;
+    cout << mid.width() <<  " " << mid.height() << endl;
+    mid.write(DATA_DIR "/output/removed-surf.png");
+//    mid.write(DATA_DIR "/output/removed-castle-medium.png");
 }
 
 //Inserts seams into an image
 void testGrow()
 {
-    const FloatImage input(DATA_DIR "/input/castle-large.png");
+    const FloatImage input(DATA_DIR "/input/castle-medium.png");
     cout << input.width() << " " << input.height() << endl;
-    FloatImage output = grow(input, 60, 0, 2); //60 vertical seams, 0 horizontal, in two steps
+    FloatImage output = grow(input, 400, 0, 4); //100 vertical seams, 0 horizontal, in 4 steps
     cout << input.width() << " " << input.height() << endl;
     cout << output.width() << " " << output.height() << endl;
-    output.write(DATA_DIR "/output/grow/castle-large-60-0-2.png");
+    output.write(DATA_DIR "/output/grow/castle-medium-400-0-4.png");
 }
 
 //Removes an object
@@ -229,7 +245,7 @@ void testCastleAll()
     //Remove some vertical seams
     FloatImage mid(input);
     for (int i = 0; i < 50; i++) {
-        FloatImage eMap = energyMap(mid);
+        FloatImage eMap = energyMap(mid, false);
         const vector<int> seam = findVerticalSeamMap(eMap);
 
         char buffer[255];
@@ -511,11 +527,13 @@ void testBeer()
 
 int main()
 {
+    testRemoveSeam();
+    //testGrow();
     //testBeer();
     //testRemoveObject();
     //testRemoveandReplaceObject();
     //testRemoveGirlfriend();
-    testContentAmplification();
+    //testContentAmplification();
     //testCastleAll();
     //testBeachAll();
     //testRemoveGirlBird();

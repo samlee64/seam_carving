@@ -191,22 +191,41 @@ FloatImage createBlockedEnergyMap(FloatImage im, FloatImage block, int value, bo
 //Calcualtes a basic cumulative energyMap using dualGradientEnergy
 //@params
 // im: image to calcuate energy
-FloatImage energyMap(FloatImage im)
+FloatImage energyMap(FloatImage im, bool isHorizontal)
 {
-    FloatImage energyMap = dualGradientEnergy(im);
-    for(int y = 1; y < im.height(); y++) {
-        for (int x = 0; x < im.width(); x++) {
-            //for every pixel at this height, i go 1 up, 1 down
-            float lowestEnergy = 10000000; //do i need to change this to be max value?
-            for (int change = -1; change <= 1; change++) {
-                if (x + change >= im.width() or x + change < 0) {
-                    continue;
+    if (isHorizontal) {
+        FloatImage energyMap = dualGradientEnergy(im);
+        for (int x = 1; x <im.width(); x++) {
+            for (int y = 0; y < im.height(); y++) {
+
+                float lowestEnergy = 10000000; //do i need to change this to be max value?
+                for (int change = -1; change <= 1; change++) {
+                    if (y + change >= im.height() or y + change < 0) {
+                        continue;
+                    }
+                    lowestEnergy = min(energyMap(x -1, y + change , 0), lowestEnergy);
                 }
-                lowestEnergy = min(energyMap(x + change, y - 1, 0), lowestEnergy);
+                energyMap(x, y, 0) = energyMap(x, y, 0) + lowestEnergy;
             }
-            energyMap(x, y, 0) = energyMap(x, y, 0) + lowestEnergy;
         }
+        return energyMap;
+
+    } else {
+        FloatImage energyMap = dualGradientEnergy(im);
+        for(int y = 1; y < im.height(); y++) {
+            for (int x = 0; x < im.width(); x++) {
+                //for every pixel at this height, i go 1 up, 1 down
+                float lowestEnergy = 10000000; //do i need to change this to be max value?
+                for (int change = -1; change <= 1; change++) {
+                    if (x + change >= im.width() or x + change < 0) {
+                        continue;
+                    }
+                    lowestEnergy = min(energyMap(x + change, y - 1, 0), lowestEnergy);
+                }
+                energyMap(x, y, 0) = energyMap(x, y, 0) + lowestEnergy;
+            }
+        }
+        return energyMap;
     }
-    return energyMap;
 }
 

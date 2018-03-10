@@ -15,7 +15,7 @@ vector<int> findHorizontalSeamImage(FloatImage im);
 float energy(FloatImage im, int x, int y);
 
 FloatImage drawSeam(const FloatImage &im, const vector<int> seam, bool isHorizontal);
-FloatImage removeSeam(const FloatImage im, vector<int> seam, bool isHorizontal);
+FloatImage removeSeam(const FloatImage &im, vector<int> seam, bool isHorizontal);
 
 FloatImage removeObject(const FloatImage &im, const vector<tuple<int, int>> object, const vector<tuple<int, int>> protectedObject, bool lockRatio=false, bool onlyVert=false, bool onlyHorizontal=false);
 

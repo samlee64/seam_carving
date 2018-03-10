@@ -4,6 +4,11 @@
 #include <math.h>
 #include "energy.h"
 
+//This function uses a sobel filter to calculate gradients
+// returns a non cumulative energyMap
+//@params
+// im: image to calculate the energy of
+// clamp: smartAccessor clamp
 FloatImage gradientEnergy(const FloatImage &im, bool clamp)
 {
     // sobel filtering in x direction
@@ -49,6 +54,12 @@ FloatImage gradientEnergy(const FloatImage &im, bool clamp)
     //return output;
 }
 
+//Calculates the gradient energy at a position x, y in image im
+// uses only immediate neighbors unlike the Sobel filter
+//@params:
+// im: image to calculate the energy of
+// x, y: position
+// clamp: smartAccessor clamp
 float dualGradientEnergy(const FloatImage &im, int x, int y, bool clamp)
 {
     float changeX = 0.0f;
@@ -63,6 +74,11 @@ float dualGradientEnergy(const FloatImage &im, int x, int y, bool clamp)
     return changeX + changeY;
 }
 
+//Calcualtes the gradient energy of all the pixels in image im
+// returns a non cumulative energymap
+//@params:
+// im: image to calculate the energy of
+// clamp: smartAcessor clamp
 FloatImage dualGradientEnergy(const FloatImage &im, bool clamp) {
     FloatImage energyMap(im.width(), im.height(), 1);
     for (int y = 0; y < im.height(); y++) {
@@ -73,7 +89,7 @@ FloatImage dualGradientEnergy(const FloatImage &im, bool clamp) {
     return energyMap;
 }
 
-// This funciton adds the mask to the im when calculating the non cumlative energy for each pixel
+// This function adds the mask to the im when calculating the non cumlative energy for each pixel
 // this increases the gradient across the seam, reducing the chances that another seam comes across it.
 //@params
 // im: image to whose energy should be calculated
@@ -118,35 +134,15 @@ FloatImage createMaskedEnergyMap(FloatImage im, FloatImage mask, float value, bo
     }
 }
 
-FloatImage createEnergyMap(FloatImage im)
-{
-    FloatImage energyMap = dualGradientEnergy(im);
-    for(int y = 1; y < im.height(); y++) {
-        for (int x = 0; x < im.width(); x++) {
-            //for every pixel at this height, i go 1 up, 1 down
-            float lowestEnergy = 10000000; //do i need to change this to be max value?
-            for (int change = -1; change <= 1; change++) {
-                if (x + change >= im.width() or x + change < 0) {
-                    continue;
-                }
-                lowestEnergy = min(energyMap(x + change, y - 1, 0), lowestEnergy);
-            }
-            energyMap(x, y, 0) = energyMap(x, y, 0) + lowestEnergy;
-        }
-    }
-    return energyMap;
-}
 
-//need to create horizontal for thisj
-//this creates an energy map and throws value param into anyplace where the block param has a 1
+// Creates a cumulative energy map. Hard codes energy at locations within block to value
+// Makes sure that certain areas are very undesirable or very desirable
 //@params
 // im: float image
 // block: float image. Has 1s wherever value should be placed on energyMap. Has -1s wherever -value should be placed on energyMap
 // value: value to place into the blocked out areas
 // isHorizontal: true -> sum left to right
 //              false -> sum top to bottom
-
-
 FloatImage createBlockedEnergyMap(FloatImage im, FloatImage block, int value, bool isHorizontal)
 {
     if (im.sizeX() != block.sizeX() || im.sizeY() != block.sizeY()) throw runtime_error("Image and block are different dimensions");
@@ -192,12 +188,33 @@ FloatImage createBlockedEnergyMap(FloatImage im, FloatImage block, int value, bo
     }
 }
 
+//Calcualtes a basic cumulative energyMap using dualGradientEnergy
+//@params
+// im: image to calcuate energy
 FloatImage energyMap(FloatImage im)
 {
     FloatImage energyMap = dualGradientEnergy(im);
     for(int y = 1; y < im.height(); y++) {
         for (int x = 0; x < im.width(); x++) {
             //for every pixel at this height, i go 1 up, 1 down
+            float lowestEnergy = 10000000; //do i need to change this to be max value?
+            for (int change = -1; change <= 1; change++) {
+                if (x + change >= im.width() or x + change < 0) {
+                    continue;
+                }
+                lowestEnergy = min(energyMap(x + change, y - 1, 0), lowestEnergy);
+            }
+            energyMap(x, y, 0) = energyMap(x, y, 0) + lowestEnergy;
+        }
+    }
+    return energyMap;
+}
+
+FloatImage createEnergyMap(FloatImage im)
+{
+    FloatImage energyMap = dualGradientEnergy(im);
+    for(int y = 1; y < im.height(); y++) {
+        for (int x = 0; x < im.width(); x++) {
             float lowestEnergy = 10000000; //do i need to change this to be max value?
             for (int change = -1; change <= 1; change++) {
                 if (x + change >= im.width() or x + change < 0) {

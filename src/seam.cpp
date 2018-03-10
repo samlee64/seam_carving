@@ -2,8 +2,6 @@
  //                      SEAM CARVING  FUNCTIONS              //
  *************************************************************/
 #include "morphing.h"
-#include "utils.h"
-#include "a2.h"
 #include "a6.h"
 #include "energy.h"
 #include "seam.h"
@@ -308,8 +306,11 @@ FloatImage addSeam(const FloatImage im, vector<int> seam, bool isHorizontal)
 
 //Removes a seam from an image
 //@params
-
-FloatImage removeSeam(const FloatImage im, vector<int> seam, bool isHorizontal)
+// im: image to remove the seam from
+// seam: seam
+// isHorizontal: true -> seam is horizontal
+//                 false -> seam is vertical
+FloatImage removeSeam(const FloatImage &im, vector<int> seam, bool isHorizontal)
 {
     if (isHorizontal) {
         FloatImage output(im.width(), im.height() - 1, im.depth());
@@ -349,8 +350,12 @@ FloatImage removeSeam(const FloatImage im, vector<int> seam, bool isHorizontal)
     }
 }
 
-//naive expansion function
-// will always pick the same seam
+//Expands the given image by addWith and addHeight
+//@params:
+// im: image to increase size of
+// addWidth: number of pixels to add to the width
+// addHeight: number of pixels to add to the height
+//
 FloatImage grow(const FloatImage &im, int addWidth, int addHeight, int numSteps)
 {
     cout << "Growing" << endl;
@@ -470,7 +475,7 @@ FloatImage contentAmpilification(const FloatImage &im, float factor)
 FloatImage removeObject(const FloatImage &im, const vector<tuple<int, int>> destroyObject, const vector<tuple<int, int>> protectedObject, bool lockRatio, bool onlyVert, bool onlyHorizontal)
 {
     const int MAXTRIES = min(im.width(), im.height()); //Stop before removing more than 50% of the photo
-    const float lowValue = -1;
+    const float lowValue = -100;
 
     FloatImage output(im);
 
@@ -492,8 +497,8 @@ FloatImage removeObject(const FloatImage &im, const vector<tuple<int, int>> dest
         badArea(x, y, 0) = 1;
         copy(x, y, 0) = 1;
     }
-    copy.write(DATA_DIR "/output/removal/badarea2.png");
-    badArea.write(DATA_DIR "/output/removal/badarea.png");
+    copy.write(DATA_DIR "/output/removal/protect-destroy-areas.png");
+    badArea.write(DATA_DIR "/output/removal/badareas.png");
 
     FloatImage eMap;
 
@@ -523,7 +528,12 @@ FloatImage removeObject(const FloatImage &im, const vector<tuple<int, int>> dest
         if (i % 3 == 0) {
             char buffer[255];
             sprintf(buffer, DATA_DIR "/output/removal/energy/energyMap-%d.png", i);
-            eMap.write(buffer);
+            FloatImage normalized(eMap);
+            float maxValue = normalized.max();
+            cout << maxValue << endl;
+            normalized = normalized/maxValue;
+            normalized.write(buffer);
+
         }
 
         vector<int> seam;

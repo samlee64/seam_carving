@@ -152,6 +152,7 @@ void testRemoveObject()
 }
 
 
+
 void testRemoveandReplaceObject()
 {
     const FloatImage input(DATA_DIR "/input/beach.png");
@@ -194,11 +195,109 @@ void testRemoveandReplaceObject()
 
 
 }
+
+void testRemoveGirlfriend()
+{
+    const FloatImage input(DATA_DIR "/input/couple.png");
+    vector<tuple<int, int>> destroyObject = {};
+    vector<tuple<int, int>> protectedObject= {};
+
+    for(int x=152; x<180; x++) {for (int y=187; y <211; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=154; x<190; x++) {for (int y=213; y <261; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=155; x<190; x++) {for (int y=261; y <276; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=155; x<188; x++) {for (int y=277; y <328; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=153; x<191; x++) {for (int y=272; y <281; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=152; x<160; x++) {for (int y=281; y <298; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=193; x<181; x++) {for (int y=282; y <329; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=147; x<161; x++) {for (int y=222; y <230; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=150; x<156; x++) {for (int y=220; y <223; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=151; x<154; x++) {for (int y=219; y <219; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=144; x<148; x++) {for (int y=224; y <233; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=142; x<155; x++) {for (int y=233; y <224; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=140; x<149; x++) {for (int y=230; y <244; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=149; x<157; x++) {for (int y=242; y <233; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=192; x<195; x++) {for (int y=274; y <257; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=189; x<195; x++) {for (int y=226; y <259; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=186; x<195; x++) {for (int y=255; y <274; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=141; x<147; x++) {for (int y=244; y <252; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=139; x<148; x++) {for (int y=246; y <254; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=137; x<146; x++) {for (int y=255; y <260; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=137; x<144; x++) {for (int y=251; y <256; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=134; x<140; x++) {for (int y=258; y <263; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=131; x<138; x++) {for (int y=264; y <269; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=128; x<136; x++) {for (int y=270; y <272; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=151; x<137; x++) {for (int y=243; y <258; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=137; x<136; x++) {for (int y=254; y <264; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=145; x<131; x++) {for (int y=260; y <266; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=138; x<128; x++) {for (int y=267; y <272; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=135; x<125; x++) {for (int y=273; y <278; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=135; x<127; x++) {for (int y=271; y <276; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=131; x<124; x++) {for (int y=279; y <280; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=132; x<122; x++) {for (int y=277; y <283; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=196; x<198; x++) {for (int y=252; y <280; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=193; x<196; x++) {for (int y=255; y <275; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=194; x<203; x++) {for (int y=276; y <292; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=198; x<205; x++) {for (int y=289; y <313; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=193; x<214; x++) {for (int y=310; y <327; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=192; x<212; x++) {for (int y=305; y <312; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=215; x<194; x++) {for (int y=344; y <327; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=163; x<180; x++) {for (int y=327; y <384; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=192; x<184; x++) {for (int y=330; y <391; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=191; x<178; x++) {for (int y=323; y <391; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=154; x<178; x++) {for (int y=206; y <215; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=176; x<155; x++) {for (int y=187; y <183; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=152; x<150; x++) {for (int y=187; y <208; y++) {destroyObject.push_back(make_tuple(x, y));}}
+    for(int x=177; x<191; x++) {for (int y=326; y <391; y++) {destroyObject.push_back(make_tuple(x, y));}}
+
+
+    for(int x=72; x<107; x++) {for (int y=198; y <209; y++) {protectedObject.push_back(make_tuple(x, y));}}
+    for(int x=68; x<131; x++) {for (int y=207; y <249; y++) {protectedObject.push_back(make_tuple(x, y));}}
+    for(int x=69; x<129; x++) {for (int y=249; y <264; y++) {protectedObject.push_back(make_tuple(x, y));}}
+    for(int x=129; x<133; x++) {for (int y=226; y <258; y++) {protectedObject.push_back(make_tuple(x, y));}}
+    for(int x=71; x<123; x++) {for (int y=264; y <275; y++) {protectedObject.push_back(make_tuple(x, y));}}
+    for(int x=122; x<129; x++) {for (int y=274; y <261; y++) {protectedObject.push_back(make_tuple(x, y));}}
+    for(int x=126; x<130; x++) {for (int y=255; y <267; y++) {protectedObject.push_back(make_tuple(x, y));}}
+    for(int x=76; x<120; x++) {for (int y=274; y <290; y++) {protectedObject.push_back(make_tuple(x, y));}}
+    for(int x=74; x<76; x++) {for (int y=270; y <284; y++) {protectedObject.push_back(make_tuple(x, y));}}
+    for(int x=80; x<107; x++) {for (int y=288; y <390; y++) {protectedObject.push_back(make_tuple(x, y));}}
+    for(int x=106; x<119; x++) {for (int y=291; y <372; y++) {protectedObject.push_back(make_tuple(x, y));}}
+    for(int x=107; x<124; x++) {for (int y=289; y <297; y++) {protectedObject.push_back(make_tuple(x, y));}}
+    for(int x=118; x<130; x++) {for (int y=283; y <293; y++) {protectedObject.push_back(make_tuple(x, y));}}
+    for(int x=123; x<120; x++) {for (int y=297; y <372; y++) {protectedObject.push_back(make_tuple(x, y));}}
+    for(int x=127; x<115; x++) {for (int y=295; y <377; y++) {protectedObject.push_back(make_tuple(x, y));}}
+    for(int x=113; x<124; x++) {for (int y=373; y <386; y++) {protectedObject.push_back(make_tuple(x, y));}}
+    for(int x=128; x<111; x++) {for (int y=388; y <372; y++) {protectedObject.push_back(make_tuple(x, y));}}
+    for(int x=89; x<106; x++) {for (int y=172; y <193; y++) {protectedObject.push_back(make_tuple(x, y));}}
+    for(int x=107; x<73; x++) {for (int y=200; y <194; y++) {protectedObject.push_back(make_tuple(x, y));}}
+    for(int x=90; x<84; x++) {for (int y=189; y <175; y++) {protectedObject.push_back(make_tuple(x, y));}}
+    for(int x=107; x<86; x++) {for (int y=173; y <169; y++) {protectedObject.push_back(make_tuple(x, y));}}
+    for(int x=84; x<108; x++) {for (int y=175; y <169; y++) {protectedObject.push_back(make_tuple(x, y));}}
+    for(int x=107; x<110; x++) {for (int y=197; y <172; y++) {protectedObject.push_back(make_tuple(x, y));}}
+    for(int x=106; x<113; x++) {for (int y=207; y <201; y++) {protectedObject.push_back(make_tuple(x, y));}}
+    for(int x=87; x<110; x++) {for (int y=171; y <197; y++) {protectedObject.push_back(make_tuple(x, y));}}
+    for(int x=88; x<106; x++) {for (int y=171; y <167; y++) {protectedObject.push_back(make_tuple(x, y));}}
+    for(int x=109; x<114; x++) {for (int y=173; y <183; y++) {protectedObject.push_back(make_tuple(x, y));}}
+
+    FloatImage output = removeObject(input, destroyObject, protectedObject, false, true, false);
+    cout << input.width() << " " << input.height() << endl;
+    cout << output.width() << " " << output.height() << endl;
+
+    output.write(DATA_DIR "/output/removalAndReplace/removal-vert-couple.png");
+
+    int widthDiff = input.width() - output.width();
+    int heightDiff = input.height() - output.height();
+
+    output = grow(output, widthDiff, heightDiff, 2);
+    output.write(DATA_DIR "/output/removalAndReplace/replace-couple.png");
+    cout << "Done" << endl;
+
+}
+
 void testContentAmplification()
 {
     const FloatImage input(DATA_DIR "/input/surf.png");
     cout << input.width() << " " << input.height() << endl;
-    FloatImage output = contentAmpilification(input, 1.3);
+    FloatImage output = contentAmpilification(input, 2);
     output.write(DATA_DIR "/output/amplification/surf-2.png");
 
 }
@@ -221,6 +320,7 @@ int main()
 //    testFindVerticalSeam();
     //testGrow();
     //testRemoveObject();
-    testRemoveandReplaceObject();
+    //testRemoveandReplaceObject();
+    testRemoveGirlfriend();
     //testContentAmplification();
 }

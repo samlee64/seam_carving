@@ -1,18 +1,17 @@
-import { execExecutable } from "./utils";
-import * as Koa from 'koa'
+import * as Koa from "koa";
+import * as bodyParser from "koa-bodyparser";
+import * as json from "koa-json";
+import router from "./routes";
 
 const app = new Koa();
 
-app.use((ctx: Koa.Context) => {
-  try {
-    execExecutable("./scripts/foobar.sh", []);
-  } catch (e) {
-    ctx.status = 500;
-    console.error(e);
-    return;
-  }
+//middleware
+app.use(bodyParser());
+app.use(json());
 
-  ctx.status = 200;
+//routes
+app.use(router.routes());
+
+app.listen(3000, () => {
+  console.log("Running...");
 });
-
-app.listen(3000);

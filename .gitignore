@@ -6,3 +6,5 @@ server/node_modules/
 *.png
 server/core/cmake-build-debug/*
 server/core/data/output/**
+server/lib/
+.bic_cache

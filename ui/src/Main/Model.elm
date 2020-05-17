@@ -5,16 +5,20 @@ import Flags exposing (Flags)
 import Main.Msg exposing (Msg(..))
 import Main.Routes as Routes
 import Page.Index as Index
+import Page.SeamCarving.Model as SeamCarving
 import Url exposing (Url)
 
 
 type Page
     = IndexPage Index.Model
+    | SeamCarvingPage SeamCarving.Model
     | NotFound
 
 
 type alias Model =
-    { page : Page, flags : Flags }
+    { page : Page
+    , flags : Flags
+    }
 
 
 init : Flags -> Url -> Key -> ( Model, Cmd Msg )
@@ -31,6 +35,9 @@ initPage url model =
     case Routes.fromUrl url of
         Just Routes.Index ->
             Index.init |> updatePage IndexPage IndexMsg model
+
+        Just Routes.SeamCarving ->
+            SeamCarving.init |> updatePage SeamCarvingPage SeamCarvingMsg model
 
         Nothing ->
             ( { model | page = NotFound }, Cmd.none )

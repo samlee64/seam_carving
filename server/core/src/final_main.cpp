@@ -555,19 +555,53 @@ void testFuji()
 
 }
 
-int main()
+int main(int argc, char *argv[])
 {
+    printf("%d; \n", argc);
+    // print all command line arguments
+    std::cout << "name of program: " << argv[0] << '\n' ;
+
+   if( argc > 1 )
+    {
+        std::cout << "there are " << argc-1 << " (more) arguments, they are:\n" ;
+
+        std::copy( argv+1, argv+argc, std::ostream_iterator<const char*>( std::cout, "\n" ) ) ;
+    }
+
+    //something happens here if i arg doesn't  exist
+   char* arg = argv[1];
+
+   std::cout << "sam" << "\n" ;
+
+   if (std::strcmp(arg, "dolphin") == 0) {
+       std::cout << "Testing Dolphin" << '\n' ;
+       testDolphin();
+   } else if (std::strcmp(arg, "edo") == 0) {
+       std::cout << "Testing Edo" << '\n' ;
+       testEdo();
+   } else if (std::strcmp(arg, "fuji") == 0) {
+       std::cout << "Testing Fuji" << '\n' ;
+       testFuji();
+   } else {
+       std::cout << "No matching arg" ;
+   }
+
+
+
+
+    std::cout << "end" << "\n" ;
+
     //testDolphin();
-    //testEdo();jkkkk
+    //testEdo();
     //testFuji();
     //testRemoveSeam();
     //testGrow();
-    testBeer();
+    //testBeer();
     //testRemoveObject();
     //testRemoveandReplaceObject();
     //testRemoveGirlfriend();
     //testContentAmplification();
-    //testCastleAll();
+//    testCastleAll();
     //testBeachAll();
     //testRemoveGirlBird();
 }

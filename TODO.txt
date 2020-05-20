@@ -1,0 +1,7 @@
+First run:
+- Trigger executable
+- "Refresh" button on the UI that just checks up on backend to see if the files have been written
+
+
+
+Implement this with sockets

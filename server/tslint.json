@@ -4,7 +4,6 @@
   "jsRules": {},
   "rules": {
     "no-any": true,
-    "no-unsafe-any": true,
     "no-object-literal-type-assertion": false
   },
   "rulesDirectory": []

@@ -37,7 +37,7 @@ initPage url model =
             Index.init |> updatePage IndexPage IndexMsg model
 
         Just Routes.SeamCarving ->
-            SeamCarving.init |> updatePage SeamCarvingPage SeamCarvingMsg model
+            SeamCarving.init model.flags |> updatePage SeamCarvingPage SeamCarvingMsg model
 
         Nothing ->
             ( { model | page = NotFound }, Cmd.none )

@@ -1,21 +1,44 @@
 module Request.Request exposing (..)
 
-import Http exposing (Request)
+import Flags exposing (Flags)
+import Http
 import HttpBuilder as HB
-import Json.Decode as Decode
-import Json.Encode as Encode
+import Json.Decode as Decode exposing (Decoder, string)
+import RemoteData as RD exposing (WebData)
 import Url.Builder as UrlBuilder
 
 
-get : Flags -> List String -> Http.Request
+get : Flags -> List String -> HB.RequestBuilder ()
 get flags path =
-    HB.crossOrigin flags.api path
+    UrlBuilder.crossOrigin flags.api path []
         |> HB.get
-        |> HB.withExpect Http.expectJson
+
+
+withExpect : Decoder a -> (WebData a -> msg) -> HB.RequestBuilder () -> HB.RequestBuilder msg
+withExpect decoder msg =
+    HB.withExpect (Http.expectJson (RD.fromResult >> msg) decoder)
+
+
+request : HB.RequestBuilder msg -> Cmd msg
+request =
+    HB.request
+
+
+healthCheck : Flags -> (WebData String -> msg) -> Cmd msg
+healthCheck flags msg =
+    let
+        logs =
+            Debug.log "flags.api" flags.api
+    in
+    UrlBuilder.crossOrigin flags.api [ "health" ] []
+        |> HB.get
+        |> HB.withExpect (Http.expectJson (RD.fromResult >> msg) string)
         |> HB.request
 
 
-post : Flags -> List String -> Http Request
-post flags path =
-    HB.crossOrigin flags.api path
-        |> HB.post
+
+{-
+   withExpect :
+           |> HB.withExpect (Http.expectJson (RD.fromResult >> msg) decoder
+           |> HB.request
+-}

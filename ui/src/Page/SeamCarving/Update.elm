@@ -43,3 +43,9 @@ update msg model =
                     Debug.log "Resp " resp
             in
             ( { model | carveImageResp = resp }, Cmd.none )
+
+        GetImage ->
+            model |> none
+
+        GotImage resp ->
+            model |> none

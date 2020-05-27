@@ -1,5 +1,6 @@
 module Request.Request exposing (..)
 
+import Bytes.Decode as Bytes
 import Flags exposing (Flags)
 import Http
 import HttpBuilder as HB
@@ -17,6 +18,11 @@ get flags path =
 withExpect : Decoder a -> (WebData a -> msg) -> HB.RequestBuilder () -> HB.RequestBuilder msg
 withExpect decoder msg =
     HB.withExpect (Http.expectJson (RD.fromResult >> msg) decoder)
+
+
+withExpectBytes : Bytes.Decoder a -> (WebData a -> msg) -> HB.RequestBuilder () -> HB.RequestBuilder msg
+withExpectBytes decoder msg =
+    HB.withExpect (Http.expectBytes (RD.fromResult >> msg) decoder)
 
 
 request : HB.RequestBuilder msg -> Cmd msg

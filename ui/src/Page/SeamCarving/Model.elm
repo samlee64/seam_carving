@@ -27,4 +27,4 @@ init flags =
 
 imageTitles : List String
 imageTitles =
-    [ "dolphin", "edo", "fuji", "castle" ]
+    [ "dolphin", "edo", "Fuji", "castle", "beach" ]

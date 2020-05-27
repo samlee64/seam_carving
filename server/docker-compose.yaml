@@ -1,0 +1,12 @@
+version: '2'
+services:
+  postgres:
+    image: "postgres:9.6-alpine"
+    ports:
+      - "8400:5432"
+    environment:
+      - POSTGRES_DB=slicer
+      - POSTGRES_USER=slicer
+      - POSTGRES_PASSWORD=slicer
+    command: postgres -c max_connections=100 -c shared_buffers=80MB -c kernel.shmmax=100663296
+

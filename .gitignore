@@ -9,3 +9,5 @@ server/lib/
 server/.bic_cache
 elm-stuff/
 node_modules/
+config.json
+database.json

@@ -2,7 +2,7 @@ import * as Router from "koa-router";
 
 import health from "./health";
 import seamCarving from "./seamCarving";
-import files from "./files"
+import files from "./files";
 
 const router = new Router();
 

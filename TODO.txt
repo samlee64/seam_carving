@@ -4,4 +4,11 @@ First run:
 
 
 
+Goals:
+Have a display of all images (both base and uploaded ones)
+Click on an image and you can see all the processing that went on
+Similar UI to the gifs
+
+
+
 Implement this with sockets

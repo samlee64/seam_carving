@@ -14,7 +14,7 @@ set(ext_stb_srcs
     src/ext/stb/stb_image.h
 )
 
-add_definitions(-DDATA_DIR=R\"\(${PROJECT_SOURCE_DIR}/data\)\")
+add_definitions(-DDATA_DIR=R\"\(${PROJECT_SOURCE_DIR}/../data\)\")
 
 set(common_srcs
     src/array3D.h

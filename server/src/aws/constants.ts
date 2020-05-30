@@ -1,1 +1,1 @@
-export const IMAGE_BUCKET = "";
+export const IMAGE_BUCKET = "seam-carving";

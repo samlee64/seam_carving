@@ -20,21 +20,26 @@
   "dependencies": {
     "@koa/cors": "^3.1.0",
     "aws-sdk": "^2.681.0",
+    "bluebird": "^3.7.2",
     "db-migrate": "^0.11.11",
+    "fs": "0.0.1-security",
     "koa": "^2.11.0",
     "koa-bodyparser": "^4.3.0",
     "koa-json": "^2.0.2",
     "koa-router": "^8.0.8",
-    "koa-send": "^5.0.0"
+    "koa-send": "^5.0.0",
+    "path": "^0.12.7"
   },
   "devDependencies": {
     "@types/aws-sdk": "^2.7.0",
+    "@types/bluebird": "^3.5.32",
     "@types/koa": "^2.11.3",
     "@types/koa-bodyparser": "^4.3.0",
     "@types/koa-json": "^2.0.18",
     "@types/koa-router": "^7.4.1",
     "@types/koa-send": "^4.1.2",
     "@types/koa__cors": "^3.0.1",
+    "@types/node": "^14.0.5",
     "build-if-changed": "^1.5.5",
     "husky": "^4.2.5",
     "nodemon": "^2.0.3",

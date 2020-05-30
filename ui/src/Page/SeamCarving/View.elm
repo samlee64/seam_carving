@@ -3,37 +3,82 @@ module Page.SeamCarving.View exposing (view)
 import Bootstrap.Button as Button
 import Bootstrap.Card as Card
 import Bootstrap.Card.Block as CardBlock
+import Bootstrap.Dropdown as Dropdown
+import Bootstrap.Form as Form
+import Bootstrap.Form.Checkbox as Checkbox
+import Bootstrap.Form.Input as Input
 import Bootstrap.Utilities.Flex as Flex
 import Bootstrap.Utilities.Spacing as Spacing
 import Extra.Html as EH
 import Flags exposing (Flags)
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Page.SeamCarving.Model exposing (Model, imageTitles)
-import Page.SeamCarving.Msg exposing (Msg(..))
+import Html.Events exposing (onClick)
+import Page.SeamCarving.Model exposing (Model, gifTypes, imageTitles, numSteps)
+import Page.SeamCarving.Msg exposing (GrowFormMsg(..), Msg(..))
 import View.WebData exposing (viewWebData)
+
+
+
+--TODO add some scaffolding around this switch
 
 
 view : Model -> Html Msg
 view model =
     div []
-        [ viewImages
-        , viewImage model.flags
+        [ viewToolbar model
+        , model.selectedImage
+            |> Maybe.map (viewSelectedImage model)
+            |> Maybe.withDefault (viewAllImages model)
+        ]
+
+
+viewToolbar : Model -> Html Msg
+viewToolbar model =
+    div []
+        [ Button.button [ Button.primary, Button.onClick UnselectImage ] [ text "Back" ]
+        ]
+
+
+viewAllImages : Model -> Html Msg
+viewAllImages model =
+    div []
+        [ viewImages model.flags
         , viewStatus model
         , viewHealthCheck model
         ]
 
 
-viewImages : Html Msg
-viewImages =
-    imageTitles
-        |> List.map
-            (\title ->
-                Button.button
-                    [ Button.attrs [ Spacing.ml5 ], Button.primary, Button.onClick (CarveImage title) ]
-                    [ text title ]
-            )
-        |> div []
+viewSelectedImage : Model -> String -> Html Msg
+viewSelectedImage model imageTitle =
+    let
+        imgSrc =
+            model.flags.bucket ++ "/defaults/" ++ imageTitle ++ ".png"
+
+        gifSrc =
+            model.flags.bucket ++ "/output/" ++ imageTitle ++ "/"
+    in
+    div []
+        [ viewGrowForm model
+        , Card.config [ Card.attrs [] ]
+            |> Card.header [] [ text imageTitle ]
+            |> Card.block []
+                [ CardBlock.custom <|
+                    div []
+                        [ img [ src imgSrc, width 300 ]
+                            []
+                        , gifTypes
+                            |> List.map (\g -> img [ src (gifSrc ++ g ++ ".gif") ] [])
+                            |> div []
+                        ]
+                ]
+            |> Card.footer []
+                [ Button.button
+                    [ Button.attrs [ Spacing.ml5 ], Button.primary, Button.onClick (CarveImage imageTitle) ]
+                    [ text imageTitle ]
+                ]
+            |> Card.view
+        ]
 
 
 viewStatus : Model -> Html Msg
@@ -50,22 +95,69 @@ viewHealthCheck model =
         ]
 
 
-viewImage : Flags -> Html Msg
-viewImage flags =
+viewImages : Flags -> Html Msg
+viewImages flags =
     let
         imgSrc title =
             flags.bucket ++ "/defaults/" ++ title ++ ".png"
     in
     imageTitles
-        |> List.map
-            (\title ->
-                Card.config []
-                    |> Card.header [] [ text title ]
-                    |> Card.block []
-                        [ CardBlock.custom <|
-                            img [ src <| imgSrc title, width 300 ] []
+        |> List.map (viewImage flags)
+        |> div [ Flex.block, Flex.wrap ]
+
+
+viewImage : Flags -> String -> Html Msg
+viewImage flags title =
+    let
+        imgSrc =
+            flags.bucket ++ "/defaults/" ++ title ++ ".png"
+    in
+    Card.config [ Card.attrs [ onClick <| SelectImage title ] ]
+        |> Card.header [] [ text title ]
+        |> Card.block []
+            [ CardBlock.custom <|
+                img [ src imgSrc, width 300 ] []
+            ]
+        |> Card.footer [] []
+        |> Card.view
+
+
+viewGrowForm : Model -> Html Msg
+viewGrowForm model =
+    Card.config []
+        |> Card.header [] [ text "Grow Form" ]
+        |> Card.block []
+            [ CardBlock.custom <|
+                div []
+                    [ Checkbox.checkbox
+                        [ Checkbox.checked True, Checkbox.onCheck (\b -> GrowFormMsg (ShowIntermediateSteps b)) ]
+                        "Show Intermediate Steps"
+                    , Form.group []
+                        [ Form.label [] [ text "Add Height (pixels)" ]
+                        , Input.number
+                            [ Input.attrs [ placeholder "height pixels" ]
+                            , Input.onInput (\s -> GrowFormMsg <| SetWidth s)
+                            ]
                         ]
-                    |> Card.footer [] []
-                    |> Card.view
-            )
-        |> div [ Flex.block ]
+                    , Form.group []
+                        [ Form.label [] [ text "Add Width (pixels)" ]
+                        , Input.number
+                            [ Input.attrs [ placeholder "width pixels" ]
+                            , Input.onInput (\s -> GrowFormMsg <| SetHeight s)
+                            ]
+                        ]
+                    , Form.group []
+                        [ Form.label [] [ text "Set Number of Steps" ]
+                        , div [] [ text "Specifies how many times the energy map should be cleared. Also specifies max number of times any given pixel can be copied" ]
+                        , Dropdown.dropdown model.growForm.numStepsDropdown
+                            { options = []
+                            , toggleMsg = \s -> GrowFormMsg <| NumStepsDropdown s
+                            , toggleButton = Dropdown.toggle [ Button.outlinePrimary ] [ text <| String.fromInt model.growForm.numSteps ]
+                            , items = numSteps |> List.map (\s -> Dropdown.buttonItem [ onClick <| GrowFormMsg <| SetNumSteps s ] [ text <| String.fromInt s ])
+                            }
+                        ]
+                    ]
+            ]
+        |> Card.footer []
+            [ Button.button [ Button.primary, Button.onClick NoOp ] [ text "Grow" ] ]
+        |> Card.view

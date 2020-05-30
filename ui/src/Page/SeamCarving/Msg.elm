@@ -1,8 +1,8 @@
-module Page.SeamCarving.Msg exposing (Msg(..))
+module Page.SeamCarving.Msg exposing (GrowFormMsg(..), Msg(..))
 
+import Bootstrap.Dropdown as Dropdown
 import Data.SeamCarving exposing (CarveImageResp)
 import Http
-import Image exposing (Image)
 import RemoteData as RD exposing (WebData)
 
 
@@ -12,5 +12,14 @@ type Msg
     | CarvedImage (WebData CarveImageResp)
     | HealthCheck
     | HealthChecked (WebData String)
-    | GetImage
-    | GotImage (Result Http.Error (Maybe Image))
+    | SelectImage String
+    | UnselectImage
+    | GrowFormMsg GrowFormMsg
+
+
+type GrowFormMsg
+    = ShowIntermediateSteps Bool
+    | SetNumSteps Int
+    | SetHeight String
+    | SetWidth String
+    | NumStepsDropdown Dropdown.State

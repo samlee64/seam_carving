@@ -22,6 +22,8 @@ FloatImage removeObject(const FloatImage &im, const vector<tuple<int, int>> obje
 
 vector<bool> seamOrientation(FloatImage badArea, int i, bool lockRatio, bool onlyVert, bool onlyHorizontal);
 
-FloatImage grow(const FloatImage &im, int addWidth, int addHeight, int numSteps);
+FloatImage grow(const FloatImage &im, const int addWidth, const int addHeight, const int numSteps);
+FloatImage grow(const FloatImage &im, const int addWidth, const int addHeight, const int numSteps, const string outputPath);
+
 FloatImage contentAmpilification(const FloatImage &im, float factor);
 

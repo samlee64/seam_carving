@@ -75,6 +75,7 @@ public:
     float max(int channel) const;
     //@}
 
+    std::vector<uint8_t> bytePixel(const int frameWidth, const int frameHeight);
     //-----------------------------------------------------------------------
     //@{ \name Image I/O.
     //-----------------------------------------------------------------------

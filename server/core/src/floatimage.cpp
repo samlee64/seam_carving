@@ -392,6 +392,27 @@ bool FloatImage::read(const string &filename)
 	}
 }
 
+std::vector<uint8_t> FloatImage::bytePixel(const int frameWidth, const int frameHeight)
+{
+    int outputChannels = 4;
+    vector<uint8_t> bytePixels(frameHeight * frameWidth * outputChannels, 255);
+    int c;
+    for (int x = 0; x < frameWidth; x++)
+        for (int y = 0; y < frameHeight; y++)
+        {
+            for (c = 0; c < channels(); c++)
+                bytePixels[c + x * outputChannels + y * outputChannels * frameWidth] =
+                        floatToByte(smartAccessor(x, y, c));
+
+            for (; c < 3; c++)
+                // Only executes when there is one channel
+                bytePixels[c + x * outputChannels + y * outputChannels * frameWidth] =
+                        floatToByte(smartAccessor(x, y, 0));
+        }
+
+    return bytePixels;
+}
+
 bool FloatImage::write(const string &filename) const
 {
 	if (channels() != 1 && channels() != 3 && channels() != 4)

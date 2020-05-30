@@ -5,21 +5,10 @@
 #include "a6.h"
 #include "energy.h"
 #include "seam.h"
+#include <gif.h>
+#include <string>
 
 using namespace std;
-
-void debugPrintMap(FloatImage map)
-{
-    for (int y = 0; y < map.height(); y++) {
-        for (int x = 0; x < map.width(); x++) {
-            cout << round(map(x, y, 0)) << " ";
-        }
-        cout << endl;
-    }
-    cout << endl;
-
-}
-
 
 // Returns the X index of the lowest energy value in the bottom row
 // @params:
@@ -366,63 +355,110 @@ FloatImage removeSeam(const FloatImage &im, vector<int> seam, bool isHorizontal)
 // im: image to increase size of
 // addWidth: number of pixels to add to the width
 // addHeight: number of pixels to add to the height
-//
-FloatImage grow(const FloatImage &im, int addWidth, int addHeight, int numSteps)
+// numSteps: number of times to recaculate the energy map. Also represents the max number of times a
+//          single pixel can be duplicated
+FloatImage grow(const FloatImage &im, const int addWidth, const int addHeight, const int numSteps)
+{
+    char outputPath[255];
+    sprintf(outputPath, DATA_DIR, "/output/default");
+    cout << "No outputPath specified for grow(), using default output path " << endl;
+
+    return grow(im, addWidth, addHeight, numSteps, outputPath);
+}
+
+FloatImage grow(const FloatImage &im, const int addWidth, const int addHeight, const int numSteps, const string outputPath)
 {
     if (numSteps < 1 ) {throw runtime_error("Min number of steps is 1");}
+
     cout << "Growing" << endl;
     FloatImage mid(im);
-
+    FloatImage midSeam(im); //copy of the image with all drawn seams marked
     FloatImage mask(im.width(), im.height(), 1);
+
+    int gifWidth = im.width() + addWidth;
+    int gifHeight = im.height() + addHeight;
+    int delay = 15;
+
+    std::vector<uint8_t> black(gifWidth * gifHeight * 4, 0);
+    std::vector<uint8_t> white(gifWidth * gifHeight * 4, 255);
+
+    string eMapGifFilename = outputPath + "energy-map.gif";
+    GifWriter eMapGif;
+    GifBegin(&eMapGif, eMapGifFilename.c_str(), gifWidth, gifHeight, delay);
+    GifWriteFrame(&eMapGif, black.data(), gifWidth, gifHeight, delay);
+    GifWriteFrame(&eMapGif, white.data(), gifWidth, gifHeight, delay);
+
+    string maskGifFilename = outputPath + "mask.gif";
+    GifWriter maskGif;
+    GifBegin(&maskGif, maskGifFilename.c_str(), gifWidth, gifHeight, delay);
+    GifWriteFrame(&maskGif, black.data(), gifWidth, gifHeight, delay);
+    GifWriteFrame(&maskGif, white.data(), gifWidth, gifHeight, delay);
+
+    string midGifFilename = outputPath + "mid.gif";
+    GifWriter midGif;
+    GifBegin(&midGif, midGifFilename.c_str(), gifWidth, gifHeight, delay);
+    GifWriteFrame(&midGif, black.data(), gifWidth, gifHeight, delay);
+    GifWriteFrame(&midGif, white.data(), gifWidth, gifHeight, delay);
+
     float highValue = 1;
     for (int i = 0; i < addWidth; i++) {
-        if (i % (addWidth/numSteps) == 0) {
+        if (i % (addWidth/numSteps) == 0 && i != 0 ) {
             for (int i =0; i < mask.size(); i++) {
                 mask(i) = 0;
             }
         }
+
         FloatImage eMap = createMaskedEnergyMap(mid, mask, highValue, false);
 
-        char buffer[255];
-        sprintf(buffer, DATA_DIR "/output/grow/energyMaps/eMap-%d.png", i);
-        eMap.write(buffer);
-
-        char buffer2[255];
-        sprintf(buffer2, DATA_DIR "/output/grow/masks/mask-%d.png", i);
-        mask.write(buffer2);
-
+        GifWriteFrame(&eMapGif, eMap.bytePixel(gifWidth, gifHeight).data(), gifWidth, gifHeight, delay);
+        GifWriteFrame(&maskGif, mask.bytePixel(gifWidth, gifHeight).data(), gifWidth, gifHeight, delay);
 
         vector<int> seam = findVerticalSeamMap(eMap);
-
         mask = addSeamToMask(mask, seam, false); //vertical
 
-        char buffer3[255];
-        sprintf(buffer3, DATA_DIR "/output/grow/mid/mid-%d.png", i);
-        drawSeam(mid, seam, false).write(buffer3);
+        FloatImage midSeam = drawSeam(mid, seam, false);
+        GifWriteFrame(&midGif, midSeam.bytePixel(gifWidth, gifHeight).data(), gifWidth, gifHeight, delay);
+
         mid = addSeam(mid, seam, false);
+
+        if ((i + 1) % (addWidth/numSteps) == 0)
+        {
+            string stepNum(to_string (i / (addWidth/numSteps)));
+            eMap.write(outputPath + "eMap-" + stepNum + ".png");
+            mask.write(outputPath + "mask-" + stepNum + ".png");
+        }
     }
 
     for (int i = 0; i < addHeight; i++) {
-        if (i %(addHeight/numSteps) == 0 ) {
+        if (i %(addHeight/numSteps) == 0) {
             for (int i =0; i < mask.size(); i++) {
                 mask(i) = 0;
             }
         }
         FloatImage eMap = createMaskedEnergyMap(mid, mask, highValue, true);
 
-        char buffer[255];
-        sprintf(buffer, DATA_DIR "/output/grow/energyMaps/eMap-%d.png", i + addWidth);
-        eMap.write(buffer);
-
-        char buffer2[255];
-        sprintf(buffer2, DATA_DIR "/output/grow/masks/mask-%d.png", i + addWidth);
-        mask.write(buffer2);
+        GifWriteFrame(&eMapGif, eMap.bytePixel(gifWidth, gifHeight).data(), gifWidth, gifHeight, delay);
+        GifWriteFrame(&maskGif, mask.bytePixel(gifWidth, gifHeight).data(), gifWidth, gifHeight, delay);
 
         vector<int> seam = findHorizontalSeamMap(eMap);
 
+        GifWriteFrame(&midGif, midSeam.bytePixel(gifWidth, gifHeight).data(), gifWidth, gifHeight, delay);
+
         mask = addSeamToMask(mask, seam, true);
         mid = addSeam(mid, seam, true);
+
+        if ((i + 1) % (addWidth/numSteps) == 0)
+        {
+            string stepNum(to_string((i / (addHeight/numSteps)) + numSteps));
+            eMap.write(outputPath + "eMap-" + stepNum + ".png");
+            mask.write(outputPath + "mask-" + stepNum + ".png");
+        }
     }
+    GifEnd(&eMapGif);
+    GifEnd(&maskGif);
+    GifEnd(&midGif);
+
+    mid.write(outputPath + "/output.png");
 
     return mid;
 }
@@ -620,6 +656,7 @@ vector<bool> seamOrientation(FloatImage badArea, int i, bool lockRatio, bool onl
 
 
 //Draws a red seam on the image
+//Returns a deep copy of the input image
 FloatImage drawSeam(const FloatImage &im, const vector<int> seam, bool isHorizontal)
 {
     FloatImage output(im);

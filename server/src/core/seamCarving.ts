@@ -7,7 +7,10 @@ import { uploadFile } from "../aws/s3";
 
 export function grow(params: GrowParams): void {
   const imageName = params.imageName;
-  const args: string[] = [imageName];
+
+  const args: string[] = ["grow", imageName, params.addWidth.toString(), params.addHeight.toString(), params.numSteps.toString(), params.showIntermediateSteps.toString()];
+
+  console.log("Running with these args", args)
 
   console.log("starting exec");
   execFile(config.executablePath, args, async (error, stdout, stderr) => {
@@ -29,6 +32,4 @@ export function grow(params: GrowParams): void {
 
     console.log("seamCarving, finished uploading to s3");
   });
-
-  console.log("finished");
 }

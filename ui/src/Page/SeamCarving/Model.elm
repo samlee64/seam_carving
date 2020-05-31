@@ -1,7 +1,7 @@
-module Page.SeamCarving.Model exposing (GrowForm, Model, defaultGrowForm, gifTypes, imageTitles, init, numSteps)
+module Page.SeamCarving.Model exposing (..)
 
 import Bootstrap.Dropdown as Dropdown
-import Data.SeamCarving exposing (CarveImageResp)
+import Data.SeamCarving exposing (..)
 import Flags exposing (Flags)
 import Page.SeamCarving.Msg exposing (Msg(..))
 import RemoteData as RD exposing (RemoteData(..), WebData)
@@ -10,9 +10,9 @@ import RemoteData as RD exposing (RemoteData(..), WebData)
 type alias Model =
     { flags : Flags
     , healthCheck : WebData String
-    , carveImageResp : WebData CarveImageResp
     , selectedImage : Maybe String
     , growForm : GrowForm
+    , growImageResp : WebData GrowImageResp
     }
 
 
@@ -22,9 +22,9 @@ init flags =
         model =
             { flags = flags
             , healthCheck = NotAsked
-            , carveImageResp = NotAsked
-            , selectedImage = Just "castle-medium"
+            , selectedImage = Just "dolphin"
             , growForm = defaultGrowForm
+            , growImageResp = NotAsked
             }
     in
     ( model, Cmd.none )
@@ -33,8 +33,8 @@ init flags =
 type alias GrowForm =
     { showIntermediateSteps : Bool
     , numSteps : Int
-    , addHeight : Int
-    , addWidth : Int
+    , addHeight : Maybe Int
+    , addWidth : Maybe Int
     , numStepsDropdown : Dropdown.State
     }
 
@@ -43,10 +43,29 @@ defaultGrowForm : GrowForm
 defaultGrowForm =
     { showIntermediateSteps = False
     , numSteps = 2
-    , addHeight = 0
-    , addWidth = 100
+    , addHeight = Nothing
+    , addWidth = Just 100
     , numStepsDropdown = Dropdown.initialState
     }
+
+
+isGrowFormValid : GrowForm -> Bool
+isGrowFormValid form =
+    True
+
+
+extractGrowImageParams : Model -> Maybe GrowImageParams
+extractGrowImageParams ({ growForm } as model) =
+    Maybe.map
+        (\si ->
+            { imageName = si
+            , showIntermediateSteps = growForm.showIntermediateSteps
+            , numSteps = growForm.numSteps
+            , addHeight = Maybe.withDefault 0 growForm.addHeight
+            , addWidth = Maybe.withDefault 0 growForm.addWidth
+            }
+        )
+        model.selectedImage
 
 
 imageTitles : List String
@@ -65,7 +84,7 @@ gifTypes =
 
 outputFiles : List String
 outputFiles =
-    [ "energy-map.gif", "mask.gif", "mid.gif", "output.gif" ]
+    [ "energy-map.gif", "mask.gif", "mid.gif", "output.png" ]
 
 
 numSteps : List Int

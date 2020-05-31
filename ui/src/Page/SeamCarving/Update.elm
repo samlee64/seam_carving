@@ -1,21 +1,15 @@
 module Page.SeamCarving.Update exposing (update)
 
-import Data.SeamCarving exposing (CarveImageParams)
 import Extra.Cmd exposing (cmd, none)
-import Page.SeamCarving.Model exposing (GrowForm, Model, defaultGrowForm)
+import Page.SeamCarving.Model exposing (..)
 import Page.SeamCarving.Msg exposing (GrowFormMsg(..), Msg(..))
 import RemoteData as RD exposing (RemoteData(..), WebData)
 import Request.Request exposing (healthCheck)
-import Request.SeamCarving exposing (carveImage)
-
-
-defaultCarveImageParams : String -> CarveImageParams
-defaultCarveImageParams title =
-    { imageName = title }
+import Request.SeamCarving exposing (growImage)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
+update msg ({ flags } as model) =
     case msg of
         NoOp ->
             model
@@ -23,22 +17,10 @@ update msg model =
 
         HealthCheck ->
             { model | healthCheck = Loading }
-                |> cmd (\m -> healthCheck m.flags HealthChecked)
+                |> cmd (\_ -> healthCheck flags HealthChecked)
 
         HealthChecked resp ->
             { model | healthCheck = resp } |> none
-
-        CarveImage title ->
-            let
-                params =
-                    title
-                        |> defaultCarveImageParams
-            in
-            { model | carveImageResp = Loading }
-                |> cmd (\m -> carveImage m.flags CarvedImage params)
-
-        CarvedImage resp ->
-            ( { model | carveImageResp = resp }, Cmd.none )
 
         SelectImage imageName ->
             { model | selectedImage = Just imageName } |> none
@@ -48,8 +30,26 @@ update msg model =
                 |> resetGrowForm
                 |> none
 
+        GrowImage ->
+            let
+                params =
+                    model.growForm
+            in
+            model
+                |> cmd
+                    (\m ->
+                        extractGrowImageParams m
+                            |> Maybe.map (growImage flags GrewImage)
+                            |> Maybe.withDefault Cmd.none
+                    )
+
+        GrewImage resp ->
+            { model | growImageResp = resp } |> none
+
         GrowFormMsg gMsg ->
-            model |> updateGrowForm gMsg |> none
+            model
+                |> updateGrowForm gMsg
+                |> none
 
 
 updateGrowForm : GrowFormMsg -> Model -> Model
@@ -67,14 +67,22 @@ updateGrowForm_ gMsg form =
             { form | numSteps = numSteps }
 
         SetHeight height ->
-            String.toInt height
-                |> Maybe.map (\h -> { form | addHeight = h })
-                |> Maybe.withDefault form
+            if String.isEmpty height then
+                { form | addHeight = Nothing }
+
+            else
+                String.toInt height
+                    |> Maybe.map (\h -> { form | addHeight = Just h })
+                    |> Maybe.withDefault form
 
         SetWidth width ->
-            String.toInt width
-                |> Maybe.map (\w -> { form | addWidth = w })
-                |> Maybe.withDefault form
+            if String.isEmpty width then
+                { form | addWidth = Nothing }
+
+            else
+                String.toInt width
+                    |> Maybe.map (\w -> { form | addWidth = Just w })
+                    |> Maybe.withDefault form
 
         NumStepsDropdown state ->
             { form | numStepsDropdown = state }

@@ -1,20 +1,20 @@
 module Page.SeamCarving.Msg exposing (GrowFormMsg(..), Msg(..))
 
 import Bootstrap.Dropdown as Dropdown
-import Data.SeamCarving exposing (CarveImageResp)
+import Data.SeamCarving exposing (..)
 import Http
 import RemoteData as RD exposing (WebData)
 
 
 type Msg
     = NoOp
-    | CarveImage String
-    | CarvedImage (WebData CarveImageResp)
     | HealthCheck
     | HealthChecked (WebData String)
     | SelectImage String
     | UnselectImage
     | GrowFormMsg GrowFormMsg
+    | GrowImage
+    | GrewImage (WebData GrowImageResp)
 
 
 type GrowFormMsg

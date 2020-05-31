@@ -9,12 +9,10 @@ const router = new Router({
 
 router.post("/grow", async (ctx: Context) => {
   const params: GrowParams = ctx.request.body;
-  console.log(params);
-
   try {
     grow(params);
     ctx.status = 200;
-    ctx.body = "Execution has been sent";
+    ctx.body = {...params};
   } catch (e) {
     ctx.status = 500;
     ctx.body = e;
@@ -22,8 +20,6 @@ router.post("/grow", async (ctx: Context) => {
     console.error(e);
     return;
   }
-
-  console.log("response");
 });
 
 export default router;

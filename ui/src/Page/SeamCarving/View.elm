@@ -44,7 +44,6 @@ viewAllImages : Model -> Html Msg
 viewAllImages model =
     div []
         [ viewImages model.flags
-        , viewStatus model
         , viewHealthCheck model
         ]
 
@@ -65,26 +64,16 @@ viewSelectedImage model imageTitle =
             |> Card.block []
                 [ CardBlock.custom <|
                     div []
-                        [ img [ src imgSrc, width 300 ]
+                        [ img [ src imgSrc ]
                             []
                         , gifTypes
                             |> List.map (\g -> img [ src (gifSrc ++ g ++ ".gif") ] [])
                             |> div []
                         ]
                 ]
-            |> Card.footer []
-                [ Button.button
-                    [ Button.attrs [ Spacing.ml5 ], Button.primary, Button.onClick (CarveImage imageTitle) ]
-                    [ text imageTitle ]
-                ]
+            |> Card.footer [] []
             |> Card.view
         ]
-
-
-viewStatus : Model -> Html Msg
-viewStatus model =
-    model.carveImageResp
-        |> viewWebData (\_ -> EH.none)
 
 
 viewHealthCheck : Model -> Html Msg
@@ -116,7 +105,7 @@ viewImage flags title =
         |> Card.header [] [ text title ]
         |> Card.block []
             [ CardBlock.custom <|
-                img [ src imgSrc, width 300 ] []
+                img [ src imgSrc ] []
             ]
         |> Card.footer [] []
         |> Card.view
@@ -124,6 +113,17 @@ viewImage flags title =
 
 viewGrowForm : Model -> Html Msg
 viewGrowForm model =
+    let
+        heightValue =
+            model.growForm.addHeight
+                |> Maybe.map String.fromInt
+                |> Maybe.withDefault ""
+
+        widthValue =
+            model.growForm.addWidth
+                |> Maybe.map String.fromInt
+                |> Maybe.withDefault ""
+    in
     Card.config []
         |> Card.header [] [ text "Grow Form" ]
         |> Card.block []
@@ -133,17 +133,19 @@ viewGrowForm model =
                         [ Checkbox.checked True, Checkbox.onCheck (\b -> GrowFormMsg (ShowIntermediateSteps b)) ]
                         "Show Intermediate Steps"
                     , Form.group []
-                        [ Form.label [] [ text "Add Height (pixels)" ]
-                        , Input.number
-                            [ Input.attrs [ placeholder "height pixels" ]
-                            , Input.onInput (\s -> GrowFormMsg <| SetWidth s)
-                            ]
-                        ]
-                    , Form.group []
                         [ Form.label [] [ text "Add Width (pixels)" ]
                         , Input.number
                             [ Input.attrs [ placeholder "width pixels" ]
+                            , Input.onInput (\s -> GrowFormMsg <| SetWidth s)
+                            , Input.value widthValue
+                            ]
+                        ]
+                    , Form.group []
+                        [ Form.label [] [ text "Add Height (pixels)" ]
+                        , Input.number
+                            [ Input.attrs [ placeholder "height pixels" ]
                             , Input.onInput (\s -> GrowFormMsg <| SetHeight s)
+                            , Input.value heightValue
                             ]
                         ]
                     , Form.group []
@@ -159,5 +161,5 @@ viewGrowForm model =
                     ]
             ]
         |> Card.footer []
-            [ Button.button [ Button.primary, Button.onClick NoOp ] [ text "Grow" ] ]
+            [ Button.button [ Button.primary, Button.onClick GrowImage ] [ text "Grow" ] ]
         |> Card.view

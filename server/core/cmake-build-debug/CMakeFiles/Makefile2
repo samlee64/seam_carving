@@ -53,7 +53,7 @@ CMAKE_BINARY_DIR = /Users/Lee/workspace/seam_carving/server/core/cmake-build-deb
 # Directory level rules for the build root directory
 
 # The main recursive "all" target.
-all: CMakeFiles/server.dir/all
+all: CMakeFiles/seam_carving.dir/all
 all: CMakeFiles/a6.dir/all
 all: CMakeFiles/common_lib.dir/all
 all: src/ext/all
@@ -66,7 +66,7 @@ preinstall: src/ext/preinstall
 .PHONY : preinstall
 
 # The main recursive "clean" target.
-clean: CMakeFiles/server.dir/clean
+clean: CMakeFiles/seam_carving.dir/clean
 clean: CMakeFiles/a6.dir/clean
 clean: CMakeFiles/common_lib.dir/clean
 clean: src/ext/clean
@@ -92,31 +92,31 @@ src/ext/clean:
 .PHONY : src/ext/clean
 
 #=============================================================================
-# Target rules for target CMakeFiles/server.dir
+# Target rules for target CMakeFiles/seam_carving.dir
 
 # All Build rule for target.
-CMakeFiles/server.dir/all:
-	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/depend
-	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/Users/Lee/workspace/seam_carving/server/core/cmake-build-debug/CMakeFiles --progress-num=12,13 "Built target server"
-.PHONY : CMakeFiles/server.dir/all
+CMakeFiles/seam_carving.dir/all: CMakeFiles/common_lib.dir/all
+	$(MAKE) -f CMakeFiles/seam_carving.dir/build.make CMakeFiles/seam_carving.dir/depend
+	$(MAKE) -f CMakeFiles/seam_carving.dir/build.make CMakeFiles/seam_carving.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/Users/Lee/workspace/seam_carving/server/core/cmake-build-debug/CMakeFiles --progress-num=12,13,14,15,16,17,18,19 "Built target seam_carving"
+.PHONY : CMakeFiles/seam_carving.dir/all
 
 # Build rule for subdir invocation for target.
-CMakeFiles/server.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /Users/Lee/workspace/seam_carving/server/core/cmake-build-debug/CMakeFiles 2
-	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/server.dir/all
+CMakeFiles/seam_carving.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/Lee/workspace/seam_carving/server/core/cmake-build-debug/CMakeFiles 10
+	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/seam_carving.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /Users/Lee/workspace/seam_carving/server/core/cmake-build-debug/CMakeFiles 0
-.PHONY : CMakeFiles/server.dir/rule
+.PHONY : CMakeFiles/seam_carving.dir/rule
 
 # Convenience name for target.
-server: CMakeFiles/server.dir/rule
+seam_carving: CMakeFiles/seam_carving.dir/rule
 
-.PHONY : server
+.PHONY : seam_carving
 
 # clean rule for target.
-CMakeFiles/server.dir/clean:
-	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/clean
-.PHONY : CMakeFiles/server.dir/clean
+CMakeFiles/seam_carving.dir/clean:
+	$(MAKE) -f CMakeFiles/seam_carving.dir/build.make CMakeFiles/seam_carving.dir/clean
+.PHONY : CMakeFiles/seam_carving.dir/clean
 
 #=============================================================================
 # Target rules for target CMakeFiles/a6.dir

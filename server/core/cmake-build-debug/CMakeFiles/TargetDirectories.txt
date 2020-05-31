@@ -1,6 +1,6 @@
 /Users/Lee/workspace/seam_carving/server/core/cmake-build-debug/CMakeFiles/rebuild_cache.dir
 /Users/Lee/workspace/seam_carving/server/core/cmake-build-debug/CMakeFiles/edit_cache.dir
-/Users/Lee/workspace/seam_carving/server/core/cmake-build-debug/CMakeFiles/server.dir
+/Users/Lee/workspace/seam_carving/server/core/cmake-build-debug/CMakeFiles/seam_carving.dir
 /Users/Lee/workspace/seam_carving/server/core/cmake-build-debug/CMakeFiles/a6.dir
 /Users/Lee/workspace/seam_carving/server/core/cmake-build-debug/CMakeFiles/common_lib.dir
 /Users/Lee/workspace/seam_carving/server/core/cmake-build-debug/src/ext/CMakeFiles/rebuild_cache.dir

@@ -4,12 +4,12 @@
 #include "a6.h"
 #include "energy.h"
 #include <iomanip>
+#include <string>
 
 using namespace std;
 
 //writes out energy maps
-void testEnergy()
-{
+void testEnergy() {
     const FloatImage input(DATA_DIR "/input/test2.png");
     FloatImage output = gradientEnergy(input);
     output.write(DATA_DIR "/output/gradientEnergyTest.png");
@@ -76,10 +76,29 @@ void testRemoveSeam()
 void testGrow()
 {
     const FloatImage input(DATA_DIR "/input/castle-medium.png");
-    cout << input.width() << " " << input.height() << endl;
-    FloatImage output = grow(input, 400, 0, 4); //100 vertical seams, 0 horizontal, in 4 steps
-    cout << input.width() << " " << input.height() << endl;
-    cout << output.width() << " " << output.height() << endl;
+
+    string outputPath(DATA_DIR "/output/castle-medium/");
+    cout << outputPath << endl;
+
+    cout << "Input Width, Height: " << input.width() << ", " << input.height() << endl;
+    FloatImage output = grow(input, 50, 50, 2, outputPath); //100 vertical seams, 0 horizontal, in 4 steps
+
+    cout << "Output Width, Height: " << output.width() << ", " << output.height() << endl;
+    output.write(DATA_DIR "/output/grow/castle-medium-400-0-4.png");
+}
+
+void runGrow(const string imageName, const int addWidth, const int addHeight, const bool debug)
+{
+    string inputImagePath = DATA_DIR "/input/" + imageName + ".png";
+    const FloatImage input(inputImagePath);
+
+    string outputPath = DATA_DIR "/output/" + imageName + "/";
+    cout << outputPath << endl;
+
+    cout << "Input Width, Height: " << input.width() << ", " << input.height() << endl;
+    FloatImage output = grow(input, 50, 50, 1, outputPath); //100 vertical seams, 0 horizontal, in 4 steps
+
+    cout << "Output Width, Height: " << output.width() << ", " << output.height() << endl;
     output.write(DATA_DIR "/output/grow/castle-medium-400-0-4.png");
 }
 
@@ -569,29 +588,30 @@ int main(int argc, char *argv[])
     }
 
     //something happens here if i arg doesn't  exist
-   char* arg = argv[1];
+   //char* arg = argv[1];
 
-   std::cout << "sam" << "\n" ;
+   //std::cout << "sam" << "\n" ;
 
-   if (std::strcmp(arg, "dolphin") == 0) {
-       std::cout << "Testing Dolphin" << '\n' ;
-       testDolphin();
-   } else if (std::strcmp(arg, "edo") == 0) {
-       std::cout << "Testing Edo" << '\n' ;
-       testEdo();
-   } else if (std::strcmp(arg, "fuji") == 0) {
-       std::cout << "Testing Fuji" << '\n' ;
-       testFuji();
-   } else {
-       std::cout << "No matching arg" ;
-   }
+   //if (std::strcmp(arg, "dolphin") == 0) {
+   //    std::cout << "Testing Dolphin" << '\n' ;
+   //    testDolphin();
+   //} else if (std::strcmp(arg, "edo") == 0) {
+   //    std::cout << "Testing Edo" << '\n' ;
+   //    testEdo();
+   //} else if (std::strcmp(arg, "fuji") == 0) {
+   //    std::cout << "Testing Fuji" << '\n' ;
+   //    testFuji();
+   //} else {
+   //    std::cout << "No matching arg" ;
+   //}
 
 
+   testGrow();
 
 
     std::cout << "end" << "\n" ;
 
-    //testDolphin();
+//    testDolphin();
     //testEdo();
     //testFuji();
     //testRemoveSeam();

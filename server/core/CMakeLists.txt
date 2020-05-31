@@ -31,12 +31,15 @@ add_library(common_lib STATIC
 )
 SOURCE_GROUP("src\\ext\\stb" FILES ${ext_stb_srcs})
 
-set(a6_srcs   src/final_main.cpp src/gif.h src/seam.cpp src/energy.cpp src/filtering.cpp src/a6.cpp src/morphing.cpp src/a2.cpp src/server.cpp src/server.h)       # a6
+set(a6_srcs src/final_main.cpp src/gif.h src/seam.cpp src/energy.cpp src/filtering.cpp src/a6.cpp src/morphing.cpp src/a2.cpp src/server.cpp src/server.h)       # a6
 add_executable(a6 ${a6_srcs})                                               # a6
 target_link_libraries(a6 common_lib)                                        # a6
 SOURCE_GROUP("src" FILES ${a6_srcs})                                        # a6
 
-set(server_srcs src/server.cpp)
-add_executable(server ${server_srcs})
+set(seam_carving_srcs src/main.cpp src/gif.h src/seam.cpp src/energy.cpp src/filtering.cpp src/a6.cpp src/morphing.cpp src/a2.cpp)
+add_executable(seam_carving ${seam_carving_srcs})
+target_link_libraries(seam_carving common_lib)
+SOURCE_GROUP("src" FILES ${seam_carving_srcs})
+
 # Create the output data directory
 add_custom_command(TARGET a6 POST_BUILD COMMAND ${CMAKE_COMMAND} -E make_directory "${PROJECT_SOURCE_DIR}/data/output") # a6

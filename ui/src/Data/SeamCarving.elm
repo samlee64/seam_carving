@@ -22,14 +22,13 @@ type alias GrowImageResp =
     }
 
 
-growImageRespDecoder : Decoder GrowImageResp
-growImageRespDecoder =
-    map5 GrowImageResp
-        (field "imageName" string)
-        (field "showIntermediateSteps" bool)
-        (field "numSteps" int)
-        (field "addHeight" int)
-        (field "addWidth" int)
+type alias PollStatusParams =
+    { imageName : String
+    }
+
+
+type alias PollStatusResp =
+    { status : String }
 
 
 encodeGrowImageParams : GrowImageParams -> E.Value
@@ -41,3 +40,23 @@ encodeGrowImageParams params =
         , ( "addWidth", E.int params.addWidth )
         , ( "addHeight", E.int params.addHeight )
         ]
+
+
+encodePollParams : PollStatusParams -> E.Value
+encodePollParams params =
+    E.object [ ( "imageName", E.string params.imageName ) ]
+
+
+growImageRespDecoder : Decoder GrowImageResp
+growImageRespDecoder =
+    map5 GrowImageResp
+        (field "imageName" string)
+        (field "showIntermediateSteps" bool)
+        (field "numSteps" int)
+        (field "addHeight" int)
+        (field "addWidth" int)
+
+
+pollRespDecoder : Decoder PollStatusResp
+pollRespDecoder =
+    map PollStatusResp (field "status" string)

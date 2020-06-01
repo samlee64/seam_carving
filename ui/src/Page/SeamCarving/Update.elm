@@ -1,11 +1,12 @@
 module Page.SeamCarving.Update exposing (update)
 
 import Extra.Cmd exposing (cmd, none)
+import Extra.Extra as Extra
 import Page.SeamCarving.Model exposing (..)
 import Page.SeamCarving.Msg exposing (GrowFormMsg(..), Msg(..))
 import RemoteData as RD exposing (RemoteData(..), WebData)
 import Request.Request exposing (healthCheck)
-import Request.SeamCarving exposing (growImage)
+import Request.SeamCarving exposing (growImage, pollStatus)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -31,11 +32,7 @@ update msg ({ flags } as model) =
                 |> none
 
         GrowImage ->
-            let
-                params =
-                    model.growForm
-            in
-            model
+            { model | growImageResp = Loading }
                 |> cmd
                     (\m ->
                         extractGrowImageParams m
@@ -50,6 +47,24 @@ update msg ({ flags } as model) =
             model
                 |> updateGrowForm gMsg
                 |> none
+
+        Tick _ ->
+            let
+                pollCmd =
+                    model.selectedImage
+                        |> Maybe.map (\si -> { imageName = si })
+                        |> Maybe.map (pollStatus flags PolledStatus)
+                        |> Maybe.withDefault Cmd.none
+
+                cmd1 =
+                    model.growImageResp
+                        |> RD.isLoading
+                        |> Extra.ternary pollCmd Cmd.none
+            in
+            model |> none
+
+        PolledStatus resp ->
+            model |> none
 
 
 updateGrowForm : GrowFormMsg -> Model -> Model

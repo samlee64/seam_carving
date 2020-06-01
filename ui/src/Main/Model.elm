@@ -1,6 +1,6 @@
 module Main.Model exposing (Model, Page(..), init, initPage, updatePage)
 
-import Browser.Navigation exposing (Key)
+import Browser.Navigation as Navigation exposing (Key)
 import Flags exposing (Flags)
 import Main.Msg exposing (Msg(..))
 import Main.Routes as Routes
@@ -18,6 +18,7 @@ type Page
 type alias Model =
     { page : Page
     , flags : Flags
+    , key : Key
     }
 
 
@@ -25,7 +26,7 @@ init : Flags -> Url -> Key -> ( Model, Cmd Msg )
 init flags url key =
     let
         ( model, cmd ) =
-            initPage url { page = NotFound, flags = flags }
+            initPage url { page = NotFound, flags = flags, key = key }
     in
     ( model, cmd )
 

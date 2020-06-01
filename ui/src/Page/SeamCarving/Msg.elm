@@ -4,6 +4,7 @@ import Bootstrap.Dropdown as Dropdown
 import Data.SeamCarving exposing (..)
 import Http
 import RemoteData as RD exposing (WebData)
+import Time
 
 
 type Msg
@@ -15,6 +16,8 @@ type Msg
     | GrowFormMsg GrowFormMsg
     | GrowImage
     | GrewImage (WebData GrowImageResp)
+    | Tick Time.Posix
+    | PolledStatus (WebData PollStatusResp)
 
 
 type GrowFormMsg

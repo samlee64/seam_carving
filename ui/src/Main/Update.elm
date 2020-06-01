@@ -6,18 +6,26 @@ import Main.Model exposing (Model, Page(..), initPage, updatePage)
 import Main.Msg exposing (Msg(..))
 import Page.Index as Index
 import Page.SeamCarving.Update as SeamCarving
+import Url
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case ( msg, model.page ) of
         ( UrlRequest urlRequest, _ ) ->
-            --TODO(sam)
-            ( model, Cmd.none )
+            case urlRequest of
+                Browser.Internal url ->
+                    ( model
+                    , Navigation.pushUrl model.key (Url.toString url)
+                    )
+
+                Browser.External href ->
+                    ( model
+                    , Navigation.load href
+                    )
 
         ( UrlChange url, _ ) ->
-            --TODO(sam)
-            ( model, Cmd.none )
+            initPage url model
 
         ( IndexMsg imsg, IndexPage imodel ) ->
             Index.update imsg imodel |> updatePage IndexPage IndexMsg model

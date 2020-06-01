@@ -32,3 +32,14 @@ growImage flags msg params =
         |> withJsonBody body
         |> withExpect growImageRespDecoder msg
         |> request
+
+
+pollStatus : Flags -> (WebData PollStatusResp -> msg) -> PollStatusParams -> Cmd msg
+pollStatus flags msg params =
+    let
+        queryString =
+            ""
+    in
+    get flags [ "seam", "poll" ]
+        |> withExpect pollRespDecoder msg
+        |> request

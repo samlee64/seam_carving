@@ -1,7 +1,7 @@
 import * as Router from "koa-router";
 import * as send from "koa-send";
 import { Context } from "koa";
-import config from "../config";
+import config from "../../config";
 
 const router = new Router({
   prefix: "/files",

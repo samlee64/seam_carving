@@ -3,7 +3,7 @@ import * as bodyParser from "koa-bodyparser";
 import * as json from "koa-json";
 import * as cors from "@koa/cors";
 import router from "./routes";
-import config from "./config";
+import config from "../config";
 
 const app = new Koa();
 

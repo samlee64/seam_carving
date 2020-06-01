@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node lib/main.js",
+    "start": "node lib/api/main.js",
     "start:watch": "nodemon",
     "tslint": "tslint -c tslint.json --project tsconfig.json",
     "build": "rm -rf lib && npm run transpile",
@@ -22,7 +22,9 @@
     "aws-sdk": "^2.681.0",
     "bluebird": "^3.7.2",
     "db-migrate": "^0.11.11",
+    "db-migrate-pg": "^1.2.2",
     "fs": "0.0.1-security",
+    "knex": "^0.21.1",
     "koa": "^2.11.0",
     "koa-bodyparser": "^4.3.0",
     "koa-json": "^2.0.2",
@@ -33,6 +35,7 @@
   "devDependencies": {
     "@types/aws-sdk": "^2.7.0",
     "@types/bluebird": "^3.5.32",
+    "@types/knex": "^0.16.1",
     "@types/koa": "^2.11.3",
     "@types/koa-bodyparser": "^4.3.0",
     "@types/koa-json": "^2.0.18",

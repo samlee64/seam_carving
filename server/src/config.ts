@@ -6,6 +6,13 @@ export interface Config {
     accessKey: string;
     secretAccessKey: string;
   };
+  db: {
+    host: string;
+    user: string;
+    password: string;
+    database: string;
+    port: number;
+  };
 }
 
 //tslint:disable-next-line

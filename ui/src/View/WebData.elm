@@ -1,6 +1,7 @@
 module View.WebData exposing (..)
 
 import Bootstrap.Alert as Alert
+import Bootstrap.Button as Button
 import Html exposing (..)
 import Http exposing (Error(..))
 import RemoteData as RD exposing (RemoteData(..), WebData)
@@ -39,3 +40,12 @@ viewHttpError e =
 
         BadBody s ->
             text s
+
+
+viewWebDataButton : List (Button.Option msg) -> List (Html msg) -> WebData a -> Html msg
+viewWebDataButton options view data =
+    if RD.isLoading data then
+        Button.button (Button.disabled True :: options) [ text "Loading" ]
+
+    else
+        Button.button options view

@@ -17,7 +17,7 @@ type Msg
     | GrowImage
     | GrewImage (WebData GrowImageResp)
     | Tick Time.Posix
-    | PolledStatus (WebData PollStatusResp)
+    | PolledExecutionStatus (WebData ExecutionStatusResp)
 
 
 type GrowFormMsg

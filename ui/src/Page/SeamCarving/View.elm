@@ -1,5 +1,6 @@
 module Page.SeamCarving.View exposing (view)
 
+import Bootstrap.Alert as Alert
 import Bootstrap.Button as Button
 import Bootstrap.Card as Card
 import Bootstrap.Card.Block as CardBlock
@@ -9,14 +10,17 @@ import Bootstrap.Form.Checkbox as Checkbox
 import Bootstrap.Form.Input as Input
 import Bootstrap.Utilities.Flex as Flex
 import Bootstrap.Utilities.Spacing as Spacing
+import Data.SeamCarving exposing (Status(..), statusToString)
+import Extra.Extra as Extra
 import Extra.Html as EH
 import Flags exposing (Flags)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
-import Page.SeamCarving.Model exposing (Model, gifTypes, imageTitles, numSteps)
+import Page.SeamCarving.Model exposing (Model, gifTypes, imageTitles, isExecutionDone, numSteps)
 import Page.SeamCarving.Msg exposing (GrowFormMsg(..), Msg(..))
-import View.WebData exposing (viewWebData)
+import RemoteData as RD exposing (RemoteData(..), WebData)
+import View.WebData exposing (viewWebData, viewWebDataButton)
 
 
 
@@ -36,16 +40,21 @@ view model =
 viewToolbar : Model -> Html Msg
 viewToolbar model =
     div []
-        [ Button.button [ Button.primary, Button.onClick UnselectImage ] [ text "Back" ]
+        [ model.selectedImage
+            |> Maybe.map (\_ -> Button.button [ Button.primary, Button.onClick UnselectImage ] [ text "Back" ])
+            |> Maybe.withDefault EH.none
         ]
 
 
 viewAllImages : Model -> Html Msg
 viewAllImages model =
-    div []
-        [ viewImages model.flags
-        , viewHealthCheck model
-        ]
+    let
+        imgSrc title =
+            model.flags.bucket ++ "/defaults/" ++ title ++ ".png"
+    in
+    imageTitles
+        |> List.map (viewImage model.flags)
+        |> div [ Flex.block, Flex.wrap ]
 
 
 viewSelectedImage : Model -> String -> Html Msg
@@ -56,6 +65,11 @@ viewSelectedImage model imageTitle =
 
         gifSrc =
             model.flags.bucket ++ "/output/" ++ imageTitle ++ "/"
+
+        viewGifs =
+            gifTypes
+                |> List.map (\g -> img [ src (gifSrc ++ g ++ ".gif") ] [])
+                |> div []
     in
     div []
         [ viewGrowForm model
@@ -66,9 +80,9 @@ viewSelectedImage model imageTitle =
                     div []
                         [ img [ src imgSrc ]
                             []
-                        , gifTypes
-                            |> List.map (\g -> img [ src (gifSrc ++ g ++ ".gif") ] [])
-                            |> div []
+                        , model
+                            |> isExecutionDone
+                            |> Extra.ternary viewGifs EH.none
                         ]
                 ]
             |> Card.footer [] []
@@ -82,17 +96,6 @@ viewHealthCheck model =
         [ Button.button [ Button.primary, Button.onClick HealthCheck ] [ text "Check health" ]
         , model.healthCheck |> viewWebData (\_ -> text "You are healthy")
         ]
-
-
-viewImages : Flags -> Html Msg
-viewImages flags =
-    let
-        imgSrc title =
-            flags.bucket ++ "/defaults/" ++ title ++ ".png"
-    in
-    imageTitles
-        |> List.map (viewImage flags)
-        |> div [ Flex.block, Flex.wrap ]
 
 
 viewImage : Flags -> String -> Html Msg
@@ -123,6 +126,9 @@ viewGrowForm model =
             model.growForm.addWidth
                 |> Maybe.map String.fromInt
                 |> Maybe.withDefault ""
+
+        isGrowButtonDisabled =
+            not <| RD.isNotAsked model.growImageResp
     in
     Card.config []
         |> Card.header [] [ text "Grow Form" ]
@@ -155,11 +161,45 @@ viewGrowForm model =
                             { options = []
                             , toggleMsg = \s -> GrowFormMsg <| NumStepsDropdown s
                             , toggleButton = Dropdown.toggle [ Button.outlinePrimary ] [ text <| String.fromInt model.growForm.numSteps ]
-                            , items = numSteps |> List.map (\s -> Dropdown.buttonItem [ onClick <| GrowFormMsg <| SetNumSteps s ] [ text <| String.fromInt s ])
+                            , items =
+                                List.map
+                                    (\s ->
+                                        Dropdown.buttonItem [ onClick <| GrowFormMsg <| SetNumSteps s ]
+                                            [ text <| String.fromInt s ]
+                                    )
+                                    numSteps
                             }
                         ]
                     ]
             ]
         |> Card.footer []
-            [ Button.button [ Button.primary, Button.onClick GrowImage ] [ text "Grow" ] ]
+            [ Button.button
+                [ Button.primary, Button.onClick GrowImage, Button.disabled isGrowButtonDisabled ]
+                [ text "Grow" ]
+            , div [ Spacing.mt2, Flex.block ] [ viewExecutionStatus model ]
+            ]
         |> Card.view
+
+
+viewExecutionStatus : Model -> Html Msg
+viewExecutionStatus model =
+    model.pollExecutionStatusResp
+        |> viewWebData
+            (\resp ->
+                let
+                    message =
+                        text <| statusToString resp.status
+                in
+                case resp.status of
+                    Executing ->
+                        Alert.simpleInfo [] [ message ]
+
+                    Uploading ->
+                        Alert.simpleInfo [] [ message ]
+
+                    Done ->
+                        Alert.simpleSuccess [] [ message ]
+
+                    Error ->
+                        Alert.simpleDanger [] [ message ]
+            )

@@ -13,6 +13,7 @@ type alias Model =
     , selectedImage : Maybe String
     , growForm : GrowForm
     , growImageResp : WebData GrowImageResp
+    , pollExecutionStatusResp : WebData ExecutionStatusResp
     }
 
 
@@ -25,6 +26,7 @@ init flags =
             , selectedImage = Just "dolphin"
             , growForm = defaultGrowForm
             , growImageResp = NotAsked
+            , pollExecutionStatusResp = NotAsked
             }
     in
     ( model, Cmd.none )
@@ -66,6 +68,13 @@ extractGrowImageParams ({ growForm } as model) =
             }
         )
         model.selectedImage
+
+
+isExecutionDone : Model -> Bool
+isExecutionDone model =
+    model.pollExecutionStatusResp
+        |> RD.map (\r -> r.status == Done)
+        |> RD.withDefault False
 
 
 imageTitles : List String

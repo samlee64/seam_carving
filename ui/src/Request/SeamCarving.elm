@@ -11,17 +11,6 @@ import RemoteData as RD exposing (WebData)
 import Request.Request exposing (..)
 
 
-getImageLinks : Flags -> (WebData (List String) -> msg) -> Cmd msg
-getImageLinks flags msg =
-    let
-        path =
-            "files"
-    in
-    get flags [ path ]
-        |> withExpect (list string) msg
-        |> request
-
-
 growImage : Flags -> (WebData GrowImageResp -> msg) -> GrowImageParams -> Cmd msg
 growImage flags msg params =
     let
@@ -34,12 +23,12 @@ growImage flags msg params =
         |> request
 
 
-pollStatus : Flags -> (WebData PollStatusResp -> msg) -> PollStatusParams -> Cmd msg
-pollStatus flags msg params =
+getExecutionStatus : Flags -> (WebData ExecutionStatusResp -> msg) -> ExecutionStatusParams -> Cmd msg
+getExecutionStatus flags msg params =
     let
         queryString =
-            ""
+            "?executionId=" ++ params.executionId
     in
-    get flags [ "seam", "poll" ]
+    get flags [ "seam", "status", queryString ]
         |> withExpect pollRespDecoder msg
         |> request

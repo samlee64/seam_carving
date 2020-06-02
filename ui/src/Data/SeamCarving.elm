@@ -19,16 +19,59 @@ type alias GrowImageResp =
     , numSteps : Int
     , addHeight : Int
     , addWidth : Int
+    , executionId : String
     }
 
 
-type alias PollStatusParams =
-    { imageName : String
+type alias ExecutionStatusParams =
+    { executionId : String
     }
 
 
-type alias PollStatusResp =
-    { status : String }
+type alias ExecutionStatusResp =
+    { status : Status }
+
+
+type Status
+    = Executing
+    | Uploading
+    | Done
+    | Error
+
+
+stringToStatus : String -> Maybe Status
+stringToStatus input =
+    case input of
+        "executing" ->
+            Just Executing
+
+        "uploading" ->
+            Just Uploading
+
+        "done" ->
+            Just Done
+
+        "error" ->
+            Just Error
+
+        _ ->
+            Nothing
+
+
+statusToString : Status -> String
+statusToString status =
+    case status of
+        Executing ->
+            "executing"
+
+        Uploading ->
+            "uploading"
+
+        Done ->
+            "done"
+
+        Error ->
+            "error"
 
 
 encodeGrowImageParams : GrowImageParams -> E.Value
@@ -42,21 +85,28 @@ encodeGrowImageParams params =
         ]
 
 
-encodePollParams : PollStatusParams -> E.Value
-encodePollParams params =
-    E.object [ ( "imageName", E.string params.imageName ) ]
-
-
 growImageRespDecoder : Decoder GrowImageResp
 growImageRespDecoder =
-    map5 GrowImageResp
+    map6 GrowImageResp
         (field "imageName" string)
         (field "showIntermediateSteps" bool)
         (field "numSteps" int)
         (field "addHeight" int)
         (field "addWidth" int)
+        (field "executionId" string)
 
 
-pollRespDecoder : Decoder PollStatusResp
+statusDecoder : Decoder Status
+statusDecoder =
+    string
+        |> andThen
+            (\str ->
+                stringToStatus str
+                    |> Maybe.map (\status -> succeed status)
+                    |> Maybe.withDefault (fail (str ++ " is not a valid status type"))
+            )
+
+
+pollRespDecoder : Decoder ExecutionStatusResp
 pollRespDecoder =
-    map PollStatusResp (field "status" string)
+    map ExecutionStatusResp (field "status" statusDecoder)

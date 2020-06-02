@@ -17,14 +17,11 @@ export async function insertExecution(
     image_name: params.imageName,
     routine: params.routine,
     s3_url: params.s3Url,
-    params,
+    params: params.params,
   };
 
   const ret = await conn(EXECUTIONS).insert(insertParams).returning("id");
-  console.log(ret);
-  //TODO tomorrow do this. Figure out if this is an array or not
-
-  return "";
+  return ret[0];
 }
 
 export async function updateStatus(
@@ -32,5 +29,5 @@ export async function updateStatus(
   id: string,
   status: Status
 ): Promise<void> {
-  conn(EXECUTIONS).update({ status }).where({ id });
+  await conn(EXECUTIONS).update({ status }).where({ id });
 }

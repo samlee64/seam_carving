@@ -11,6 +11,7 @@ const router = new Router({
 
 router.get("/status", async (ctx: Context) => {
   const executionId = ctx.query.executionId;
+
   if (!executionId) {
     ctx.status = 400;
     ctx.body = "Include query string param executionId";
@@ -18,7 +19,9 @@ router.get("/status", async (ctx: Context) => {
   }
 
   try {
-    await getExecution(conn, executionId);
+    const execution = await getExecution(conn, executionId);
+    ctx.status = 200;
+    ctx.body = {id: execution.id, imageName: execution.image_name, status: execution.status};
   } catch (e) {}
 });
 

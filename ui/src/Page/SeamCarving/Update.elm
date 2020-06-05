@@ -4,10 +4,10 @@ import Data.SeamCarving exposing (..)
 import Extra.Cmd exposing (cmd, none)
 import Extra.Extra as Extra
 import Page.SeamCarving.Model exposing (..)
-import Page.SeamCarving.Msg exposing (GrowFormMsg(..), Msg(..))
+import Page.SeamCarving.Msg exposing (..)
 import RemoteData as RD exposing (RemoteData(..), WebData)
 import Request.Request exposing (healthCheck)
-import Request.SeamCarving exposing (getExecutionStatus, growImage)
+import Request.SeamCarving exposing (contentAmplification, getExecutionStatus, growImage)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -65,6 +65,24 @@ update msg ({ flags } as model) =
         PolledExecutionStatus resp ->
             { model | pollExecutionStatusResp = resp } |> none
 
+        ContentAmplificationFormMsg caMsg ->
+            model
+                |> updateContentAmplificationForm caMsg
+                |> none
+
+        AmplifyImage ->
+            let
+                amplifyImageCmd m =
+                    extractContentAmplificationParams m
+                        |> Maybe.map (contentAmplification flags AmplifiedImage)
+                        |> Maybe.withDefault Cmd.none
+            in
+            { model | contentAmplificationResp = Loading, pollExecutionStatusResp = Loading }
+                |> cmd amplifyImageCmd
+
+        AmplifiedImage resp ->
+            { model | contentAmplificationResp = resp } |> none
+
 
 updateGrowForm : GrowFormMsg -> Model -> Model
 updateGrowForm gMsg model =
@@ -74,7 +92,7 @@ updateGrowForm gMsg model =
 updateGrowForm_ : GrowFormMsg -> GrowForm -> GrowForm
 updateGrowForm_ gMsg form =
     case gMsg of
-        ShowIntermediateSteps val ->
+        ShowGrowIntermediateSteps val ->
             { form | showIntermediateSteps = val }
 
         SetNumSteps numSteps ->
@@ -100,6 +118,24 @@ updateGrowForm_ gMsg form =
 
         NumStepsDropdown state ->
             { form | numStepsDropdown = state }
+
+
+updateContentAmplificationForm : ContentAmplificationFormMsg -> Model -> Model
+updateContentAmplificationForm caMsg model =
+    { model | contentAmplificationForm = updateContentAmplificationForm_ caMsg model.contentAmplificationForm }
+
+
+updateContentAmplificationForm_ : ContentAmplificationFormMsg -> ContentAmplificationForm -> ContentAmplificationForm
+updateContentAmplificationForm_ caMsg form =
+    case caMsg of
+        ShowContentAmplificationIntermediateSteps val ->
+            { form | showIntermediateSteps = val }
+
+        SetFactor factor ->
+            { form | factor = factor }
+
+        FactorDropdown state ->
+            { form | factorDropdown = state }
 
 
 resetGrowForm : Model -> Model

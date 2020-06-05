@@ -23,6 +23,17 @@ type alias GrowImageResp =
     }
 
 
+type alias ContentAmplificationParams =
+    { imageName : String
+    , showIntermediateSteps : Bool
+    , factor : Int
+    }
+
+
+type alias ContentAmplificationResp =
+    { executionId : String }
+
+
 type alias ExecutionStatusParams =
     { executionId : String
     }
@@ -94,6 +105,20 @@ growImageRespDecoder =
         (field "addHeight" int)
         (field "addWidth" int)
         (field "executionId" string)
+
+
+encodeContentAmplificationParams : ContentAmplificationParams -> E.Value
+encodeContentAmplificationParams params =
+    E.object
+        [ ( "imageName", E.string params.imageName )
+        , ( "showIntermediateSteps", E.bool params.showIntermediateSteps )
+        , ( "factor", E.int params.factor )
+        ]
+
+
+contentAmplificationRespDecoder : Decoder ContentAmplificationResp
+contentAmplificationRespDecoder =
+    map ContentAmplificationResp (field "executionId" string)
 
 
 statusDecoder : Decoder Status

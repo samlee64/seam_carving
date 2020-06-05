@@ -14,6 +14,8 @@ type alias Model =
     , growForm : GrowForm
     , growImageResp : WebData GrowImageResp
     , pollExecutionStatusResp : WebData ExecutionStatusResp
+    , contentAmplificationForm : ContentAmplificationForm
+    , contentAmplificationResp : WebData ContentAmplificationResp
     }
 
 
@@ -27,6 +29,8 @@ init flags =
             , growForm = defaultGrowForm
             , growImageResp = NotAsked
             , pollExecutionStatusResp = NotAsked
+            , contentAmplificationForm = defaultContentAmplificationForm
+            , contentAmplificationResp = NotAsked
             }
     in
     ( model, Cmd.none )
@@ -41,6 +45,13 @@ type alias GrowForm =
     }
 
 
+type alias ContentAmplificationForm =
+    { showIntermediateSteps : Bool
+    , factor : Int
+    , factorDropdown : Dropdown.State
+    }
+
+
 defaultGrowForm : GrowForm
 defaultGrowForm =
     { showIntermediateSteps = False
@@ -51,9 +62,12 @@ defaultGrowForm =
     }
 
 
-isGrowFormValid : GrowForm -> Bool
-isGrowFormValid form =
-    True
+defaultContentAmplificationForm : ContentAmplificationForm
+defaultContentAmplificationForm =
+    { showIntermediateSteps = False
+    , factor = 2
+    , factorDropdown = Dropdown.initialState
+    }
 
 
 extractGrowImageParams : Model -> Maybe GrowImageParams
@@ -65,6 +79,18 @@ extractGrowImageParams ({ growForm } as model) =
             , numSteps = growForm.numSteps
             , addHeight = Maybe.withDefault 0 growForm.addHeight
             , addWidth = Maybe.withDefault 0 growForm.addWidth
+            }
+        )
+        model.selectedImage
+
+
+extractContentAmplificationParams : Model -> Maybe ContentAmplificationParams
+extractContentAmplificationParams ({ contentAmplificationForm } as model) =
+    Maybe.map
+        (\si ->
+            { imageName = si
+            , showIntermediateSteps = contentAmplificationForm.showIntermediateSteps
+            , factor = contentAmplificationForm.factor
             }
         )
         model.selectedImage
@@ -99,3 +125,8 @@ outputFiles =
 numSteps : List Int
 numSteps =
     List.range 1 8
+
+
+factorRange : List Int
+factorRange =
+    List.range 2 10

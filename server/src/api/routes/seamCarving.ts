@@ -1,7 +1,10 @@
 import * as Router from "koa-router";
 import { Context } from "koa";
-import { GrowParams } from "../../types/seamCarving";
-import { grow } from "../../core/seamCarving";
+import {
+  GrowParams,
+  ContentAmplificationParams,
+} from "../../types/seamCarving";
+import { grow, contentAmplification } from "../../core/seamCarving";
 import { getExecution } from "../../store/executions";
 import { conn } from "../../db";
 
@@ -21,7 +24,11 @@ router.get("/status", async (ctx: Context) => {
   try {
     const execution = await getExecution(conn, executionId);
     ctx.status = 200;
-    ctx.body = {id: execution.id, imageName: execution.image_name, status: execution.status};
+    ctx.body = {
+      id: execution.id,
+      imageName: execution.image_name,
+      status: execution.status,
+    };
   } catch (e) {}
 });
 
@@ -31,6 +38,21 @@ router.post("/grow", async (ctx: Context) => {
     const executionId = await grow(conn, params);
     ctx.status = 200;
     ctx.body = { ...params, executionId };
+  } catch (e) {
+    ctx.status = 500;
+    ctx.body = e;
+
+    console.error(e);
+    return;
+  }
+});
+
+router.post("/content-amplification", async (ctx: Context) => {
+  const params: ContentAmplificationParams = ctx.request.body;
+  try {
+    const executionId = await contentAmplification(conn, params);
+    ctx.status = 200;
+    ctx.body = { executionId };
   } catch (e) {
     ctx.status = 500;
     ctx.body = e;

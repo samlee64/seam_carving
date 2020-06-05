@@ -5,6 +5,7 @@ cmake-build-debug/*
 *.png
 server/core/cmake-build-debug/*
 server/core/data/output/**
+server/data/output
 server/lib/
 server/.bic_cache
 elm-stuff/

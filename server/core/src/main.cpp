@@ -45,9 +45,8 @@ int growArgCheck(int argc, char *argv[])
 {
     if (argc != 7)
     {
-        cout <<  "There is an improper number of arguments. Needed 7, received " << argc << "\n" << endl;
+        cout <<  "There is an improper number of arguments. Needed 6, received " << argc << "\n" << endl;
         cout << "Needs arguments <routine> <imageName> <addWidth> <addHeight> <numSteps> <showIntermediate>\n" << endl;
-        cout << "Provided" << argv << endl;
         return 1;
     }
 
@@ -56,10 +55,11 @@ int growArgCheck(int argc, char *argv[])
     const int addHeight = atoi(argv[4]);
     const int numSteps = atoi(argv[5]);
 
-    bool showIntermediate = 0 == strcmp(argv[6], "true");
+    const bool showIntermediate = 0 == strcmp(argv[6], "true");
 
     if (addWidth == 0 && addHeight == 0 )
     {
+        cout << "0 addWidth, 0 addHeight specified. Not doing anything. \n" << endl;
         return 0;
     }
 
@@ -76,6 +76,63 @@ int growArgCheck(int argc, char *argv[])
 }
 
 
+void runContentAmplification(const string imageName, const int factor)
+{
+    string inputImagePath = DATA_DIR "/input/" + imageName + ".png";
+
+    const FloatImage input(inputImagePath);
+
+    string outputPath = DATA_DIR "/output/" + imageName + "/";
+    cout << outputPath << endl;
+
+    const FloatImage output = contentAmplification(input, factor, outputPath);
+}
+
+int contentAmplificationArgCheck(int argc, char *argv[])
+{
+    int i;
+    for (i=0; i<argc-1; i++)
+    {
+        cout << " " << argv[i];
+    }
+
+    cout << "\n" << endl;
+    if (argc != 5)
+    {
+        cout << "There is an improper number of arguments." << argc << endl;
+        cout << "Needs arguments <routine> <imageName> <factor> <showIntermediate>\n" << endl;
+        cout << "Provided: ";
+        int i;
+        for (i=0; i<argc-1; i++)
+        {
+            cout << " " << argv[i];
+        }
+        cout << "\n" << endl;
+
+
+        return 1;
+    }
+
+    const string imageName(argv[2]);
+    const int factor = atoi(argv[3]);
+
+    const bool showIntermediate = 0 == strcmp(argv[4], "true");
+    if (factor == 0)
+    {
+        cout << "0 factor specified. Not doing anything" << endl;
+        return 0;
+    }
+
+    cout << "Running grow with parameters \n" << endl;
+    cout << "imageName: " << imageName << endl;
+    cout << "factor: " << factor << endl;
+    cout << "showIntermediate: " << showIntermediate << endl;
+
+    runContentAmplification(imageName, factor);
+
+    return 0;
+}
+
 int main(int argc, char *argv[])
 {
     Initialize();
@@ -88,6 +145,7 @@ int main(int argc, char *argv[])
             break;
         case contentAmplificationRoutine:
             cout << "Calling content amplification" << endl;
+            contentAmplificationArgCheck(argc, argv);
             break;
 
         case removeObjectRoutine:

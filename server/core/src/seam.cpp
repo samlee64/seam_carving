@@ -471,6 +471,12 @@ FloatImage grow(const FloatImage &im, const int addWidth, const int addHeight, c
 
 FloatImage contentAmpilification(const FloatImage &im, float factor)
 {
+    const string outputPath("");
+    return contentAmplification(im, factor, outputPath);
+}
+
+FloatImage contentAmplification(const FloatImage &im, float factor, const string outputPath)
+{
     if (factor < 1) {
         return im;
     }
@@ -478,25 +484,40 @@ FloatImage contentAmpilification(const FloatImage &im, float factor)
     FloatImage scaledImageNN = scaleNN(im, factor);
     FloatImage scaledImageLin = scaleLin(im, factor);
 
-    int reduceWidth = scaledImageLin.width() - im.width();
-    int reduceHeight = scaledImageLin.height() - im.height();
+    const int reduceWidth = scaledImageLin.width() - im.width();
+    const int reduceHeight = scaledImageLin.height() - im.height();
 
-    scaledImageLin.write(DATA_DIR "/output/amplification/scaledImage.png");
+    const int gifWidth = scaledImageLin.width();
+    const int gifHeight = scaledImageLin.height();
+    int delay = 15;
+    std::vector<uint8_t> black(gifWidth * gifHeight * 4, 0);
+    std::vector<uint8_t> white(gifWidth * gifHeight * 4, 255);
+
+    string gifFilename = outputPath + "reduce.gif";
+    GifWriter reduceGif;
+    GifBegin(&reduceGif, gifFilename.c_str(), gifWidth, gifHeight, delay);
+    GifWriteFrame(&reduceGif, black.data(), gifWidth, gifHeight, delay);
+    GifWriteFrame(&reduceGif, white.data(), gifWidth, gifHeight, delay);
+
+    scaledImageLin.write(outputPath + "scaledImageLin.png");
+    scaledImageNN.write(outputPath + "scaledImageNN.png");
 
     for (int i = 0; i < reduceWidth; i++) {
         cout << "Reducing width " <<  i << endl;
-        bool isHorizontal = false;
-        vector<int> seam = isHorizontal ? findHorizontalSeamImage(scaledImageLin) : findVerticalSeamImage(scaledImageLin);
-        scaledImageLin = removeSeam(scaledImageLin, seam, isHorizontal);
-        scaledImageLin.write(DATA_DIR "/output/amplification/sca.png");
+        vector<int> seam = findVerticalSeamImage(scaledImageLin);
+        scaledImageLin = removeSeam(scaledImageLin, seam, false);
+        GifWriteFrame(&reduceGif, scaledImageLin.bytePixel(gifWidth, gifHeight).data(), gifWidth, gifHeight, delay);
     }
     for (int i = 0; i < reduceHeight; i++ ) {
         cout << "Reducing height " <<  i << endl;
-        bool isHorizontal = true;
-        vector<int> seam = isHorizontal ? findHorizontalSeamImage(scaledImageLin) : findVerticalSeamImage(scaledImageLin);
-        scaledImageLin = removeSeam(scaledImageLin, seam, isHorizontal);
+        vector<int> seam = findHorizontalSeamImage(scaledImageLin);
+        scaledImageLin = removeSeam(scaledImageLin, seam, true);
+        GifWriteFrame(&reduceGif, scaledImageLin.bytePixel(gifWidth, gifHeight).data(), gifWidth, gifHeight, delay);
     }
 
+    GifEnd(&reduceGif);
+
+    scaledImageLin.write(outputPath + "output.png");
     return scaledImageLin;
 }
 

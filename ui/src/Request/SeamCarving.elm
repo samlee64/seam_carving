@@ -23,6 +23,18 @@ growImage flags msg params =
         |> request
 
 
+contentAmplification : Flags -> (WebData ContentAmplificationResp -> msg) -> ContentAmplificationParams -> Cmd msg
+contentAmplification flags msg params =
+    let
+        body =
+            encodeContentAmplificationParams params
+    in
+    post flags [ "seam", "content-amplification" ]
+        |> withJsonBody body
+        |> withExpect contentAmplificationRespDecoder msg
+        |> request
+
+
 getExecutionStatus : Flags -> (WebData ExecutionStatusResp -> msg) -> ExecutionStatusParams -> Cmd msg
 getExecutionStatus flags msg params =
     let

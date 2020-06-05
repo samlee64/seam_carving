@@ -1,12 +1,10 @@
-import { execFile } from "child_process";
-import { map } from "bluebird";
-import config from "../config";
-import { GrowParams } from "../types/seamCarving";
-import { outputPaths, OutputPath, s3Path } from "./utils";
-import { uploadFile } from "../aws/s3";
-import { insertExecution, updateStatus } from "../store/executions";
+import {
+  GrowParams,
+  ContentAmplificationParams,
+  Routine,
+} from "../types/seamCarving";
+import { execFileWithUpload } from "./utils";
 import { Connection } from "../db";
-import { Status } from "../types/schema";
 
 export async function grow(
   conn: Connection,
@@ -15,7 +13,7 @@ export async function grow(
   const imageName = params.imageName;
 
   const args: string[] = [
-    "grow",
+    Routine.Grow,
     imageName,
     params.addWidth.toString(),
     params.addHeight.toString(),
@@ -23,43 +21,34 @@ export async function grow(
     params.showIntermediateSteps.toString(),
   ];
 
-  const executionId = await insertExecution(conn, {
-    imageName,
-    routine: "grow",
+  const executionId = await execFileWithUpload(
+    conn,
+    Routine.Grow,
     params,
-  });
+    args
+  );
+  return executionId;
+}
 
-  console.log("Running with these args", args);
-  console.log("starting exec");
-  execFile(config.executablePath, args, async (error, stdout, stderr) => {
-    if (error) {
-      await updateStatus(conn, executionId, Status.Error);
-      console.error("stderr", stderr);
-      console.error("error", error);
-      throw error;
-    }
-    await updateStatus(conn, executionId, Status.Uploading);
+export async function contentAmplification(
+  conn: Connection,
+  params: ContentAmplificationParams
+): Promise<string> {
+  const args: string[] = [
+    Routine.ContentAmplification,
+    params.imageName,
+    params.factor.toString(),
+    params.showIntermediateSteps.toString(),
+  ];
 
-    console.log("stdout", stdout);
-
-    console.log("seamCarving, uploading to s3");
-    try {
-      await map(outputPaths(imageName), async (outputPath: OutputPath) => {
-        console.log(outputPath);
-        const s3 = s3Path(imageName, outputPath.fileName);
-
-        return uploadFile(outputPath.path, s3);
-      });
-    } catch (e) {
-      await updateStatus(conn, executionId, Status.Error);
-      console.error(e);
-      throw e;
-    }
-
-    await updateStatus(conn, executionId, Status.Done);
-
-    console.log("seamCarving, finished uploading to s3");
-  });
+  console.log("Running content amplification with these args", args);
+  console.log("Starting exec");
+  const executionId = await execFileWithUpload(
+    conn,
+    Routine.ContentAmplification,
+    params,
+    args
+  );
 
   return executionId;
 }

@@ -2,7 +2,7 @@ module Page.SeamCarving.Subscriptions exposing (subscriptions)
 
 import Bootstrap.Dropdown as Dropdown
 import Page.SeamCarving.Model exposing (Model)
-import Page.SeamCarving.Msg exposing (GrowFormMsg(..), Msg(..))
+import Page.SeamCarving.Msg exposing (..)
 import Time
 
 
@@ -15,5 +15,6 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
         [ Dropdown.subscriptions model.growForm.numStepsDropdown (\s -> GrowFormMsg <| NumStepsDropdown s)
+        , Dropdown.subscriptions model.contentAmplificationForm.factorDropdown (\s -> ContentAmplificationFormMsg <| FactorDropdown s)
         , Time.every pollInterval Tick
         ]

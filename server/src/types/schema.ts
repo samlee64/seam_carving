@@ -1,4 +1,4 @@
-import { GrowParams } from "./seamCarving";
+import { RoutineParams } from "./seamCarving";
 
 export enum Status {
   Executing = "executing",
@@ -13,12 +13,13 @@ export interface Execution {
   routine: string;
   s3_url: string | null;
   status: Status;
-  params: GrowParams; //when I add contentAmp and removeObject, I need to change this to a union type
+  params: RoutineParams;
 }
 
+//TODO do something fancy binding the type of routine to the type of a params
 export interface InsertExecutionParams {
   imageName: string;
   routine: string;
   s3Url?: string | null;
-  params: GrowParams;
+  params: RoutineParams;
 }

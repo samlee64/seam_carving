@@ -1,4 +1,4 @@
-module Page.SeamCarving.Msg exposing (GrowFormMsg(..), Msg(..))
+module Page.SeamCarving.Msg exposing (..)
 
 import Bootstrap.Dropdown as Dropdown
 import Data.SeamCarving exposing (..)
@@ -18,11 +18,20 @@ type Msg
     | GrewImage (WebData GrowImageResp)
     | Tick Time.Posix
     | PolledExecutionStatus (WebData ExecutionStatusResp)
+    | ContentAmplificationFormMsg ContentAmplificationFormMsg
+    | AmplifyImage
+    | AmplifiedImage (WebData ContentAmplificationResp)
 
 
 type GrowFormMsg
-    = ShowIntermediateSteps Bool
+    = ShowGrowIntermediateSteps Bool
     | SetNumSteps Int
     | SetHeight String
     | SetWidth String
     | NumStepsDropdown Dropdown.State
+
+
+type ContentAmplificationFormMsg
+    = ShowContentAmplificationIntermediateSteps Bool
+    | SetFactor Int
+    | FactorDropdown Dropdown.State

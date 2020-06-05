@@ -17,8 +17,8 @@ import Flags exposing (Flags)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
-import Page.SeamCarving.Model exposing (Model, gifTypes, imageTitles, isExecutionDone, numSteps)
-import Page.SeamCarving.Msg exposing (GrowFormMsg(..), Msg(..))
+import Page.SeamCarving.Model exposing (Model, factorRange, gifTypes, imageTitles, isExecutionDone, numSteps)
+import Page.SeamCarving.Msg exposing (..)
 import RemoteData as RD exposing (RemoteData(..), WebData)
 import View.WebData exposing (viewWebData, viewWebDataButton)
 
@@ -73,6 +73,7 @@ viewSelectedImage model imageTitle =
     in
     div []
         [ viewGrowForm model
+        , viewContentAmplificationForm model
         , Card.config [ Card.attrs [] ]
             |> Card.header [] [ text imageTitle ]
             |> Card.block []
@@ -136,7 +137,7 @@ viewGrowForm model =
             [ CardBlock.custom <|
                 div []
                     [ Checkbox.checkbox
-                        [ Checkbox.checked True, Checkbox.onCheck (\b -> GrowFormMsg (ShowIntermediateSteps b)) ]
+                        [ Checkbox.checked True, Checkbox.onCheck (\b -> GrowFormMsg (ShowGrowIntermediateSteps b)) ]
                         "Show Intermediate Steps"
                     , Form.group []
                         [ Form.label [] [ text "Add Width (pixels)" ]
@@ -176,30 +177,56 @@ viewGrowForm model =
             [ Button.button
                 [ Button.primary, Button.onClick GrowImage, Button.disabled isGrowButtonDisabled ]
                 [ text "Grow" ]
-            , div [ Spacing.mt2, Flex.block ] [ viewExecutionStatus model ]
+            , div [ Spacing.mt2, Flex.block ]
+                [ viewWebData (\resp -> viewExecutionStatus resp.status) model.pollExecutionStatusResp ]
             ]
         |> Card.view
 
 
-viewExecutionStatus : Model -> Html Msg
-viewExecutionStatus model =
-    model.pollExecutionStatusResp
-        |> viewWebData
-            (\resp ->
-                let
-                    message =
-                        text <| statusToString resp.status
-                in
-                case resp.status of
-                    Executing ->
-                        Alert.simpleInfo [] [ message ]
+viewContentAmplificationForm : Model -> Html Msg
+viewContentAmplificationForm model =
+    Card.config []
+        |> Card.header [] [ text "Content Amplification Form" ]
+        |> Card.block []
+            [ CardBlock.custom <|
+                div []
+                    [ Checkbox.checkbox
+                        [ Checkbox.checked True, Checkbox.onCheck (\b -> GrowFormMsg (ShowGrowIntermediateSteps b)) ]
+                        "Show Intermediate Steps"
+                    , Form.group []
+                        [ Form.label [] [ text "Set Factor: " ]
+                        , br [] []
+                        , Dropdown.dropdown model.contentAmplificationForm.factorDropdown
+                            { options = []
+                            , toggleMsg = \s -> ContentAmplificationFormMsg <| FactorDropdown s
+                            , toggleButton = Dropdown.toggle [ Button.outlinePrimary ] [ text <| String.fromInt model.contentAmplificationForm.factor ]
+                            , items = List.map (\s -> Dropdown.buttonItem [ onClick <| ContentAmplificationFormMsg <| SetFactor s ] [ text <| String.fromInt s ]) factorRange
+                            }
+                        ]
+                    , viewWebData (\resp -> text "turned out ok") model.contentAmplificationResp
+                    ]
+            ]
+        |> Card.footer []
+            [ Button.button [ Button.primary, Button.onClick AmplifyImage ] [ text "Amp" ]
+            ]
+        |> Card.view
 
-                    Uploading ->
-                        Alert.simpleInfo [] [ message ]
 
-                    Done ->
-                        Alert.simpleSuccess [] [ message ]
+viewExecutionStatus : Status -> Html Msg
+viewExecutionStatus status =
+    let
+        message =
+            text <| statusToString status
+    in
+    case status of
+        Executing ->
+            Alert.simpleInfo [] [ message ]
 
-                    Error ->
-                        Alert.simpleDanger [] [ message ]
-            )
+        Uploading ->
+            Alert.simpleInfo [] [ message ]
+
+        Done ->
+            Alert.simpleSuccess [] [ message ]
+
+        Error ->
+            Alert.simpleDanger [] [ message ]

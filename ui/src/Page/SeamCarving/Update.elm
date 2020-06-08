@@ -1,8 +1,10 @@
 module Page.SeamCarving.Update exposing (update)
 
 import Data.SeamCarving exposing (..)
+import Data.Triangle as Triangle
 import Extra.Cmd exposing (cmd, none)
 import Extra.Extra as Extra
+import Extra.Maybe exposing (isJust, isNothing)
 import Page.SeamCarving.Model exposing (..)
 import Page.SeamCarving.Msg exposing (..)
 import RemoteData as RD exposing (RemoteData(..), WebData)
@@ -83,6 +85,15 @@ update msg ({ flags } as model) =
         AmplifiedImage resp ->
             { model | contentAmplificationResp = resp } |> none
 
+        TabMsg state ->
+            { model | tabState = state }
+                |> none
+
+        RemoveObjectFormMsg rMsg ->
+            model
+                |> updateRemoveObjectForm rMsg
+                |> none
+
 
 updateGrowForm : GrowFormMsg -> Model -> Model
 updateGrowForm gMsg model =
@@ -136,6 +147,57 @@ updateContentAmplificationForm_ caMsg form =
 
         FactorDropdown state ->
             { form | factorDropdown = state }
+
+
+updateRemoveObjectForm : RemoveObjectFormMsg -> Model -> Model
+updateRemoveObjectForm rMsg model =
+    { model | removeObjectForm = updateRemoveObjectForm_ rMsg model.removeObjectForm }
+
+
+updateRemoveObjectForm_ : RemoveObjectFormMsg -> RemoveObjectForm -> RemoveObjectForm
+updateRemoveObjectForm_ rMsg form =
+    case rMsg of
+        ShowRemoveObjectIntermediateSteps val ->
+            { form | showIntermediateSteps = val }
+
+        SetProtectedArea ->
+            form
+
+        SetDestroyArea ->
+            form
+
+        SetClickMode ->
+            form
+
+        MouseMove data ->
+            { form | mouseMoveData = Just data }
+
+        --                |> (\f -> Maybe.map extractTriangleCoordFromMouseData f.mouseMoveData)
+        --                |> Maybe.map (\coord -> Triangle.updateLatest form.currTriangle coord)
+        --                |> Maybe.withDefault form.currTriangle
+        --                |> (\tri -> { form | currTriangle = tri })
+        Click ->
+            let
+                tri =
+                    form.currTriangle
+            in
+            form.mouseMoveData
+                |> Maybe.map extractTriangleCoordFromMouseData
+                |> Maybe.map
+                    (\coord ->
+                        Triangle.addCoord tri coord
+                            |> Result.map
+                                (\updatedTri ->
+                                    if Triangle.isComplete updatedTri then
+                                        { form | currTriangle = Triangle.shiftRight updatedTri [], triangles = updatedTri :: form.triangles }
+
+                                    else
+                                        { form | currTriangle = updatedTri }
+                                )
+                            --triangle is complete
+                            |> Result.withDefault { form | triangles = tri :: form.triangles, currTriangle = Triangle.shiftRight tri [] }
+                    )
+                |> Maybe.withDefault form
 
 
 resetGrowForm : Model -> Model

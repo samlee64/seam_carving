@@ -26,7 +26,7 @@ type alias GrowImageResp =
 type alias ContentAmplificationParams =
     { imageName : String
     , showIntermediateSteps : Bool
-    , factor : Int
+    , factor : Float
     }
 
 
@@ -112,7 +112,7 @@ encodeContentAmplificationParams params =
     E.object
         [ ( "imageName", E.string params.imageName )
         , ( "showIntermediateSteps", E.bool params.showIntermediateSteps )
-        , ( "factor", E.int params.factor )
+        , ( "factor", E.float params.factor )
         ]
 
 

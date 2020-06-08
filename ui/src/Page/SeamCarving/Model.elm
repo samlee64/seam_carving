@@ -1,7 +1,10 @@
 module Page.SeamCarving.Model exposing (..)
 
 import Bootstrap.Dropdown as Dropdown
+import Bootstrap.Tab as Tab
+import Data.Mouse exposing (..)
 import Data.SeamCarving exposing (..)
+import Data.Triangle as Triangle exposing (Triangle)
 import Flags exposing (Flags)
 import Page.SeamCarving.Msg exposing (Msg(..))
 import RemoteData as RD exposing (RemoteData(..), WebData)
@@ -16,6 +19,8 @@ type alias Model =
     , pollExecutionStatusResp : WebData ExecutionStatusResp
     , contentAmplificationForm : ContentAmplificationForm
     , contentAmplificationResp : WebData ContentAmplificationResp
+    , tabState : Tab.State
+    , removeObjectForm : RemoveObjectForm
     }
 
 
@@ -31,6 +36,8 @@ init flags =
             , pollExecutionStatusResp = NotAsked
             , contentAmplificationForm = defaultContentAmplificationForm
             , contentAmplificationResp = NotAsked
+            , tabState = Tab.initialState
+            , removeObjectForm = defaultRemoveObjectForm
             }
     in
     ( model, Cmd.none )
@@ -47,8 +54,25 @@ type alias GrowForm =
 
 type alias ContentAmplificationForm =
     { showIntermediateSteps : Bool
-    , factor : Int
+    , factor : Float
     , factorDropdown : Dropdown.State
+    }
+
+
+type ClickMode
+    = Protect
+    | Destroy
+
+
+type alias RemoveObjectForm =
+    { protected : Int
+    , destroy : Int
+    , clickMode : ClickMode
+    , showIntermediateSteps : Bool
+    , mouseMoveData : Maybe MouseMoveData
+    , triangles : List Triangle
+    , currTriangle : Triangle
+    , trianglePointIdx : Int
     }
 
 
@@ -65,8 +89,21 @@ defaultGrowForm =
 defaultContentAmplificationForm : ContentAmplificationForm
 defaultContentAmplificationForm =
     { showIntermediateSteps = False
-    , factor = 2
+    , factor = 1.2
     , factorDropdown = Dropdown.initialState
+    }
+
+
+defaultRemoveObjectForm : RemoveObjectForm
+defaultRemoveObjectForm =
+    { protected = 0
+    , destroy = 0
+    , clickMode = Destroy
+    , showIntermediateSteps = True
+    , mouseMoveData = Nothing
+    , triangles = []
+    , currTriangle = Triangle.empty
+    , trianglePointIdx = 0
     }
 
 
@@ -94,6 +131,15 @@ extractContentAmplificationParams ({ contentAmplificationForm } as model) =
             }
         )
         model.selectedImage
+
+
+
+--TODO this is badly named
+
+
+extractTriangleCoordFromMouseData : MouseMoveData -> List Int
+extractTriangleCoordFromMouseData mouseMoveData =
+    [ mouseMoveData.offsetX, mouseMoveData.offsetY ]
 
 
 isExecutionDone : Model -> Bool
@@ -127,6 +173,7 @@ numSteps =
     List.range 1 8
 
 
-factorRange : List Int
+factorRange : List Float
 factorRange =
-    List.range 2 10
+    List.range 11 20
+        |> List.map (\modifier -> toFloat modifier / 10)

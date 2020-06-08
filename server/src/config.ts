@@ -13,6 +13,7 @@ export interface Config {
     database: string;
     port: number;
   };
+  env: string;
 }
 
 //tslint:disable-next-line
@@ -22,6 +23,7 @@ const config: Config = {
   ...staticConfig,
   dataDir: __dirname + "/../data",
   executablePath: __dirname + "/../core/cmake-build-debug/seam_carving",
+  env: "test"
 };
 
 export default config;

@@ -76,7 +76,7 @@ int growArgCheck(int argc, char *argv[])
 }
 
 
-void runContentAmplification(const string imageName, const int factor)
+void runContentAmplification(const string imageName, const float factor)
 {
     string inputImagePath = DATA_DIR "/input/" + imageName + ".png";
 
@@ -114,7 +114,7 @@ int contentAmplificationArgCheck(int argc, char *argv[])
     }
 
     const string imageName(argv[2]);
-    const int factor = atoi(argv[3]);
+    const float factor = stof(argv[3]);
 
     const bool showIntermediate = 0 == strcmp(argv[4], "true");
     if (factor == 0)

@@ -475,21 +475,23 @@ FloatImage contentAmpilification(const FloatImage &im, float factor)
     return contentAmplification(im, factor, outputPath);
 }
 
-FloatImage contentAmplification(const FloatImage &im, float factor, const string outputPath)
+FloatImage contentAmplification(const FloatImage &im, const float factor, const string outputPath)
 {
     if (factor < 1) {
         return im;
     }
 
-    FloatImage scaledImageNN = scaleNN(im, factor);
     FloatImage scaledImageLin = scaleLin(im, factor);
 
     const int reduceWidth = scaledImageLin.width() - im.width();
     const int reduceHeight = scaledImageLin.height() - im.height();
 
+    cout << "reduceWidth " << reduceWidth << endl;
+    cout << "reduceHeight " << reduceHeight << endl;
+
     const int gifWidth = scaledImageLin.width();
     const int gifHeight = scaledImageLin.height();
-    int delay = 15;
+    int delay = 7;
     std::vector<uint8_t> black(gifWidth * gifHeight * 4, 0);
     std::vector<uint8_t> white(gifWidth * gifHeight * 4, 255);
 
@@ -500,16 +502,13 @@ FloatImage contentAmplification(const FloatImage &im, float factor, const string
     GifWriteFrame(&reduceGif, white.data(), gifWidth, gifHeight, delay);
 
     scaledImageLin.write(outputPath + "scaledImageLin.png");
-    scaledImageNN.write(outputPath + "scaledImageNN.png");
 
     for (int i = 0; i < reduceWidth; i++) {
-        cout << "Reducing width " <<  i << endl;
         vector<int> seam = findVerticalSeamImage(scaledImageLin);
         scaledImageLin = removeSeam(scaledImageLin, seam, false);
         GifWriteFrame(&reduceGif, scaledImageLin.bytePixel(gifWidth, gifHeight).data(), gifWidth, gifHeight, delay);
     }
     for (int i = 0; i < reduceHeight; i++ ) {
-        cout << "Reducing height " <<  i << endl;
         vector<int> seam = findHorizontalSeamImage(scaledImageLin);
         scaledImageLin = removeSeam(scaledImageLin, seam, true);
         GifWriteFrame(&reduceGif, scaledImageLin.bytePixel(gifWidth, gifHeight).data(), gifWidth, gifHeight, delay);

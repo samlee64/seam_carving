@@ -1,6 +1,8 @@
 module Page.SeamCarving.Msg exposing (..)
 
 import Bootstrap.Dropdown as Dropdown
+import Bootstrap.Tab as Tab
+import Data.Mouse exposing (..)
 import Data.SeamCarving exposing (..)
 import Http
 import RemoteData as RD exposing (WebData)
@@ -21,6 +23,8 @@ type Msg
     | ContentAmplificationFormMsg ContentAmplificationFormMsg
     | AmplifyImage
     | AmplifiedImage (WebData ContentAmplificationResp)
+    | TabMsg Tab.State
+    | RemoveObjectFormMsg RemoveObjectFormMsg
 
 
 type GrowFormMsg
@@ -33,5 +37,14 @@ type GrowFormMsg
 
 type ContentAmplificationFormMsg
     = ShowContentAmplificationIntermediateSteps Bool
-    | SetFactor Int
+    | SetFactor Float
     | FactorDropdown Dropdown.State
+
+
+type RemoveObjectFormMsg
+    = ShowRemoveObjectIntermediateSteps Bool
+    | SetProtectedArea
+    | SetDestroyArea
+    | SetClickMode
+    | MouseMove MouseMoveData
+    | Click

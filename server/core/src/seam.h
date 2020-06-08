@@ -26,5 +26,5 @@ FloatImage grow(const FloatImage &im, const int addWidth, const int addHeight, c
 FloatImage grow(const FloatImage &im, const int addWidth, const int addHeight, const int numSteps, const string outputPath);
 
 FloatImage contentAmpilification(const FloatImage &im, float factor);
-FloatImage contentAmplification(const FloatImage &im, float factor, const string outputPath);
+FloatImage contentAmplification(const FloatImage &im, const float factor, const string outputPath);
 

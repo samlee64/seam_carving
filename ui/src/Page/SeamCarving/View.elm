@@ -8,27 +8,37 @@ import Bootstrap.Dropdown as Dropdown
 import Bootstrap.Form as Form
 import Bootstrap.Form.Checkbox as Checkbox
 import Bootstrap.Form.Input as Input
+import Bootstrap.Tab as Tab
 import Bootstrap.Utilities.Flex as Flex
 import Bootstrap.Utilities.Spacing as Spacing
+import Canvas
+import Canvas.Settings
+import Canvas.Settings.Advanced
+import Canvas.Settings.Line
+import Data.Mouse exposing (..)
 import Data.SeamCarving exposing (Status(..), statusToString)
+import Data.Triangle as Triangle exposing (Triangle)
 import Extra.Extra as Extra
 import Extra.Html as EH
 import Flags exposing (Flags)
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onClick)
-import Page.SeamCarving.Model exposing (Model, factorRange, gifTypes, imageTitles, isExecutionDone, numSteps)
+import Html.Events exposing (on, onClick)
+import Json.Decode as Decode
+import Json.Encode as E
+import Page.SeamCarving.Model exposing (..)
 import Page.SeamCarving.Msg exposing (..)
 import RemoteData as RD exposing (RemoteData(..), WebData)
+import Tuple
 import View.WebData exposing (viewWebData, viewWebDataButton)
-
-
-
---TODO add some scaffolding around this switch
 
 
 view : Model -> Html Msg
 view model =
+    let
+        imgSrc =
+            "http://seam-carving.s3-us-west-2.amazonaws.com/defaults/dolphin.png"
+    in
     div []
         [ viewToolbar model
         , model.selectedImage
@@ -59,6 +69,30 @@ viewAllImages model =
 
 viewSelectedImage : Model -> String -> Html Msg
 viewSelectedImage model imageTitle =
+    Tab.config TabMsg
+        |> Tab.withAnimation
+        |> Tab.items
+            [ Tab.item
+                { id = "object-removal"
+                , link = Tab.link [] [ text "Object Removal" ]
+                , pane = Tab.pane [ Spacing.mt3 ] [ viewObjectRemovalForm model ]
+                }
+            , Tab.item
+                { id = "content-amplification"
+                , link = Tab.link [] [ text "Content Amplification" ]
+                , pane = Tab.pane [ Spacing.mt3 ] [ viewContentAmplificationForm model ]
+                }
+            , Tab.item
+                { id = "grow"
+                , link = Tab.link [] [ text "Grow" ]
+                , pane = Tab.pane [ Spacing.mt3 ] [ viewGrowForm model ]
+                }
+            ]
+        |> Tab.view model.tabState
+
+
+viewSelectedImage_ : Model -> String -> Html Msg
+viewSelectedImage_ model imageTitle =
     let
         imgSrc =
             model.flags.bucket ++ "/defaults/" ++ imageTitle ++ ".png"
@@ -71,24 +105,20 @@ viewSelectedImage model imageTitle =
                 |> List.map (\g -> img [ src (gifSrc ++ g ++ ".gif") ] [])
                 |> div []
     in
-    div []
-        [ viewGrowForm model
-        , viewContentAmplificationForm model
-        , Card.config [ Card.attrs [] ]
-            |> Card.header [] [ text imageTitle ]
-            |> Card.block []
-                [ CardBlock.custom <|
-                    div []
-                        [ img [ src imgSrc ]
-                            []
-                        , model
-                            |> isExecutionDone
-                            |> Extra.ternary viewGifs EH.none
-                        ]
-                ]
-            |> Card.footer [] []
-            |> Card.view
-        ]
+    Card.config [ Card.attrs [] ]
+        |> Card.header [] [ text imageTitle ]
+        |> Card.block []
+            [ CardBlock.custom <|
+                div []
+                    [ img [ src imgSrc ]
+                        []
+                    , model
+                        |> isExecutionDone
+                        |> Extra.ternary viewGifs EH.none
+                    ]
+            ]
+        |> Card.footer [] []
+        |> Card.view
 
 
 viewHealthCheck : Model -> Html Msg
@@ -199,8 +229,8 @@ viewContentAmplificationForm model =
                         , Dropdown.dropdown model.contentAmplificationForm.factorDropdown
                             { options = []
                             , toggleMsg = \s -> ContentAmplificationFormMsg <| FactorDropdown s
-                            , toggleButton = Dropdown.toggle [ Button.outlinePrimary ] [ text <| String.fromInt model.contentAmplificationForm.factor ]
-                            , items = List.map (\s -> Dropdown.buttonItem [ onClick <| ContentAmplificationFormMsg <| SetFactor s ] [ text <| String.fromInt s ]) factorRange
+                            , toggleButton = Dropdown.toggle [ Button.outlinePrimary ] [ text <| String.fromFloat model.contentAmplificationForm.factor ]
+                            , items = List.map (\s -> Dropdown.buttonItem [ onClick <| ContentAmplificationFormMsg <| SetFactor s ] [ text <| String.fromFloat s ]) factorRange
                             }
                         ]
                     , viewWebData (\resp -> text "turned out ok") model.contentAmplificationResp
@@ -210,6 +240,89 @@ viewContentAmplificationForm model =
             [ Button.button [ Button.primary, Button.onClick AmplifyImage ] [ text "Amp" ]
             ]
         |> Card.view
+
+
+viewObjectRemovalForm : Model -> Html Msg
+viewObjectRemovalForm model =
+    Card.config []
+        |> Card.header [] [ text "Object Removal Form" ]
+        |> Card.block [] [ CardBlock.custom <| Html.map RemoveObjectFormMsg <| viewCanvas model ]
+        |> Card.footer [] [ Button.button [ Button.primary, Button.onClick NoOp ] [ text "Remove!" ] ]
+        |> Card.view
+
+
+viewCanvas : Model -> Html RemoveObjectFormMsg
+viewCanvas ({ removeObjectForm } as model) =
+    let
+        imgSrc =
+            model.selectedImage
+                |> Maybe.map
+                    (\si ->
+                        model.flags.bucket ++ "/defaults/" ++ si ++ ".png"
+                    )
+                |> Maybe.withDefault ""
+
+        viewMouseData data =
+            div []
+                [ text <| "OffsetX: " ++ String.fromInt data.offsetX
+                , br [] []
+                , text <| "OffsetY: " ++ String.fromInt data.offsetY
+                , br [] []
+                , text <| "OffsetHeight: " ++ String.fromFloat data.offsetHeight
+                , br [] []
+                , text <| "OffsetWidth: " ++ String.fromFloat data.offsetWidth
+                ]
+
+        getTuple tupe =
+            Maybe.map (\t -> String.fromInt (Tuple.first t) ++ ", " ++ String.fromInt (Tuple.second t)) tupe |> Maybe.withDefault ""
+
+        viewTriangleData data =
+            div []
+                [ text <| "one: " ++ E.encode 0 (E.list E.int data.one)
+                , br [] []
+                , text <| "two: " ++ E.encode 0 (E.list E.int data.two)
+                , br [] []
+                , text <| "three: " ++ E.encode 0 (E.list E.int data.three)
+                ]
+
+        protected =
+            removeObjectForm.mouseMoveData
+                |> Maybe.map extractTriangleCoordFromMouseData
+                |> Maybe.withDefault []
+                |> Triangle.addCoord removeObjectForm.currTriangle
+                |> Result.map (\tri -> E.encode 0 (E.list Triangle.encode (tri :: removeObjectForm.triangles)))
+                |> Result.withDefault ""
+
+        attributes =
+            [ on "mousemove" (Decode.map MouseMove mouseMoveDataDecoder)
+            , onClick Click
+            , attribute "destroy" ""
+            , attribute "imgSrc" imgSrc
+            , attribute "protected" protected
+            ]
+    in
+    div []
+        [ removeObjectForm.mouseMoveData
+            |> Maybe.map viewMouseData
+            |> Maybe.withDefault EH.none
+        , div [ Flex.block, Flex.row, style "background" "grey" ] (List.map viewTriangleData removeObjectForm.triangles)
+        , div [] [ viewTriangleData removeObjectForm.currTriangle ]
+        , node "remove-object" attributes []
+        , Button.button
+            [ Button.success
+
+            --            , Button.onClick SetProtected
+            , Button.disabled <| removeObjectForm.clickMode == Protect
+            ]
+            [ text "Set Protected Areas" ]
+        , Button.button
+            [ Button.danger
+
+            --           , Button.onClick SetDestroy
+            , Button.disabled <| removeObjectForm.clickMode == Destroy
+            ]
+            [ text "Set Destroy Areas" ]
+        ]
 
 
 viewExecutionStatus : Status -> Html Msg

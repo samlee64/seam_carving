@@ -8,12 +8,12 @@ import { Routine, RoutineParams } from "../types/seamCarving";
 import { updateStatus, insertExecution } from "../store/executions";
 import { uploadFile } from "../aws/s3";
 
-export interface OutputPath {
+interface OutputPath {
   fileName: string;
   path: string;
 }
 
-export function outputPaths(imageName: string, routine: Routine): OutputPath[] {
+function outputPaths(imageName: string, routine: Routine): OutputPath[] {
   //Returns the location of the newly written png and gif files
   let fileNames: string[];
 
@@ -34,8 +34,8 @@ export function outputPaths(imageName: string, routine: Routine): OutputPath[] {
   });
 }
 
-export function s3Path(imageName: string, fileName: string): string {
-  return path.join("output", imageName, fileName);
+function s3Path(routine: Routine, imageName: string, fileName: string): string {
+  return path.join("output", routine, imageName, fileName);
 }
 
 export async function execFileWithUpload(
@@ -65,9 +65,10 @@ export async function execFileWithUpload(
     try {
       await map(
         outputPaths(params.imageName, routine),
+
         async (outputPath: OutputPath) => {
           console.log(outputPath);
-          const s3 = s3Path(params.imageName, outputPath.fileName);
+          const s3 = s3Path(routine, params.imageName, outputPath.fileName);
 
           return uploadFile(outputPath.path, s3);
         }
@@ -78,7 +79,6 @@ export async function execFileWithUpload(
       throw e;
     }
 
-    console.log("pre updating status", executionId, Status.Done);
     await updateStatus(conn, executionId, Status.Done);
 
     console.log("seamCarving, finished uploading to s3");

@@ -45,6 +45,17 @@ type RemoveObjectFormMsg
     = ShowRemoveObjectIntermediateSteps Bool
     | SetProtectedArea
     | SetDestroyArea
-    | SetClickMode
+    | SetClickMode ClickMode
+    | SetMarkMode MarkMode
     | MouseMove MouseMoveData
     | Click
+
+
+type ClickMode
+    = Continious
+    | Discreet
+
+
+type MarkMode
+    = Protect
+    | Destroy

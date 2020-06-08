@@ -15,12 +15,12 @@ class RemoveObject extends HTMLElement {
   }
   constructor() {
     super();
-    this.triangles = [];
-
     this.attachShadow({mode: 'open'});
 
     this.shadowRoot.appendChild(template.content.cloneNode(true));
     this.img;
+    this.protected = [];
+    this.destroy = [];
 
 //    const img = document.createElement('img');
 //    img.id = "removal-img"
@@ -54,7 +54,6 @@ class RemoveObject extends HTMLElement {
       canvas.width = this.width;
       canvas.height = this.height;
       ctx.drawImage(img, 0, 0)
-      console.log(this.img)
     }
     this.img = img;
   }
@@ -65,37 +64,38 @@ class RemoveObject extends HTMLElement {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     if (this.img) {
-
       ctx.drawImage(this.img, 0, 0)
     }
 
-    //ctx.save();
-    //ctx.restore();
+    this.protected.map(tri => this.drawTriangle(tri, "#008000"));
 
-    this.triangles.map(tri => {
-      drawTriangle(tri)
-    })
+
+    this.destroy.map(tri => this.drawTriangle(tri, "#FF0000"));
+//
+//    destroyRegions.triangles.map(tri => {
+//      drawTriangle(tri)
+//    })
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
-    console.log(newValue);
     const parsedValues = JSON.parse(newValue);
+    this[name] = parsedValues;
 
     this.redraw();
-    if (parsedValues && parsedValues[0]) {
-      parsedValues.map(tri => this.drawTriangle(tri));
-    }
+//    if (parsedValues) {
+//      parsedValues.map(tri => this.drawTriangle(tri));
+//    }
 
 
   }
 
-  drawTriangle(points) {
+  drawTriangle(points, color) {
     const ctx = this.shadowRoot.getElementById('removal-canvas').getContext('2d');
 
+    ctx.fillStyle=color;
     const pointOne = points[0];
     const pointTwo = points[1];
     const pointThree = points[2];
-    ctx.fillStyle = "#008000"
 
     ctx.beginPath();
     ctx.moveTo(pointOne[0], pointOne[1]);

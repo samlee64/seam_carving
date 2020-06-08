@@ -290,13 +290,21 @@ viewCanvas ({ removeObjectForm } as model) =
                 |> Maybe.map extractTriangleCoordFromMouseData
                 |> Maybe.withDefault []
                 |> Triangle.addCoord removeObjectForm.currTriangle
-                |> Result.map (\tri -> E.encode 0 (E.list Triangle.encode (tri :: removeObjectForm.triangles)))
+                |> Result.map (\tri -> E.encode 0 (E.list Triangle.encode (tri :: removeObjectForm.protected)))
+                |> Result.withDefault ""
+
+        destroy =
+            removeObjectForm.mouseMoveData
+                |> Maybe.map extractTriangleCoordFromMouseData
+                |> Maybe.withDefault []
+                |> Triangle.addCoord removeObjectForm.currTriangle
+                |> Result.map (\tri -> E.encode 0 (E.list Triangle.encode (tri :: removeObjectForm.destroy)))
                 |> Result.withDefault ""
 
         attributes =
             [ on "mousemove" (Decode.map MouseMove mouseMoveDataDecoder)
             , onClick Click
-            , attribute "destroy" ""
+            , attribute "destroy" destroy
             , attribute "imgSrc" imgSrc
             , attribute "protected" protected
             ]
@@ -305,23 +313,38 @@ viewCanvas ({ removeObjectForm } as model) =
         [ removeObjectForm.mouseMoveData
             |> Maybe.map viewMouseData
             |> Maybe.withDefault EH.none
-        , div [ Flex.block, Flex.row, style "background" "grey" ] (List.map viewTriangleData removeObjectForm.triangles)
+        , div [ Flex.block, Flex.row, style "background" "grey" ] (List.map viewTriangleData removeObjectForm.protected)
+        , div [ Flex.block, Flex.row, style "background" "red" ] (List.map viewTriangleData removeObjectForm.destroy)
         , div [] [ viewTriangleData removeObjectForm.currTriangle ]
         , node "remove-object" attributes []
-        , Button.button
-            [ Button.success
-
-            --            , Button.onClick SetProtected
-            , Button.disabled <| removeObjectForm.clickMode == Protect
+        , div []
+            [ Button.button
+                [ Button.success
+                , Button.onClick (SetClickMode Continious)
+                , Button.disabled <| removeObjectForm.clickMode == Continious
+                ]
+                [ text "Set Continious" ]
+            , Button.button
+                [ Button.danger
+                , Button.onClick (SetClickMode Discreet)
+                , Button.disabled <| removeObjectForm.clickMode == Discreet
+                ]
+                [ text "Set Discreet" ]
             ]
-            [ text "Set Protected Areas" ]
-        , Button.button
-            [ Button.danger
-
-            --           , Button.onClick SetDestroy
-            , Button.disabled <| removeObjectForm.clickMode == Destroy
+        , div []
+            [ Button.button
+                [ Button.success
+                , Button.onClick (SetMarkMode Protect)
+                , Button.disabled <| removeObjectForm.markMode == Protect
+                ]
+                [ text "Set Protected Areas" ]
+            , Button.button
+                [ Button.danger
+                , Button.onClick (SetMarkMode Destroy)
+                , Button.disabled <| removeObjectForm.markMode == Destroy
+                ]
+                [ text "Set Destroy Areas" ]
             ]
-            [ text "Set Destroy Areas" ]
         ]
 
 

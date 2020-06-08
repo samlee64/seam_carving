@@ -6,7 +6,7 @@ import Data.Mouse exposing (..)
 import Data.SeamCarving exposing (..)
 import Data.Triangle as Triangle exposing (Triangle)
 import Flags exposing (Flags)
-import Page.SeamCarving.Msg exposing (Msg(..))
+import Page.SeamCarving.Msg exposing (..)
 import RemoteData as RD exposing (RemoteData(..), WebData)
 
 
@@ -59,18 +59,13 @@ type alias ContentAmplificationForm =
     }
 
 
-type ClickMode
-    = Protect
-    | Destroy
-
-
 type alias RemoveObjectForm =
-    { protected : Int
-    , destroy : Int
+    { protected : List Triangle
+    , destroy : List Triangle
     , clickMode : ClickMode
+    , markMode : MarkMode
     , showIntermediateSteps : Bool
     , mouseMoveData : Maybe MouseMoveData
-    , triangles : List Triangle
     , currTriangle : Triangle
     , trianglePointIdx : Int
     }
@@ -96,12 +91,12 @@ defaultContentAmplificationForm =
 
 defaultRemoveObjectForm : RemoveObjectForm
 defaultRemoveObjectForm =
-    { protected = 0
-    , destroy = 0
-    , clickMode = Destroy
+    { protected = []
+    , destroy = []
+    , clickMode = Discreet
+    , markMode = Destroy
     , showIntermediateSteps = True
     , mouseMoveData = Nothing
-    , triangles = []
     , currTriangle = Triangle.empty
     , trianglePointIdx = 0
     }

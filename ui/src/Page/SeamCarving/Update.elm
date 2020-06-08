@@ -166,8 +166,11 @@ updateRemoveObjectForm_ rMsg form =
         SetDestroyArea ->
             form
 
-        SetClickMode ->
-            form
+        SetClickMode mode ->
+            { form | clickMode = mode }
+
+        SetMarkMode mode ->
+            { form | markMode = mode }
 
         MouseMove data ->
             { form | mouseMoveData = Just data }
@@ -180,6 +183,23 @@ updateRemoveObjectForm_ rMsg form =
             let
                 tri =
                     form.currTriangle
+
+                nextTriangle t =
+                    if form.clickMode == Continious then
+                        Triangle.shiftRight t []
+                            |> Debug.log "shiftedRight"
+
+                    else
+                        Triangle.empty
+                            |> Debug.log "empty"
+
+                updateProper item ff =
+                    case form.markMode of
+                        Protect ->
+                            { ff | protected = item :: form.protected }
+
+                        Destroy ->
+                            { ff | destroy = item :: form.destroy }
             in
             form.mouseMoveData
                 |> Maybe.map extractTriangleCoordFromMouseData
@@ -189,13 +209,15 @@ updateRemoveObjectForm_ rMsg form =
                             |> Result.map
                                 (\updatedTri ->
                                     if Triangle.isComplete updatedTri then
-                                        { form | currTriangle = Triangle.shiftRight updatedTri [], triangles = updatedTri :: form.triangles }
+                                        { form | currTriangle = nextTriangle updatedTri }
+                                            |> updateProper updatedTri
 
                                     else
                                         { form | currTriangle = updatedTri }
                                 )
                             --triangle is complete
-                            |> Result.withDefault { form | triangles = tri :: form.triangles, currTriangle = Triangle.shiftRight tri [] }
+                            |> Result.withDefault form
+                     --({ form | currTriangle = Triangle.shiftRight tri [] } |> updateProper tri)
                     )
                 |> Maybe.withDefault form
 

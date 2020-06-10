@@ -35,6 +35,18 @@ contentAmplification flags msg params =
         |> request
 
 
+removeObject : Flags -> (WebData RemoveObjectResp -> msg) -> RemoveObjectParams -> Cmd msg
+removeObject flags msg params =
+    let
+        body =
+            encodeRemoveObjectParams params
+    in
+    post flags [ "seam", "remove-object" ]
+        |> withJsonBody body
+        |> withExpect removeObjectRespDecoder msg
+        |> request
+
+
 getExecutionStatus : Flags -> (WebData ExecutionStatusResp -> msg) -> ExecutionStatusParams -> Cmd msg
 getExecutionStatus flags msg params =
     let

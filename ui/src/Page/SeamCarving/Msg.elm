@@ -2,6 +2,7 @@ module Page.SeamCarving.Msg exposing (..)
 
 import Bootstrap.Dropdown as Dropdown
 import Bootstrap.Tab as Tab
+import Data.Markings exposing (Markings)
 import Data.Mouse exposing (..)
 import Data.SeamCarving exposing (..)
 import Http
@@ -25,6 +26,8 @@ type Msg
     | AmplifiedImage (WebData ContentAmplificationResp)
     | TabMsg Tab.State
     | RemoveObjectFormMsg RemoveObjectFormMsg
+    | RemoveObject
+    | RemovedObject (WebData RemoveObjectResp)
 
 
 type GrowFormMsg
@@ -43,12 +46,14 @@ type ContentAmplificationFormMsg
 
 type RemoveObjectFormMsg
     = ShowRemoveObjectIntermediateSteps Bool
-    | SetProtectedArea
-    | SetDestroyArea
     | SetClickMode ClickMode
     | SetMarkMode MarkMode
     | MouseMove MouseMoveData
     | Click
+    | SetLockRatio Bool
+    | SetOnlyHorizontal Bool
+    | SetOnlyVertical Bool
+    | HandleMarkings Markings
 
 
 type ClickMode

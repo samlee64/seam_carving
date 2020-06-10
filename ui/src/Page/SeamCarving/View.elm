@@ -1,6 +1,7 @@
 module Page.SeamCarving.View exposing (view)
 
 import Bootstrap.Alert as Alert
+import Bootstrap.Badge as Badge
 import Bootstrap.Button as Button
 import Bootstrap.Card as Card
 import Bootstrap.Card.Block as CardBlock
@@ -15,6 +16,7 @@ import Canvas
 import Canvas.Settings
 import Canvas.Settings.Advanced
 import Canvas.Settings.Line
+import Data.Markings exposing (..)
 import Data.Mouse exposing (..)
 import Data.SeamCarving exposing (Status(..), statusToString)
 import Data.Triangle as Triangle exposing (Triangle)
@@ -247,7 +249,7 @@ viewObjectRemovalForm model =
     Card.config []
         |> Card.header [] [ text "Object Removal Form" ]
         |> Card.block [] [ CardBlock.custom <| Html.map RemoveObjectFormMsg <| viewCanvas model ]
-        |> Card.footer [] [ Button.button [ Button.primary, Button.onClick NoOp ] [ text "Remove!" ] ]
+        |> Card.footer [] [ Button.button [ Button.primary, Button.onClick RemoveObject ] [ text "Remove!" ] ]
         |> Card.view
 
 
@@ -256,25 +258,8 @@ viewCanvas ({ removeObjectForm } as model) =
     let
         imgSrc =
             model.selectedImage
-                |> Maybe.map
-                    (\si ->
-                        model.flags.bucket ++ "/defaults/" ++ si ++ ".png"
-                    )
+                |> Maybe.map (\si -> model.flags.bucket ++ "/defaults/" ++ si ++ ".png")
                 |> Maybe.withDefault ""
-
-        viewMouseData data =
-            div []
-                [ text <| "OffsetX: " ++ String.fromInt data.offsetX
-                , br [] []
-                , text <| "OffsetY: " ++ String.fromInt data.offsetY
-                , br [] []
-                , text <| "OffsetHeight: " ++ String.fromFloat data.offsetHeight
-                , br [] []
-                , text <| "OffsetWidth: " ++ String.fromFloat data.offsetWidth
-                ]
-
-        getTuple tupe =
-            Maybe.map (\t -> String.fromInt (Tuple.first t) ++ ", " ++ String.fromInt (Tuple.second t)) tupe |> Maybe.withDefault ""
 
         viewTriangleData data =
             div []
@@ -285,24 +270,34 @@ viewCanvas ({ removeObjectForm } as model) =
                 , text <| "three: " ++ E.encode 0 (E.list E.int data.three)
                 ]
 
-        protected =
+        currTri =
             removeObjectForm.mouseMoveData
                 |> Maybe.map extractTriangleCoordFromMouseData
-                |> Maybe.withDefault []
-                |> Triangle.addCoord removeObjectForm.currTriangle
-                |> Result.map (\tri -> E.encode 0 (E.list Triangle.encode (tri :: removeObjectForm.protected)))
-                |> Result.withDefault ""
+                |> Maybe.andThen (\c -> Result.toMaybe <| Triangle.addCoord removeObjectForm.currTriangle c)
+
+        protected =
+            currTri
+                |> Maybe.map
+                    (\t ->
+                        removeObjectForm.markMode
+                            == Protect
+                            |> Extra.ternary (t :: removeObjectForm.protected) removeObjectForm.protected
+                    )
+                |> Maybe.withDefault removeObjectForm.protected
+                |> (\l -> E.encode 0 (E.list Triangle.encode l))
 
         destroy =
-            removeObjectForm.mouseMoveData
-                |> Maybe.map extractTriangleCoordFromMouseData
-                |> Maybe.withDefault []
-                |> Triangle.addCoord removeObjectForm.currTriangle
-                |> Result.map (\tri -> E.encode 0 (E.list Triangle.encode (tri :: removeObjectForm.destroy)))
-                |> Result.withDefault ""
+            currTri
+                |> Maybe.map
+                    (\t ->
+                        removeObjectForm.markMode == Destroy |> Extra.ternary (t :: removeObjectForm.destroy) removeObjectForm.destroy
+                    )
+                |> Maybe.withDefault removeObjectForm.destroy
+                |> (\l -> E.encode 0 (E.list Triangle.encode l))
 
         attributes =
             [ on "mousemove" (Decode.map MouseMove mouseMoveDataDecoder)
+            , on "markings" (Decode.map HandleMarkings markingsDecoder)
             , onClick Click
             , attribute "destroy" destroy
             , attribute "imgSrc" imgSrc
@@ -310,15 +305,13 @@ viewCanvas ({ removeObjectForm } as model) =
             ]
     in
     div []
-        [ removeObjectForm.mouseMoveData
-            |> Maybe.map viewMouseData
-            |> Maybe.withDefault EH.none
-        , div [ Flex.block, Flex.row, style "background" "grey" ] (List.map viewTriangleData removeObjectForm.protected)
+        [ div [ Flex.block, Flex.row, style "background" "grey" ] (List.map viewTriangleData removeObjectForm.protected)
         , div [ Flex.block, Flex.row, style "background" "red" ] (List.map viewTriangleData removeObjectForm.destroy)
         , div [] [ viewTriangleData removeObjectForm.currTriangle ]
         , node "remove-object" attributes []
         , div []
-            [ Button.button
+            [ viewModeInfo removeObjectForm
+            , Button.button
                 [ Button.success
                 , Button.onClick (SetClickMode Continious)
                 , Button.disabled <| removeObjectForm.clickMode == Continious
@@ -345,6 +338,48 @@ viewCanvas ({ removeObjectForm } as model) =
                 ]
                 [ text "Set Destroy Areas" ]
             ]
+        , div []
+            [ Checkbox.checkbox
+                [ Checkbox.checked removeObjectForm.lockRatio
+                , Checkbox.onCheck SetLockRatio
+                ]
+                "Lock Width/Height Ratio"
+            , Checkbox.checkbox
+                [ Checkbox.checked removeObjectForm.onlyHorizontal
+                , Checkbox.onCheck SetOnlyHorizontal
+                , Checkbox.disabled removeObjectForm.lockRatio
+                ]
+                "Remove only horizontal seams"
+            , Checkbox.checkbox
+                [ Checkbox.checked removeObjectForm.onlyVertical
+                , Checkbox.onCheck SetOnlyVertical
+                , Checkbox.disabled removeObjectForm.lockRatio
+                ]
+                "Remove only vertical seams"
+            ]
+        ]
+
+
+viewModeInfo : RemoveObjectForm -> Html msg
+viewModeInfo form =
+    let
+        clickMode =
+            form.clickMode
+                == Continious
+                |> Extra.ternary
+                    (Badge.badgeLight [] [ text "Continious" ])
+                    (Badge.badgeDark [] [ text "Discreet" ])
+
+        markMode =
+            form.markMode
+                == Protect
+                |> Extra.ternary
+                    (Badge.badgeSuccess [] [ text "Protect" ])
+                    (Badge.badgeDanger [] [ text "Destroy" ])
+    in
+    div []
+        [ h5 [] [ text "ClickMode: ", clickMode ]
+        , h5 [] [ text "MarkMode: ", markMode ]
         ]
 
 

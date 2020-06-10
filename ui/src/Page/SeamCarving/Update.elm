@@ -9,7 +9,7 @@ import Page.SeamCarving.Model exposing (..)
 import Page.SeamCarving.Msg exposing (..)
 import RemoteData as RD exposing (RemoteData(..), WebData)
 import Request.Request exposing (healthCheck)
-import Request.SeamCarving exposing (contentAmplification, getExecutionStatus, growImage)
+import Request.SeamCarving exposing (contentAmplification, getExecutionStatus, growImage, removeObject)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -83,6 +83,7 @@ update msg ({ flags } as model) =
                 |> cmd amplifyImageCmd
 
         AmplifiedImage resp ->
+            --TODO fire off a poll cmd here
             { model | contentAmplificationResp = resp } |> none
 
         TabMsg state ->
@@ -93,6 +94,20 @@ update msg ({ flags } as model) =
             model
                 |> updateRemoveObjectForm rMsg
                 |> none
+
+        RemoveObject ->
+            let
+                removeObjectCmd m =
+                    extractRemoveObjectParams m
+                        |> Maybe.map (removeObject flags RemovedObject)
+                        |> Maybe.withDefault Cmd.none
+            in
+            model
+                |> cmd removeObjectCmd
+
+        RemovedObject resp ->
+            --TODO fire off a poll cmd
+            { model | removeObjectResp = Loading } |> none
 
 
 updateGrowForm : GrowFormMsg -> Model -> Model
@@ -160,12 +175,6 @@ updateRemoveObjectForm_ rMsg form =
         ShowRemoveObjectIntermediateSteps val ->
             { form | showIntermediateSteps = val }
 
-        SetProtectedArea ->
-            form
-
-        SetDestroyArea ->
-            form
-
         SetClickMode mode ->
             { form | clickMode = mode }
 
@@ -187,11 +196,9 @@ updateRemoveObjectForm_ rMsg form =
                 nextTriangle t =
                     if form.clickMode == Continious then
                         Triangle.shiftRight t []
-                            |> Debug.log "shiftedRight"
 
                     else
                         Triangle.empty
-                            |> Debug.log "empty"
 
                 updateProper item ff =
                     case form.markMode of
@@ -220,6 +227,22 @@ updateRemoveObjectForm_ rMsg form =
                      --({ form | currTriangle = Triangle.shiftRight tri [] } |> updateProper tri)
                     )
                 |> Maybe.withDefault form
+
+        SetLockRatio val ->
+            { form | lockRatio = val }
+
+        SetOnlyHorizontal val ->
+            { form | onlyHorizontal = val }
+
+        SetOnlyVertical val ->
+            { form | onlyVertical = val }
+
+        HandleMarkings markings ->
+            let
+                log =
+                    Debug.log "gogo " markings
+            in
+            form
 
 
 resetGrowForm : Model -> Model

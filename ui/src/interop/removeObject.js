@@ -4,9 +4,25 @@ template.innerHTML = `
 <style>
  :host { display: inline-block; }
  canvas { display: inline-block; }
+ #container { position: relative; }
+ #drawing-canvas {
+    position: absolute;
+    left: 0;
+    top: 0;
+    opacity: 1;
+ }
+ #img-canvas {
+   position: aboslute;
+   left: 0;
+   top: 0;
+ }
+
 </style>
 
-<canvas id="removal-canvas" width=getWidth()> </canvas>
+<div id="container">
+  <canvas id="drawing-canvas"> </canvas>
+  <canvas id="img-canvas"> </canvas>
+</div>
 `
 
 class RemoveObject extends HTMLElement {
@@ -16,83 +32,71 @@ class RemoveObject extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({mode: 'open'});
-
     this.shadowRoot.appendChild(template.content.cloneNode(true));
+
     this.img;
+
     this.protected = [];
     this.destroy = [];
-
-//    const img = document.createElement('img');
-//    img.id = "removal-img"
-//    if (this.hasAttribute('imgSrc')) {
-//      imgUrl = this.getAttribute('imgSrc');
-//
-//      console.log(imgUrl);
-//
-//      img.src = imgUrl;
-//    }
-//
-//    this.shadowRoot.appendChild(img);
   }
 
-  connectedCallback() { console.log("connectedCallback");
+  connectedCallback() {
     const img = new Image();
     const imgSrc = this.getAttribute('imgSrc');
     img.src = imgSrc;
 
-    const protectedRegions = this.getAttribute("protected");
-    const destroyRegions = this.getAttribute("destroy");
+    var canvas = this.shadowRoot.getElementById('img-canvas');
+    var ctx = canvas.getContext('2d');
 
-    console.log("protectedRegions", protectedRegions)
-    console.log("destroyRegions", destroyRegions)
-
-    const canvas = this.shadowRoot.getElementById('removal-canvas');
-    const ctx = canvas.getContext('2d');
-    const shadow = this.shadowRoot;
+    var drawingCanvas = this.shadowRoot.getElementById("drawing-canvas");
+    var container = this.shadowRoot.getElementById('container');
 
     img.onload = function () {
+      container.setAttribute("style", `width:${this.width}px;height:${this.height}px`);
+
       canvas.width = this.width;
       canvas.height = this.height;
+      drawingCanvas.width =  this.width;
+      drawingCanvas.height = this.height;
+
       ctx.drawImage(img, 0, 0)
     }
     this.img = img;
   }
 
   redraw() {
-    const canvas = this.shadowRoot.getElementById('removal-canvas');
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    var drawingCanvas = this.shadowRoot.getElementById('drawing-canvas');
+    var ctx = drawingCanvas.getContext('2d');
+    ctx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
 
-    if (this.img) {
-      ctx.drawImage(this.img, 0, 0)
-    }
+    ctx.strokeStyle = "black";
 
+    color = "#FF0000";
+    ctx.fillStyle = color;
+    this.destroy.map(tri => this.drawTriangle(tri, "#FF0000"));
+
+    var color ="#008000";
+    ctx.fillStyle = color;
     this.protected.map(tri => this.drawTriangle(tri, "#008000"));
 
-
-    this.destroy.map(tri => this.drawTriangle(tri, "#FF0000"));
-//
-//    destroyRegions.triangles.map(tri => {
-//      drawTriangle(tri)
-//    })
+    var imageData = ctx.getImageData(0, 0, drawingCanvas.width, drawingCanvas.height);
+    var markings = getMarkings (imageData);
+    this.emitMarkings(markings);
   }
+
 
   attributeChangedCallback(name, oldValue, newValue) {
     const parsedValues = JSON.parse(newValue);
+    //if new triangle is added; redo the data
     this[name] = parsedValues;
 
     this.redraw();
-//    if (parsedValues) {
-//      parsedValues.map(tri => this.drawTriangle(tri));
-//    }
-
-
   }
 
   drawTriangle(points, color) {
-    const ctx = this.shadowRoot.getElementById('removal-canvas').getContext('2d');
+    const ctx = this.shadowRoot.getElementById('drawing-canvas').getContext('2d');
+    ctx.stroke();
 
-    ctx.fillStyle=color;
     const pointOne = points[0];
     const pointTwo = points[1];
     const pointThree = points[2];
@@ -103,40 +107,38 @@ class RemoveObject extends HTMLElement {
     ctx.lineTo(pointThree[0], pointThree[1]);
     ctx.fill();
   }
+
+  emitMarkings(markings) {
+    this.dispatchEvent(new CustomEvent("markings"), { bubbles: true, detail: markings });
+  }
+}
+
+
+//Maybe turn this into a two channel array?
+function getMarkings(imageData) {
+  var destroy = [];
+  var protect = [];
+
+  for (var idx = 0; idx < imageData.data.length; idx+=4) {
+    var red = imageData.data[idx];
+    var green = imageData.data[idx + 1];
+    var alpha = imageData.data[idx + 3];
+
+    //this match is wrong
+    if (alpha === 255 && red) {
+      destroy.push(1);
+    } else {
+      destroy.push(0)
+    }
+    if (alpha == 255 && green ) {
+      protect.push(1);
+    } else {
+      protect.push(0);
+    }
+  }
+
+  return {destroy, protect}
 }
 
 window.customElements.define('remove-object', RemoveObject);
 
-/*
-
-const template = document.createElement('template');
-template.innerHTML = `
-<style>
-button {
-  background: #1E88E5;
-  color: white;
-  padding: 2rem 4rem;
-  border: 0;
-  font-size: 1.5rem;
-}
-</style>
-<button>Sup?</button>`;
-
-class WhatsUp extends HTMLElement {
-
-  constructor() {
-    super();
-    this.attachShadow({mode: 'open'});
-    this.shadowRoot.appendChild(template.content.cloneNode(true));
-    const button = this.shadowRoot.querySelector("button");
-    button.addEventListener("click", this.handleClick);
-  }
-
-  handleClick(e) {
-    alert("Sup?");
-  }
-
-}k
-
-window.customElements.define('whats-up', WhatsUp);
-*/

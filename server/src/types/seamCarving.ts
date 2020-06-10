@@ -12,6 +12,16 @@ export interface ContentAmplificationParams {
   showIntermediateSteps: boolean;
 }
 
+export interface RemoveObjectParams {
+  imageName: string;
+  showIntermediateSteps: boolean;
+  lockRatio: boolean;
+  onlyHorizontal : boolean;
+  onlyVertical : boolean;
+  protectedRegions: number[][][];
+  destroyRegions: number[][][];
+}
+
 export enum Routine {
   Grow = "grow",
   ContentAmplification = "contentAmplification",

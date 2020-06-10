@@ -1,5 +1,6 @@
 module Data.SeamCarving exposing (..)
 
+import Data.Triangle as Triangle exposing (Triangle)
 import Json.Decode exposing (..)
 import Json.Encode as E
 
@@ -34,9 +35,23 @@ type alias ContentAmplificationResp =
     { executionId : String }
 
 
-type alias ExecutionStatusParams =
-    { executionId : String
+type alias RemoveObjectParams =
+    { imageName : String
+    , showIntermediateSteps : Bool
+    , lockRatio : Bool
+    , onlyHorizontal : Bool
+    , onlyVertical : Bool
+    , protectedRegions : List Triangle --(List Int)
+    , destroyRegions : List Triangle --(List Int)
     }
+
+
+type alias RemoveObjectResp =
+    { executionId : String }
+
+
+type alias ExecutionStatusParams =
+    { executionId : String }
 
 
 type alias ExecutionStatusResp =
@@ -119,6 +134,24 @@ encodeContentAmplificationParams params =
 contentAmplificationRespDecoder : Decoder ContentAmplificationResp
 contentAmplificationRespDecoder =
     map ContentAmplificationResp (field "executionId" string)
+
+
+encodeRemoveObjectParams : RemoveObjectParams -> E.Value
+encodeRemoveObjectParams params =
+    E.object
+        [ ( "imageName", E.string params.imageName )
+        , ( "showIntermediateSteps", E.bool params.showIntermediateSteps )
+        , ( "lockRatio", E.bool params.lockRatio )
+        , ( "onlyHorizontal", E.bool params.onlyHorizontal )
+        , ( "onlyVertical", E.bool params.onlyVertical )
+        , ( "protectedRegions", E.list Triangle.encode params.protectedRegions )
+        , ( "destroyRegions", E.list Triangle.encode params.destroyRegions )
+        ]
+
+
+removeObjectRespDecoder : Decoder RemoveObjectResp
+removeObjectRespDecoder =
+    map RemoveObjectResp (field "executionId" string)
 
 
 statusDecoder : Decoder Status

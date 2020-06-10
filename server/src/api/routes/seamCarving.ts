@@ -3,6 +3,7 @@ import { Context } from "koa";
 import {
   GrowParams,
   ContentAmplificationParams,
+  RemoveObjectParams
 } from "../../types/seamCarving";
 import { grow, contentAmplification } from "../../core/seamCarving";
 import { getExecution } from "../../store/executions";
@@ -53,6 +54,22 @@ router.post("/content-amplification", async (ctx: Context) => {
     const executionId = await contentAmplification(conn, params);
     ctx.status = 200;
     ctx.body = { executionId };
+  } catch (e) {
+    ctx.status = 500;
+    ctx.body = e;
+
+    console.error(e);
+    return;
+  }
+});
+
+router.post("/remove-object", async (ctx: Context) => {
+  const params: RemoveObjectParams = ctx.request.body;
+  try {
+    console.log("removeobject params", JSON.stringify(params))
+//    const executionId = await contentAmplification(conn, params);
+    ctx.status = 200;
+//    ctx.body = { executionId };
   } catch (e) {
     ctx.status = 500;
     ctx.body = e;

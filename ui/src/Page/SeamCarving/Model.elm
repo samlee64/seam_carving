@@ -2,6 +2,7 @@ module Page.SeamCarving.Model exposing (..)
 
 import Bootstrap.Dropdown as Dropdown
 import Bootstrap.Tab as Tab
+import Data.Markings exposing (..)
 import Data.Mouse exposing (..)
 import Data.SeamCarving exposing (..)
 import Data.Triangle as Triangle exposing (Triangle)
@@ -21,6 +22,7 @@ type alias Model =
     , contentAmplificationResp : WebData ContentAmplificationResp
     , tabState : Tab.State
     , removeObjectForm : RemoveObjectForm
+    , removeObjectResp : WebData RemoveObjectResp
     }
 
 
@@ -38,6 +40,7 @@ init flags =
             , contentAmplificationResp = NotAsked
             , tabState = Tab.initialState
             , removeObjectForm = defaultRemoveObjectForm
+            , removeObjectResp = NotAsked
             }
     in
     ( model, Cmd.none )
@@ -52,10 +55,28 @@ type alias GrowForm =
     }
 
 
+defaultGrowForm : GrowForm
+defaultGrowForm =
+    { showIntermediateSteps = False
+    , numSteps = 2
+    , addHeight = Nothing
+    , addWidth = Just 100
+    , numStepsDropdown = Dropdown.initialState
+    }
+
+
 type alias ContentAmplificationForm =
     { showIntermediateSteps : Bool
     , factor : Float
     , factorDropdown : Dropdown.State
+    }
+
+
+defaultContentAmplificationForm : ContentAmplificationForm
+defaultContentAmplificationForm =
+    { showIntermediateSteps = False
+    , factor = 1.2
+    , factorDropdown = Dropdown.initialState
     }
 
 
@@ -68,24 +89,10 @@ type alias RemoveObjectForm =
     , mouseMoveData : Maybe MouseMoveData
     , currTriangle : Triangle
     , trianglePointIdx : Int
-    }
-
-
-defaultGrowForm : GrowForm
-defaultGrowForm =
-    { showIntermediateSteps = False
-    , numSteps = 2
-    , addHeight = Nothing
-    , addWidth = Just 100
-    , numStepsDropdown = Dropdown.initialState
-    }
-
-
-defaultContentAmplificationForm : ContentAmplificationForm
-defaultContentAmplificationForm =
-    { showIntermediateSteps = False
-    , factor = 1.2
-    , factorDropdown = Dropdown.initialState
+    , lockRatio : Bool
+    , onlyHorizontal : Bool
+    , onlyVertical : Bool
+    , markings : Markings
     }
 
 
@@ -94,11 +101,15 @@ defaultRemoveObjectForm =
     { protected = []
     , destroy = []
     , clickMode = Discreet
-    , markMode = Destroy
+    , markMode = Protect
     , showIntermediateSteps = True
     , mouseMoveData = Nothing
     , currTriangle = Triangle.empty
     , trianglePointIdx = 0
+    , lockRatio = False
+    , onlyHorizontal = False
+    , onlyVertical = False
+    , markings = { destroy = [], protect = [] }
     }
 
 
@@ -123,6 +134,22 @@ extractContentAmplificationParams ({ contentAmplificationForm } as model) =
             { imageName = si
             , showIntermediateSteps = contentAmplificationForm.showIntermediateSteps
             , factor = contentAmplificationForm.factor
+            }
+        )
+        model.selectedImage
+
+
+extractRemoveObjectParams : Model -> Maybe RemoveObjectParams
+extractRemoveObjectParams ({ removeObjectForm } as model) =
+    Maybe.map
+        (\si ->
+            { imageName = si
+            , showIntermediateSteps = removeObjectForm.showIntermediateSteps
+            , lockRatio = removeObjectForm.lockRatio
+            , onlyHorizontal = removeObjectForm.onlyHorizontal
+            , onlyVertical = removeObjectForm.onlyVertical
+            , protectedRegions = removeObjectForm.protected
+            , destroyRegions = removeObjectForm.destroy
             }
         )
         model.selectedImage

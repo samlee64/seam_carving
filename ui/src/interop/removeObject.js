@@ -60,8 +60,17 @@ class RemoveObject extends HTMLElement {
       drawingCanvas.height = this.height;
 
       ctx.drawImage(img, 0, 0)
+
     }
     this.img = img;
+
+    var imageData = ctx.getImageData(0, 0, drawingCanvas.width, drawingCanvas.height);
+    var markings = getMarkings(imageData);
+    console.log(markings)
+
+    var foo = await getData('http://localhost:3000/health', { answer: 42 })
+    console.log(foo)
+//    this.emitMarkings(markings);
   }
 
   redraw() {
@@ -80,8 +89,8 @@ class RemoveObject extends HTMLElement {
     this.protected.map(tri => this.drawTriangle(tri, "#008000"));
 
     var imageData = ctx.getImageData(0, 0, drawingCanvas.width, drawingCanvas.height);
-    var markings = getMarkings (imageData);
-    this.emitMarkings(markings);
+    var markings = getMarkings(imageData);
+//    this.emitMarkings(markings);
   }
 
 
@@ -109,7 +118,7 @@ class RemoveObject extends HTMLElement {
   }
 
   emitMarkings(markings) {
-    this.dispatchEvent(new CustomEvent("markings"), { bubbles: true, detail: markings });
+    this.dispatchEvent(new CustomEvent("markings", { bubbles: true, detail: markings }));
   }
 }
 

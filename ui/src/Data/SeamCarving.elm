@@ -1,6 +1,6 @@
 module Data.SeamCarving exposing (..)
 
-import Data.Triangle as Triangle exposing (Triangle)
+import Data.Markings as Markings exposing (Markings)
 import Json.Decode exposing (..)
 import Json.Encode as E
 
@@ -41,8 +41,7 @@ type alias RemoveObjectParams =
     , lockRatio : Bool
     , onlyHorizontal : Bool
     , onlyVertical : Bool
-    , protectedRegions : List Triangle --(List Int)
-    , destroyRegions : List Triangle --(List Int)
+    , markings : Markings
     }
 
 
@@ -144,8 +143,7 @@ encodeRemoveObjectParams params =
         , ( "lockRatio", E.bool params.lockRatio )
         , ( "onlyHorizontal", E.bool params.onlyHorizontal )
         , ( "onlyVertical", E.bool params.onlyVertical )
-        , ( "protectedRegions", E.list Triangle.encode params.protectedRegions )
-        , ( "destroyRegions", E.list Triangle.encode params.destroyRegions )
+        , ( "markings", Markings.encode params.markings )
         ]
 
 

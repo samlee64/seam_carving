@@ -12,10 +12,6 @@ import Bootstrap.Form.Input as Input
 import Bootstrap.Tab as Tab
 import Bootstrap.Utilities.Flex as Flex
 import Bootstrap.Utilities.Spacing as Spacing
-import Canvas
-import Canvas.Settings
-import Canvas.Settings.Advanced
-import Canvas.Settings.Line
 import Data.Markings exposing (..)
 import Data.Mouse exposing (..)
 import Data.SeamCarving exposing (Status(..), statusToString)

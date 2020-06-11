@@ -238,11 +238,11 @@ updateRemoveObjectForm_ rMsg form =
             { form | onlyVertical = val }
 
         HandleMarkings markings ->
-            let
-                log =
-                    Debug.log "gogo " markings
-            in
             form
+
+
+
+-- { form | markings = markings }
 
 
 resetGrowForm : Model -> Model

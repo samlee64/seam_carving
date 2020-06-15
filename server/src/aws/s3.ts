@@ -13,9 +13,9 @@ export async function uploadFile(filePath: string, key: string): Promise<void> {
   //TODO maybe add tagging for user generated content
   fs.readFile(filePath, async (err, data) => {
     if (err) throw err;
-    if (config.env === "dev" ) {
-      console.log("env dev, skipping upload")
-      return
+    if (config.env === "dev") {
+      console.log("env dev, skipping upload");
+      return;
     }
 
     const params = {

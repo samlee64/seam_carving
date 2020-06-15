@@ -18,6 +18,7 @@ FloatImage addSeam(const FloatImage im, vector<int> seam, bool isHorizontal);
 FloatImage removeSeam(const FloatImage &im, vector<int> seam, bool isHorizontal);
 FloatImage drawSeam(const FloatImage &im, const vector<int> seam, bool isHorizontal);
 
+FloatImage removeObject2(const FloatImage &im, FloatImage &destroyRegions, const FloatImage &protectRegions, bool lockRatio, bool onlyVert, bool onlyHorizontal, const string outputPath);
 FloatImage removeObject(const FloatImage &im, const vector<tuple<int, int>> object, const vector<tuple<int, int>> protectedObject, bool lockRatio=false, bool onlyVert=false, bool onlyHorizontal=false);
 
 vector<bool> seamOrientation(FloatImage badArea, int i, bool lockRatio, bool onlyVert, bool onlyHorizontal);

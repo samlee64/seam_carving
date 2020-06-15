@@ -109,7 +109,7 @@ defaultRemoveObjectForm =
     , lockRatio = False
     , onlyHorizontal = False
     , onlyVertical = False
-    , markings = { destroy = [], protect = [] }
+    , markings = { destroy = "", protect = "" }
     }
 
 
@@ -148,8 +148,7 @@ extractRemoveObjectParams ({ removeObjectForm } as model) =
             , lockRatio = removeObjectForm.lockRatio
             , onlyHorizontal = removeObjectForm.onlyHorizontal
             , onlyVertical = removeObjectForm.onlyVertical
-            , protectedRegions = removeObjectForm.protected
-            , destroyRegions = removeObjectForm.destroy
+            , markings = removeObjectForm.markings
             }
         )
         model.selectedImage

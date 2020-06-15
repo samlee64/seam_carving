@@ -16,15 +16,17 @@ export interface RemoveObjectParams {
   imageName: string;
   showIntermediateSteps: boolean;
   lockRatio: boolean;
-  onlyHorizontal : boolean;
-  onlyVertical : boolean;
-  protectedRegions: number[][][];
-  destroyRegions: number[][][];
+  onlyHorizontal: boolean;
+  onlyVertical: boolean;
+  markings: { destroy: number[]; protect: number[] };
+  imageWidth: number;
+  imageHeight: number;
 }
 
 export enum Routine {
-  Grow = "grow",
-  ContentAmplification = "contentAmplification",
+  Grow = 'grow',
+  ContentAmplification = 'contentAmplification',
+  RemoveObject = 'removeObject',
 }
 
-export type RoutineParams = GrowParams | ContentAmplificationParams;
+export type RoutineParams = GrowParams | ContentAmplificationParams | RemoveObjectParams;

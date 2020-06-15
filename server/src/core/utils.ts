@@ -24,6 +24,9 @@ function outputPaths(imageName: string, routine: Routine): OutputPath[] {
     case Routine.ContentAmplification:
       fileNames = ["reduce.gif", "output.png"];
       break;
+    case Routine.RemoveObject:
+      fileNames = [];
+      break;
   }
 
   return fileNames.map((fileName: string) => {

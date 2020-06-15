@@ -520,6 +520,107 @@ FloatImage contentAmplification(const FloatImage &im, const float factor, const 
     return scaledImageLin;
 }
 
+FloatImage removeObject2(const FloatImage &im, FloatImage &destroyRegions, const FloatImage &protectRegions, bool lockRatio, bool onlyVert, bool onlyHorizontal, const string outputPath)
+{
+    const int MAXTRIES = min(im.width(), im.height()); //Stop before removing more than 50% of the photo
+    const float lowValue = -100;
+
+    FloatImage output(im);
+    FloatImage debugProtectDestroyAreas(im); //copy of the image with bad and good areas painted on
+    FloatImage eMap;
+
+    for (int y = 0; y < destroyRegions.height(); y++ ) {
+        for (int x = 0; x < destroyRegions.width(); x++) {
+            int d = destroyRegions(x, y);
+            int p = protectRegions(x, y);
+            if (d != 0) {
+                debugProtectDestroyAreas(x, y, 0)  = 1;
+                destroyRegions(x, y) = 1;
+            }
+            if (p != 0) {
+                debugProtectDestroyAreas(x, y, 1) = 1;
+                destroyRegions(x, y) = -1;
+            }
+        }
+    }
+
+    debugProtectDestroyAreas.write((outputPath + "protect-destroy-areas.png") );
+    destroyRegions.write((outputPath + "combined-mask.png"));
+
+    //index 0 holds bool for stopping, index 1 holds bool for orientation
+    vector<bool> continueAndOrientation = {};
+
+    const int gifWidth = im.width();
+    const int gifHeight = im.height();
+    int delay = 7;
+    std::vector<uint8_t> black(gifWidth * gifHeight * 4, 0);
+    std::vector<uint8_t> white(gifWidth * gifHeight * 4, 255);
+
+    GifWriter seamGif;
+    GifBegin(&seamGif, (outputPath + "seam.gif").c_str(), gifWidth, gifHeight, delay);
+    GifWriteFrame(&seamGif, black.data(), gifWidth, gifHeight, delay);
+    GifWriteFrame(&seamGif, white.data(), gifWidth, gifHeight, delay);
+
+    GifWriter eMapGif;
+    GifBegin(&eMapGif, (outputPath + "energy-map.gif").c_str(), gifWidth, gifHeight, delay);
+    GifWriteFrame(&eMapGif, black.data(), gifWidth, gifHeight, delay);
+    GifWriteFrame(&eMapGif, white.data(), gifWidth, gifHeight, delay);
+
+    GifWriter midGif;
+    GifBegin(&midGif, (outputPath + "mid.gif").c_str(), gifWidth, gifHeight, delay);
+    GifWriteFrame(&midGif, black.data(), gifWidth, gifHeight, delay);
+    GifWriteFrame(&midGif, white.data(), gifWidth, gifHeight, delay);
+    for (int i = 0; i < MAXTRIES; i++) {
+        //calculate the larger difference in area and perform the vertical or horizontal removal accordingly
+        continueAndOrientation= seamOrientation(destroyRegions, i, lockRatio, onlyVert, onlyHorizontal);
+        bool isHorizontal = continueAndOrientation[1];
+
+        if (isHorizontal) {
+//            cout << "Removing horizontal: " << i << endl;
+        } else {
+//            cout << "Removing vertical: " << i << endl;
+        }
+
+        if (not continueAndOrientation[0]) {
+            cout << "Done removing bad area after " << i << " iterations" << endl;
+            break;
+        }
+
+        //create the EnergyMap
+        eMap = createBlockedEnergyMap(output, destroyRegions, lowValue, isHorizontal);
+        GifWriteFrame(&eMapGif, eMap.bytePixel(gifWidth, gifHeight).data(), gifWidth, gifHeight, delay);
+
+        vector<int> seam;
+        if (isHorizontal) {
+            seam = findHorizontalSeamMap(eMap);
+        } else {
+            seam = findVerticalSeamMap(eMap);
+        }
+
+        FloatImage seamed = drawSeam(output, seam, isHorizontal);
+        GifWriteFrame(&seamGif, seamed.bytePixel(gifWidth, gifHeight).data(), gifWidth, gifHeight, delay);
+
+        //no junk
+        output = removeSeam(output, seam, isHorizontal);
+        //no junk
+
+        GifWriteFrame(&midGif, output.bytePixel(gifWidth, gifHeight).data(), gifWidth, gifHeight, delay);
+
+        //no junk
+        destroyRegions = removeSeam(destroyRegions, seam, isHorizontal);
+        //no junk
+    }
+
+    GifEnd(&seamGif);
+    GifEnd(&eMapGif);
+    GifEnd(&midGif);
+
+    output.write(outputPath + "output.png");
+
+    return output;
+}
+
+
 //lets just remove objects vertically
 // system should be able to automatically calculate the smaller of th evertical or horizontal diameters
 //perform vertical or horizontal removals
@@ -537,8 +638,8 @@ FloatImage removeObject(const FloatImage &im, const vector<tuple<int, int>> dest
 
     FloatImage output(im);
 
-    FloatImage badArea(im.width(), im.height(), 1); //area to destroy/protect
-    FloatImage copy(im); //copy of the image to
+   FloatImage badArea(im.width(), im.height(), 1); //area to destroy/protect
+   FloatImage copy(im); //copy of the image with bad and good areas painted on
 
     //Set protected areas to -1
     for (int i = 0; i < protectedObject.size(); i++) {
@@ -555,6 +656,7 @@ FloatImage removeObject(const FloatImage &im, const vector<tuple<int, int>> dest
         badArea(x, y, 0) = 1;
         copy(x, y, 0) = 1;
     }
+
     copy.write(DATA_DIR "/output/removal/protect-destroy-areas.png");
     badArea.write(DATA_DIR "/output/removal/badareas.png");
 

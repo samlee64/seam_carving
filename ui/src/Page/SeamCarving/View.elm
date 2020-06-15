@@ -1,5 +1,6 @@
 module Page.SeamCarving.View exposing (view)
 
+import Bool.Extra as BE
 import Bootstrap.Alert as Alert
 import Bootstrap.Badge as Badge
 import Bootstrap.Button as Button
@@ -33,10 +34,6 @@ import View.WebData exposing (viewWebData, viewWebDataButton)
 
 view : Model -> Html Msg
 view model =
-    let
-        imgSrc =
-            "http://seam-carving.s3-us-west-2.amazonaws.com/defaults/dolphin.png"
-    in
     div []
         [ viewToolbar model
         , model.selectedImage
@@ -291,6 +288,9 @@ viewCanvas ({ removeObjectForm } as model) =
                 |> Maybe.withDefault removeObjectForm.destroy
                 |> (\l -> E.encode 0 (E.list Triangle.encode l))
 
+        imageName =
+            model.selectedImage |> Maybe.withDefault ""
+
         attributes =
             [ on "mousemove" (Decode.map MouseMove mouseMoveDataDecoder)
             , on "markings" (Decode.map HandleMarkings markingsDecoder)
@@ -298,6 +298,11 @@ viewCanvas ({ removeObjectForm } as model) =
             , attribute "destroy" destroy
             , attribute "imgSrc" imgSrc
             , attribute "protected" protected
+            , attribute "onlyHorizontal" <| BE.toString removeObjectForm.onlyHorizontal
+            , attribute "onlyVertical" <| BE.toString removeObjectForm.onlyVertical
+            , attribute "lockRatio" <| BE.toString removeObjectForm.lockRatio
+            , attribute "showIntermediateSteps" <| BE.toString removeObjectForm.showIntermediateSteps
+            , attribute "imageName" imageName
             ]
     in
     div []

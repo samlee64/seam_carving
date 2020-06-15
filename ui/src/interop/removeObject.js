@@ -1,5 +1,16 @@
 var template = document.createElement('template');
-
+/*
+export interface RemoveObjectParams {
+  imageName: string;
+  showIntermediateSteps: boolean;
+  lockRatio: boolean;
+  onlyHorizontal: boolean;
+  onlyVertical: boolean;
+  markings: { destroy: number[]; protect: number[] };
+  imageWidth: number;
+  imageHeight: number;
+}
+ * */
 template.innerHTML = `
 <style>
  :host { display: inline-block; }
@@ -22,16 +33,17 @@ template.innerHTML = `
 <div id="container">
   <canvas id="drawing-canvas"> </canvas>
   <canvas id="img-canvas"> </canvas>
+  <button>Click Me</button>
 </div>
-`
+`;
 
 class RemoveObject extends HTMLElement {
   static get observedAttributes() {
-    return ["protected", "destroy", "imgSrc"]
+    return ['protected', 'destroy', 'imgSrc'];
   }
   constructor() {
     super();
-    this.attachShadow({mode: 'open'});
+    this.attachShadow({ mode: 'open' });
     this.shadowRoot.appendChild(template.content.cloneNode(true));
 
     this.img;
@@ -48,29 +60,33 @@ class RemoveObject extends HTMLElement {
     var canvas = this.shadowRoot.getElementById('img-canvas');
     var ctx = canvas.getContext('2d');
 
-    var drawingCanvas = this.shadowRoot.getElementById("drawing-canvas");
+    var drawingCanvas = this.shadowRoot.getElementById('drawing-canvas');
     var container = this.shadowRoot.getElementById('container');
 
+    const button = this.shadowRoot.querySelector('button');
+    const foo = (e) => this.handleClick(e);
+    button.addEventListener('click', foo);
+    this.shadowRoot.addEventListener('click', function () {});
+
     img.onload = function () {
-      container.setAttribute("style", `width:${this.width}px;height:${this.height}px`);
+      container.setAttribute('style', `width:${this.width}px;height:${this.height}px`);
 
       canvas.width = this.width;
       canvas.height = this.height;
-      drawingCanvas.width =  this.width;
+      drawingCanvas.width = this.width;
       drawingCanvas.height = this.height;
 
-      ctx.drawImage(img, 0, 0)
-
-    }
+      ctx.drawImage(img, 0, 0);
+    };
     this.img = img;
+  }
 
+  handleClick(e) {
+    var drawingCanvas = this.shadowRoot.getElementById('drawing-canvas');
+    var ctx = drawingCanvas.getContext('2d');
     var imageData = ctx.getImageData(0, 0, drawingCanvas.width, drawingCanvas.height);
     var markings = getMarkings(imageData);
-    console.log(markings)
-
-    var foo = await getData('http://localhost:3000/health', { answer: 42 })
-    console.log(foo)
-//    this.emitMarkings(markings);
+    this.emitMarkings(markings);
   }
 
   redraw() {
@@ -78,21 +94,19 @@ class RemoveObject extends HTMLElement {
     var ctx = drawingCanvas.getContext('2d');
     ctx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
 
-    ctx.strokeStyle = "black";
+    ctx.strokeStyle = 'black';
 
-    color = "#FF0000";
+    color = '#FF0000';
     ctx.fillStyle = color;
-    this.destroy.map(tri => this.drawTriangle(tri, "#FF0000"));
+    this.destroy.map((tri) => this.drawTriangle(tri, '#FF0000'));
 
-    var color ="#008000";
+    var color = '#008000';
     ctx.fillStyle = color;
-    this.protected.map(tri => this.drawTriangle(tri, "#008000"));
+    this.protected.map((tri) => this.drawTriangle(tri, '#008000'));
 
     var imageData = ctx.getImageData(0, 0, drawingCanvas.width, drawingCanvas.height);
     var markings = getMarkings(imageData);
-//    this.emitMarkings(markings);
   }
-
 
   attributeChangedCallback(name, oldValue, newValue) {
     const parsedValues = JSON.parse(newValue);
@@ -118,17 +132,35 @@ class RemoveObject extends HTMLElement {
   }
 
   emitMarkings(markings) {
-    this.dispatchEvent(new CustomEvent("markings", { bubbles: true, detail: markings }));
+    const onlyHorizontal = this.getAttribute('onlyHorizontal') === 'True';
+    const onlyVertical = this.getAttribute('onlyVertical') === 'True';
+    const lockRatio = this.getAttribute('lockRatio') === 'True';
+    const showIntermediateSteps = this.getAttribute('showIntermediateSteps') === 'True';
+    const imageName = this.getAttribute('imageName');
+
+    var foo = {
+      imageName: imageName,
+      showIntermediateSteps,
+      lockRatio,
+      onlyHorizontal,
+      onlyVertical,
+      imageWidth: this.img.width,
+      imageHeight: this.img.height,
+      markings,
+    };
+
+    postData('http://localhost:3000/seam/remove-object/markings', foo).then((data) => {
+      console.log(JSON.stringify(data));
+    });
   }
 }
-
 
 //Maybe turn this into a two channel array?
 function getMarkings(imageData) {
   var destroy = [];
   var protect = [];
 
-  for (var idx = 0; idx < imageData.data.length; idx+=4) {
+  for (var idx = 0; idx < imageData.data.length; idx += 4) {
     var red = imageData.data[idx];
     var green = imageData.data[idx + 1];
     var alpha = imageData.data[idx + 3];
@@ -137,17 +169,51 @@ function getMarkings(imageData) {
     if (alpha === 255 && red) {
       destroy.push(1);
     } else {
-      destroy.push(0)
+      destroy.push(0);
     }
-    if (alpha == 255 && green ) {
+    if (alpha == 255 && green) {
       protect.push(1);
     } else {
       protect.push(0);
     }
   }
 
-  return {destroy, protect}
+  return { destroy: destroy, protect: protect };
+}
+
+// Example POST method implementation:
+async function postData(url = '', data = {}) {
+  // Default options are marked with *
+  const response = await fetch(url, {
+    method: 'POST',
+    mode: 'cors',
+    cache: 'no-cache',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    redirect: 'follow',
+    referrerPolicy: 'no-referrer',
+    body: JSON.stringify(data),
+  });
+  return response.json();
+}
+
+async function getData(url = '', data = {}) {
+  // Default options are marked with *
+  const response = await fetch(url, {
+    method: 'GET', // *GET, POST, PUT, DELETE, etc.
+    mode: 'cors', // no-cors, *cors, same-origin
+    cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+    credentials: 'same-origin', // include, *same-origin, omit
+    headers: {
+      'Content-Type': 'application/json',
+      // 'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    redirect: 'follow', // manual, *follow, error
+    referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+  });
+  return response.json(); // parses JSON response into native JavaScript objects
 }
 
 window.customElements.define('remove-object', RemoveObject);
-

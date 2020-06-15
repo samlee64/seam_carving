@@ -53,20 +53,17 @@ class RemoveObject extends HTMLElement {
   }
 
   connectedCallback() {
-    const img = new Image();
-    const imgSrc = this.getAttribute('imgSrc');
-    img.src = imgSrc;
-
     var canvas = this.shadowRoot.getElementById('img-canvas');
     var ctx = canvas.getContext('2d');
-
     var drawingCanvas = this.shadowRoot.getElementById('drawing-canvas');
     var container = this.shadowRoot.getElementById('container');
 
-    const button = this.shadowRoot.querySelector('button');
-    const foo = (e) => this.handleClick(e);
-    button.addEventListener('click', foo);
-    this.shadowRoot.addEventListener('click', function () {});
+    const el = (e) => this.handleClick(e);
+    this.shadowRoot.querySelector('button').addEventListener('click', el);
+
+    const img = new Image();
+    const imgSrc = this.getAttribute('imgSrc');
+    img.src = imgSrc;
 
     img.onload = function () {
       container.setAttribute('style', `width:${this.width}px;height:${this.height}px`);
@@ -85,23 +82,21 @@ class RemoveObject extends HTMLElement {
     var drawingCanvas = this.shadowRoot.getElementById('drawing-canvas');
     var ctx = drawingCanvas.getContext('2d');
     var imageData = ctx.getImageData(0, 0, drawingCanvas.width, drawingCanvas.height);
-    var markings = getMarkings(imageData);
-    this.emitMarkings(markings);
+
+    this.emitMarkings(getMarkings(imageData));
   }
 
   redraw() {
     var drawingCanvas = this.shadowRoot.getElementById('drawing-canvas');
     var ctx = drawingCanvas.getContext('2d');
-    ctx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
 
+    ctx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
     ctx.strokeStyle = 'black';
 
-    color = '#FF0000';
-    ctx.fillStyle = color;
+    ctx.fillStyle = '#FF0000';
     this.destroy.map((tri) => this.drawTriangle(tri, '#FF0000'));
 
-    var color = '#008000';
-    ctx.fillStyle = color;
+    ctx.fillStyle = '#008000';
     this.protected.map((tri) => this.drawTriangle(tri, '#008000'));
 
     var imageData = ctx.getImageData(0, 0, drawingCanvas.width, drawingCanvas.height);
@@ -116,7 +111,7 @@ class RemoveObject extends HTMLElement {
     this.redraw();
   }
 
-  drawTriangle(points, color) {
+  drawTriangle(points) {
     const ctx = this.shadowRoot.getElementById('drawing-canvas').getContext('2d');
     ctx.stroke();
 

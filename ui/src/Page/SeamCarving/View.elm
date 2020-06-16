@@ -14,7 +14,6 @@ import Bootstrap.Form.Input as Input
 import Bootstrap.Tab as Tab
 import Bootstrap.Utilities.Flex as Flex
 import Bootstrap.Utilities.Spacing as Spacing
-import Data.Markings exposing (..)
 import Data.Mouse exposing (..)
 import Data.SeamCarving exposing (..)
 import Data.Triangle as Triangle exposing (Triangle)

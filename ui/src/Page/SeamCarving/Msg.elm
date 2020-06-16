@@ -3,7 +3,6 @@ module Page.SeamCarving.Msg exposing (..)
 import Bootstrap.Accordion as Accordion
 import Bootstrap.Dropdown as Dropdown
 import Bootstrap.Tab as Tab
-import Data.Markings exposing (Markings)
 import Data.Mouse exposing (..)
 import Data.SeamCarving exposing (..)
 import Http
@@ -13,8 +12,6 @@ import Time
 
 type Msg
     = NoOp
-    | HealthCheck
-    | HealthChecked (WebData String)
     | SelectImage String
     | UnselectImage
     | GrowFormMsg GrowFormMsg
@@ -27,7 +24,6 @@ type Msg
     | AmplifiedImage (WebData ContentAmplificationResp)
     | TabMsg Tab.State
     | RemoveObjectFormMsg RemoveObjectFormMsg
-    | RemoveObject
     | RemovedObject RemoveObjectResp
 
 

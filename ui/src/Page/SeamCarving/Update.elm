@@ -19,13 +19,6 @@ update msg ({ flags } as model) =
             model
                 |> none
 
-        HealthCheck ->
-            { model | healthCheck = Loading }
-                |> cmd (\_ -> healthCheck flags HealthChecked)
-
-        HealthChecked resp ->
-            { model | healthCheck = resp } |> none
-
         SelectImage imageName ->
             { model | selectedImage = Just imageName } |> none
 
@@ -96,19 +89,6 @@ update msg ({ flags } as model) =
             model
                 |> updateRemoveObjectForm rMsg
                 |> none
-
-        RemoveObject ->
-            --            let
-            --                removeObjectCmd m =
-            --                    extractRemoveObjectParams m
-            --                        |> Maybe.map (removeObject flags RemovedObject)
-            --                        |> Maybe.withDefault Cmd.none
-            --            in
-            let
-                log =
-                    Debug.log "remove object" ""
-            in
-            model |> none
 
         RemovedObject resp ->
             let

@@ -3,7 +3,6 @@ module Page.SeamCarving.Model exposing (..)
 import Bootstrap.Accordion as Accordion
 import Bootstrap.Dropdown as Dropdown
 import Bootstrap.Tab as Tab
-import Data.Markings exposing (..)
 import Data.Mouse exposing (..)
 import Data.SeamCarving exposing (..)
 import Data.Triangle as Triangle exposing (Triangle)
@@ -14,7 +13,6 @@ import RemoteData as RD exposing (RemoteData(..), WebData)
 
 type alias Model =
     { flags : Flags
-    , healthCheck : WebData String
     , selectedImage : Maybe String
     , growForm : GrowForm
     , growImageResp : WebData GrowImageResp
@@ -33,7 +31,6 @@ init flags =
     let
         model =
             { flags = flags
-            , healthCheck = NotAsked
             , selectedImage = Just "dolphin"
             , growForm = defaultGrowForm
             , growImageResp = NotAsked
@@ -95,7 +92,6 @@ type alias RemoveObjectForm =
     , lockRatio : Bool
     , onlyHorizontal : Bool
     , onlyVertical : Bool
-    , markings : Markings
     , showTriangleData : Accordion.State
     }
 
@@ -105,7 +101,7 @@ defaultRemoveObjectForm =
     { protected = []
     , destroy = []
     , clickMode = Discreet
-    , markMode = Protect
+    , markMode = Destroy
     , showIntermediateSteps = True
     , mouseMoveData = Nothing
     , currTriangle = Triangle.empty
@@ -113,7 +109,6 @@ defaultRemoveObjectForm =
     , lockRatio = False
     , onlyHorizontal = False
     , onlyVertical = False
-    , markings = { destroy = "", protect = "" }
     , showTriangleData = Accordion.initialStateCardOpen ""
     }
 
@@ -144,25 +139,6 @@ extractContentAmplificationParams ({ contentAmplificationForm } as model) =
         model.selectedImage
 
 
-extractRemoveObjectParams : Model -> Maybe RemoveObjectParams
-extractRemoveObjectParams ({ removeObjectForm } as model) =
-    Maybe.map
-        (\si ->
-            { imageName = si
-            , showIntermediateSteps = removeObjectForm.showIntermediateSteps
-            , lockRatio = removeObjectForm.lockRatio
-            , onlyHorizontal = removeObjectForm.onlyHorizontal
-            , onlyVertical = removeObjectForm.onlyVertical
-            , markings = removeObjectForm.markings
-            }
-        )
-        model.selectedImage
-
-
-
---TODO this is badly named
-
-
 extractTriangleCoordFromMouseData : MouseMoveData -> List Int
 extractTriangleCoordFromMouseData mouseMoveData =
     [ mouseMoveData.offsetX, mouseMoveData.offsetY ]
@@ -180,18 +156,8 @@ imageTitles =
     [ "dolphin", "edo", "Fuji", "castle-medium", "beach" ]
 
 
-gifTypes : List String
-gifTypes =
-    [ "energy-map", "mask", "mid" ]
-
-
 
 --This one is currently not used, maybe i do want to use it through
-
-
-outputFiles : List String
-outputFiles =
-    [ "energy-map.gif", "mask.gif", "mid.gif", "output.png" ]
 
 
 numSteps : List Int

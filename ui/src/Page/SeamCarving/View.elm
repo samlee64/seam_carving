@@ -1,6 +1,7 @@
 module Page.SeamCarving.View exposing (view)
 
 import Bool.Extra as BE
+import Bootstrap.Accordion as Accordion
 import Bootstrap.Alert as Alert
 import Bootstrap.Badge as Badge
 import Bootstrap.Button as Button
@@ -25,6 +26,7 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (on, onClick)
 import Json.Decode as Decode
 import Json.Encode as E
+import List.Extra as LE
 import Page.SeamCarving.Model exposing (..)
 import Page.SeamCarving.Msg exposing (..)
 import RemoteData as RD exposing (RemoteData(..), WebData)
@@ -80,7 +82,7 @@ viewSelectedImage model imageTitle =
             [ Tab.item
                 { id = "object-removal"
                 , link = Tab.link [] [ text "Object Removal" ]
-                , pane = Tab.pane [ Spacing.mt3 ] [ viewObjectRemovalForm model ]
+                , pane = Tab.pane [ Spacing.mt3 ] [ viewObjectRemoval model ]
                 }
             , Tab.item
                 { id = "content-amplification"
@@ -90,10 +92,18 @@ viewSelectedImage model imageTitle =
             , Tab.item
                 { id = "grow"
                 , link = Tab.link [] [ text "Grow" ]
-                , pane = Tab.pane [ Spacing.mt3 ] [ viewGrowForm model ]
+                , pane = Tab.pane [ Spacing.mt3 ] [ viewGrow model ]
                 }
             ]
         |> Tab.view model.tabState
+
+
+viewGrow : Model -> Html Msg
+viewGrow model =
+    div []
+        [ viewGrowForm model
+        , viewResults model
+        ]
 
 
 viewGrowForm : Model -> Html Msg
@@ -118,13 +128,13 @@ viewGrowForm model =
             [ CardBlock.custom <|
                 div []
                     [ Checkbox.checkbox
-                        [ Checkbox.checked True, Checkbox.onCheck (\b -> GrowFormMsg (ShowGrowIntermediateSteps b)) ]
+                        [ Checkbox.checked True, Checkbox.onCheck (GrowFormMsg << ShowGrowIntermediateSteps) ]
                         "Show Intermediate Steps"
                     , Form.group []
                         [ Form.label [] [ text "Add Width (pixels)" ]
                         , Input.number
                             [ Input.attrs [ placeholder "width pixels" ]
-                            , Input.onInput (\s -> GrowFormMsg <| SetWidth s)
+                            , Input.onInput (GrowFormMsg << SetWidth)
                             , Input.value widthValue
                             ]
                         ]
@@ -132,7 +142,7 @@ viewGrowForm model =
                         [ Form.label [] [ text "Add Height (pixels)" ]
                         , Input.number
                             [ Input.attrs [ placeholder "height pixels" ]
-                            , Input.onInput (\s -> GrowFormMsg <| SetHeight s)
+                            , Input.onInput (GrowFormMsg << SetHeight)
                             , Input.value heightValue
                             ]
                         ]
@@ -214,19 +224,109 @@ viewContentAmplificationForm model =
         |> Card.view
 
 
-viewObjectRemovalForm : Model -> Html Msg
-viewObjectRemovalForm model =
+viewObjectRemoval : Model -> Html Msg
+viewObjectRemoval model =
     div []
-        [ Card.config []
-            |> Card.header [] [ text "Object Removal Form" ]
-            |> Card.block [] [ CardBlock.custom <| viewCanvas model ]
-            |> Card.footer []
-                [ div [ Spacing.mt2, Flex.block ]
-                    [ viewWebData (\resp -> viewExecutionStatus resp.status) model.pollExecutionStatusResp ]
-                ]
-            |> Card.view
+        [ viewObjectRemovalForm model
         , viewResults model
         ]
+
+
+viewObjectRemovalForm : Model -> Html Msg
+viewObjectRemovalForm model =
+    Card.config []
+        |> Card.header [] [ text "Object Removal Form" ]
+        |> Card.block []
+            [ CardBlock.custom <| viewCanvasControls model
+            , CardBlock.custom <| viewCanvas model
+            ]
+        |> Card.footer []
+            [ div [ Spacing.mt2, Flex.block ]
+                [ viewWebData (\resp -> viewExecutionStatus resp.status) model.pollExecutionStatusResp ]
+            ]
+        |> Card.view
+
+
+viewCanvasControls : Model -> Html Msg
+viewCanvasControls ({ removeObjectForm } as model) =
+    let
+        viewModeInfo form =
+            let
+                clickMode =
+                    form.clickMode
+                        == Continious
+                        |> Extra.ternary
+                            (Badge.badgeLight [] [ text "Continious" ])
+                            (Badge.badgeDark [] [ text "Discreet" ])
+
+                markMode =
+                    form.markMode
+                        == Protect
+                        |> Extra.ternary
+                            (Badge.badgeSuccess [] [ text "Protect" ])
+                            (Badge.badgeDanger [] [ text "Destroy" ])
+            in
+            div []
+                [ h5 [] [ text "ClickMode: ", clickMode ]
+                , h5 [] [ text "MarkMode: ", markMode ]
+                ]
+    in
+    Html.map RemoveObjectFormMsg <|
+        div []
+            [ viewTriangleData model
+            , div [ Spacing.mt3 ]
+                [ viewModeInfo removeObjectForm
+                , div [ Spacing.mb2 ]
+                    [ div [ Spacing.mb1 ]
+                        [ Button.button
+                            [ Button.success
+                            , Button.onClick (SetMarkMode Protect)
+                            , Button.disabled <| removeObjectForm.markMode == Protect
+                            ]
+                            [ text "Set Protected Areas" ]
+                        , Button.button
+                            [ Button.danger
+                            , Button.onClick (SetMarkMode Destroy)
+                            , Button.disabled <| removeObjectForm.markMode == Destroy
+                            ]
+                            [ text "Set Destroy Areas" ]
+                        ]
+                    , div []
+                        [ Button.button
+                            [ Button.success
+                            , Button.onClick (SetClickMode Continious)
+                            , Button.disabled <| removeObjectForm.clickMode == Continious
+                            ]
+                            [ text "ClickMode: Continious" ]
+                        , Button.button
+                            [ Button.danger
+                            , Button.onClick (SetClickMode Discreet)
+                            , Button.disabled <| removeObjectForm.clickMode == Discreet
+                            ]
+                            [ text "ClickMode: Discreet" ]
+                        ]
+                    ]
+                ]
+            , div [ Spacing.mb2 ]
+                [ Checkbox.checkbox
+                    [ Checkbox.checked removeObjectForm.lockRatio
+                    , Checkbox.onCheck SetLockRatio
+                    ]
+                    "Lock Width/Height Ratio"
+                , Checkbox.checkbox
+                    [ Checkbox.checked removeObjectForm.onlyHorizontal
+                    , Checkbox.onCheck SetOnlyHorizontal
+                    , Checkbox.disabled removeObjectForm.lockRatio
+                    ]
+                    "Remove only horizontal seams"
+                , Checkbox.checkbox
+                    [ Checkbox.checked removeObjectForm.onlyVertical
+                    , Checkbox.onCheck SetOnlyVertical
+                    , Checkbox.disabled removeObjectForm.lockRatio
+                    ]
+                    "Remove only vertical seams"
+                ]
+            ]
 
 
 viewCanvas : Model -> Html Msg
@@ -236,15 +336,6 @@ viewCanvas ({ removeObjectForm } as model) =
             model.selectedImage
                 |> Maybe.map (\si -> model.flags.bucket ++ "/defaults/" ++ si ++ ".png")
                 |> Maybe.withDefault ""
-
-        viewTriangleData data =
-            div []
-                [ text <| "one: " ++ E.encode 0 (E.list E.int data.one)
-                , br [] []
-                , text <| "two: " ++ E.encode 0 (E.list E.int data.two)
-                , br [] []
-                , text <| "three: " ++ E.encode 0 (E.list E.int data.three)
-                ]
 
         currTri =
             removeObjectForm.mouseMoveData
@@ -290,84 +381,60 @@ viewCanvas ({ removeObjectForm } as model) =
     in
     div []
         [ node "remove-object" attributes []
-        , Html.map RemoveObjectFormMsg <|
-            div []
-                [ div [ Flex.block, Flex.row, style "background" "grey" ] (List.map viewTriangleData removeObjectForm.protected)
-                , div [ Flex.block, Flex.row, style "background" "red" ] (List.map viewTriangleData removeObjectForm.destroy)
-                , div [] [ viewTriangleData removeObjectForm.currTriangle ]
-                , div []
-                    [ viewModeInfo removeObjectForm
-                    , Button.button
-                        [ Button.success
-                        , Button.onClick (SetClickMode Continious)
-                        , Button.disabled <| removeObjectForm.clickMode == Continious
-                        ]
-                        [ text "Set Continious" ]
-                    , Button.button
-                        [ Button.danger
-                        , Button.onClick (SetClickMode Discreet)
-                        , Button.disabled <| removeObjectForm.clickMode == Discreet
-                        ]
-                        [ text "Set Discreet" ]
-                    ]
-                , div []
-                    [ Button.button
-                        [ Button.success
-                        , Button.onClick (SetMarkMode Protect)
-                        , Button.disabled <| removeObjectForm.markMode == Protect
-                        ]
-                        [ text "Set Protected Areas" ]
-                    , Button.button
-                        [ Button.danger
-                        , Button.onClick (SetMarkMode Destroy)
-                        , Button.disabled <| removeObjectForm.markMode == Destroy
-                        ]
-                        [ text "Set Destroy Areas" ]
-                    ]
-                , div []
-                    [ Checkbox.checkbox
-                        [ Checkbox.checked removeObjectForm.lockRatio
-                        , Checkbox.onCheck SetLockRatio
-                        ]
-                        "Lock Width/Height Ratio"
-                    , Checkbox.checkbox
-                        [ Checkbox.checked removeObjectForm.onlyHorizontal
-                        , Checkbox.onCheck SetOnlyHorizontal
-                        , Checkbox.disabled removeObjectForm.lockRatio
-                        ]
-                        "Remove only horizontal seams"
-                    , Checkbox.checkbox
-                        [ Checkbox.checked removeObjectForm.onlyVertical
-                        , Checkbox.onCheck SetOnlyVertical
-                        , Checkbox.disabled removeObjectForm.lockRatio
-                        ]
-                        "Remove only vertical seams"
-                    ]
-                ]
         ]
 
 
-viewModeInfo : RemoveObjectForm -> Html msg
-viewModeInfo form =
+viewTriangleData : Model -> Html RemoveObjectFormMsg
+viewTriangleData { removeObjectForm } =
     let
-        clickMode =
-            form.clickMode
-                == Continious
-                |> Extra.ternary
-                    (Badge.badgeLight [] [ text "Continious" ])
-                    (Badge.badgeDark [] [ text "Discreet" ])
+        viewTri data =
+            div []
+                [ text <| "one: " ++ E.encode 0 (E.list E.int data.one)
+                , br [] []
+                , text <| "two: " ++ E.encode 0 (E.list E.int data.two)
+                , br [] []
+                , text <| "three: " ++ E.encode 0 (E.list E.int data.three)
+                ]
 
-        markMode =
-            form.markMode
-                == Protect
-                |> Extra.ternary
-                    (Badge.badgeSuccess [] [ text "Protect" ])
-                    (Badge.badgeDanger [] [ text "Destroy" ])
+        triToString data =
+            E.encode 0 (E.list (E.list E.int) [ data.one, data.two, data.three ])
+
+        viewCoords data =
+            div [ Spacing.m2 ] [ text <| triToString data ]
     in
-    div []
-        [ h5 [] [ text "ClickMode: ", clickMode ]
-        , h5 [] [ text "MarkMode: ", markMode ]
-        ]
+    Accordion.config AccordionMsg
+        |> Accordion.withAnimation
+        |> Accordion.cards
+            [ Accordion.card
+                { id = "card"
+                , options = []
+                , header = Accordion.header [] <| Accordion.toggle [] [ text "View Marking Data" ]
+                , blocks =
+                    [ Accordion.block []
+                        [ CardBlock.text []
+                            [ div []
+                                [ h6 [] [ text "Destory Coords" ]
+                                , div [ Flex.block, Flex.row, style "background" "red" ] (List.map viewCoords removeObjectForm.destroy)
+                                ]
+                            ]
+                        ]
+                    , Accordion.block []
+                        [ CardBlock.text []
+                            [ div []
+                                [ h6 [] [ text "Protect Coords" ]
+                                , div [ Flex.block, Flex.row, Flex.wrap, style "background" "grey" ] (List.map viewCoords removeObjectForm.protected)
+                                ]
+                            ]
+                        ]
+                    , Accordion.block []
+                        [ CardBlock.text []
+                            [ div [] [ h6 [] [ text "Current Triangle" ], viewCoords removeObjectForm.currTriangle ]
+                            ]
+                        ]
+                    ]
+                }
+            ]
+        |> Accordion.view removeObjectForm.showTriangleData
 
 
 viewExecutionStatus : Status -> Html Msg
@@ -397,17 +464,128 @@ viewResults model =
             model.flags.bucket ++ "/" ++ s3Key
 
         viewResult s3Key =
-            div []
-                [ img [ src (imgSrc s3Key) ] []
-                , text (imgSrc s3Key)
-                ]
-    in
-    div []
-        [ viewWebData
-            (\r ->
-                r.s3Url
-                    |> Maybe.map (div [] << List.map viewResult)
-                    |> Maybe.withDefault EH.none
-            )
+            isOutputImage s3Key
+                |> Extra.ternary
+                    (Card.config []
+                        |> Card.header [] [ text "Output" ]
+                        |> Card.block [] [ CardBlock.custom <| img [ src (imgSrc s3Key) ] [] ]
+                        |> Card.view
+                    )
+                    (img [ src (imgSrc s3Key) ] [])
+
+        isOutputImage key =
+            key
+                |> String.split "/"
+                |> LE.last
+                |> Maybe.map ((==) "output.png")
+                |> Maybe.withDefault False
+
+        ( output, rest ) =
             model.pollExecutionStatusResp
+                |> RD.toMaybe
+                |> Maybe.andThen .s3Url
+                |> Maybe.map (List.partition isOutputImage)
+                |> Maybe.withDefault ( [], [] )
+
+        viewOutputImage =
+            Card.config [ Card.attrs [ Spacing.mt3 ] ]
+                |> Card.header [] [ text "Output" ]
+                |> Card.block []
+                    [ List.map
+                        (\s3Key ->
+                            img [ src (imgSrc s3Key) ] []
+                        )
+                        output
+                        |> div []
+                        |> CardBlock.custom
+                    ]
+                |> Card.view
+
+        viewRest =
+            Card.config [ Card.attrs [ Spacing.mt3 ] ]
+                |> Card.header [] [ text "Intermediate Steps" ]
+                |> Card.block []
+                    [ List.map
+                        (\s3Key ->
+                            img [ src (imgSrc s3Key) ] []
+                        )
+                        rest
+                        |> div []
+                        |> CardBlock.custom
+                    ]
+                |> Card.view
+    in
+    div [ Flex.block, Flex.wrap ] [ viewOutputImage, viewRest ]
+
+
+
+--    div [ Flex.block, Flex.wrap ]
+--        [ viewWebData
+--            (\r ->
+--                r.s3Url
+--                    |> Maybe.map (div [] << List.map viewResult)
+--                    |> Maybe.withDefault EH.none
+--            )
+--            model.pollExecutionStatusResp
+--        ]
+
+
+viewResults2 : Model -> Html Msg
+viewResults2 model =
+    let
+        imgSrc s3Key =
+            model.flags.bucket ++ "/" ++ s3Key
+
+        viewResult s3Key =
+            isOutputImage s3Key
+                |> Extra.ternary
+                    (Card.config []
+                        |> Card.header [] [ text "Output" ]
+                        |> Card.block [] [ CardBlock.custom <| img [ src (imgSrc s3Key) ] [] ]
+                        |> Card.view
+                    )
+                    (div [] [ img [ src (imgSrc s3Key) ] [] ])
+
+        isOutputImage key =
+            key
+                |> String.split "/"
+                |> LE.last
+                |> Maybe.map ((==) "output.png")
+                |> Maybe.withDefault False
+
+        viewMaybeOutputImage =
+            testImages
+                |> List.partition isOutputImage
+                |> Tuple.first
+                |> List.head
+                |> Maybe.map viewOutputImage
+                |> Maybe.withDefault EH.none
+
+        viewOutputImage s3Key =
+            Card.config []
+                |> Card.header [] [ text "Output" ]
+                |> Card.block [] [ CardBlock.custom <| img [ src (imgSrc s3Key) ] [] ]
+                |> Card.view
+
+        viewRest =
+            testImages
+                |> List.partition isOutputImage
+                |> Tuple.second
+                |> List.map viewResult
+                |> div [ Flex.block, Flex.wrap ]
+    in
+    div [ Flex.block, Flex.wrap ]
+        [ viewMaybeOutputImage
+        , viewRest
         ]
+
+
+testImages : List String
+testImages =
+    [ "output/removeObject/dolphin/79e85a93-660e-47ea-8bbe-adb274f7b785/combined-mask.png"
+    , "output/removeObject/dolphin/79e85a93-660e-47ea-8bbe-adb274f7b785/energy-map.gif"
+    , "output/removeObject/dolphin/79e85a93-660e-47ea-8bbe-adb274f7b785/mid.gif"
+    , "output/removeObject/dolphin/79e85a93-660e-47ea-8bbe-adb274f7b785/output.png"
+    , "output/removeObject/dolphin/79e85a93-660e-47ea-8bbe-adb274f7b785/remove.gif"
+    , "output/removeObject/dolphin/79e85a93-660e-47ea-8bbe-adb274f7b785/protect-destroy-areas.png"
+    ]

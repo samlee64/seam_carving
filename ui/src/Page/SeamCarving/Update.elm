@@ -248,6 +248,9 @@ updateRemoveObjectForm_ rMsg form =
         SetOnlyVertical val ->
             { form | onlyVertical = val }
 
+        AccordionMsg state ->
+            { form | showTriangleData = state }
+
 
 unselectImage : Model -> Model
 unselectImage model =

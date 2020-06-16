@@ -6,8 +6,9 @@ const router = new Router({
 });
 
 router.get("/", async (ctx: Context) => {
+  console.log("Health Checked");
   ctx.status = 200;
-  ctx.body = "I'm COVID free!!";
+  ctx.body = { msg: "I'm COVID free!!" };
 });
 
 export default router;

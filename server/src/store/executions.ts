@@ -39,3 +39,14 @@ export async function updateS3Keys(
 ): Promise<void> {
   await conn(EXECUTIONS).update({ s3_url: s3Keys }).where({ id });
 }
+
+export async function updateFileLocations(
+  conn: Connection,
+  id: string,
+  s3Keys: string[],
+  outputFiles: string[]
+): Promise<void> {
+  await conn(EXECUTIONS)
+    .update({ s3_url: s3Keys, output_files: outputFiles })
+    .where({ id });
+}

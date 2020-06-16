@@ -1,5 +1,6 @@
 module Page.SeamCarving.Subscriptions exposing (subscriptions)
 
+import Bootstrap.Accordion as Accordion
 import Bootstrap.Dropdown as Dropdown
 import Bootstrap.Tab as Tab
 import Page.SeamCarving.Model exposing (Model)
@@ -15,8 +16,9 @@ pollInterval =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
-        [ Dropdown.subscriptions model.growForm.numStepsDropdown (\s -> GrowFormMsg <| NumStepsDropdown s)
-        , Dropdown.subscriptions model.contentAmplificationForm.factorDropdown (\s -> ContentAmplificationFormMsg <| FactorDropdown s)
+        [ Dropdown.subscriptions model.growForm.numStepsDropdown (GrowFormMsg << NumStepsDropdown)
+        , Dropdown.subscriptions model.contentAmplificationForm.factorDropdown (ContentAmplificationFormMsg << FactorDropdown)
+        , Accordion.subscriptions model.removeObjectForm.showTriangleData (RemoveObjectFormMsg << AccordionMsg)
         , Time.every pollInterval Tick
         , Tab.subscriptions model.tabState TabMsg
         ]

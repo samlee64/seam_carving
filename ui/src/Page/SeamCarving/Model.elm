@@ -1,5 +1,6 @@
 module Page.SeamCarving.Model exposing (..)
 
+import Bootstrap.Accordion as Accordion
 import Bootstrap.Dropdown as Dropdown
 import Bootstrap.Tab as Tab
 import Data.Markings exposing (..)
@@ -95,6 +96,7 @@ type alias RemoveObjectForm =
     , onlyHorizontal : Bool
     , onlyVertical : Bool
     , markings : Markings
+    , showTriangleData : Accordion.State
     }
 
 
@@ -112,6 +114,7 @@ defaultRemoveObjectForm =
     , onlyHorizontal = False
     , onlyVertical = False
     , markings = { destroy = "", protect = "" }
+    , showTriangleData = Accordion.initialStateCardOpen ""
     }
 
 

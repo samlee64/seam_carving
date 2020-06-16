@@ -28,7 +28,6 @@ router.get("/status", async (ctx: Context) => {
 
   try {
     const execution = await getExecution(conn, executionId);
-    ctx.status = 200;
     ctx.body = {
       id: execution.id,
       imageName: execution.image_name,
@@ -36,6 +35,8 @@ router.get("/status", async (ctx: Context) => {
       routine: execution.routine,
       s3Url: execution.s3_url,
     };
+
+    ctx.status = 200;
   } catch (e) {
     ctx.status = 500;
     ctx.body = {};
@@ -72,45 +73,8 @@ router.post("/content-amplification", async (ctx: Context) => {
   }
 });
 
-router.post("/remove-object", async (ctx: Context) => {
-  const params: RemoveObjectParams = ctx.request.body;
-  try {
-    console.log("removeobject params", JSON.stringify(params));
-    //    const executionId = await contentAmplification(conn, params);
-    ctx.status = 200;
-    //    ctx.body = { executionId };
-  } catch (e) {
-    ctx.status = 500;
-    ctx.body = e;
-
-    console.error(e);
-    return;
-  }
-});
-
 router.post("/remove-object/markings", async (ctx: Context) => {
   try {
-    /*
-    const items = JSON.parse(ctx.request.body.markings.protect);
-    console.log(JSON.stringify(items));
-
-    fs.writeFile('dolphin-triangle.json', JSON.stringify(items), (e) => {
-      console.error(e);
-    });
-    */
-
-    /*
-    //    const png = new PNG.PNG({ width: 239, height: 200, colorType: 0, inputColorType: 0 });
-
-    //    console.log('got somnething', items, items.length);
-    //  for (let idx = 0; idx < items.length; idx++) {
-    //    if (items[idx] != 0) {
-    //      png.data[idx] = 255;
-    //    }
-    //  }
-    //  png.pack().pipe(fs.createWriteStream('sam.png'));
-    //    const executionId = await contentAmplification(conn, params);
-   */
     const params: RemoveObjectParams = ctx.request.body;
     const executionId = await removeObject(conn, params);
     ctx.status = 200;

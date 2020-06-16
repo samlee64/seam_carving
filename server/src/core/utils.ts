@@ -8,7 +8,7 @@ import { Routine, RoutineParams } from "../types/seamCarving";
 import {
   updateStatus,
   insertExecution,
-  updateS3Keys,
+  updateFileLocations,
 } from "../store/executions";
 import { uploadFile } from "../aws/s3";
 
@@ -17,8 +17,16 @@ interface OutputPath {
   s3Key: string;
 }
 
-//dataDir + output + routine + imageName + filename
-function outputPaths(imageName: string, routine: Routine): OutputPath[] {
+interface Outputs {
+  fileNames: string[];
+  outputs: OutputPath[];
+}
+
+function outputs(
+  imageName: string,
+  routine: Routine,
+  executionId: string
+): Outputs {
   let fileNames: string[];
 
   switch (routine) {
@@ -34,19 +42,20 @@ function outputPaths(imageName: string, routine: Routine): OutputPath[] {
         "energy-map.gif",
         "output.png",
         "mid.gif",
-        "output.png",
         "remove.gif",
         "protect-destroy-areas.png",
       ];
       break;
   }
 
-  return fileNames.map((fileName: string) => {
+  const outputs = fileNames.map((fileName: string) => {
     return {
       path: path.join(config.dataDir, "output", routine, imageName, fileName),
-      s3Key: path.join("output", routine, imageName, fileName),
+      s3Key: path.join("output", routine, imageName, executionId, fileName),
     };
   });
+
+  return { fileNames, outputs };
 }
 
 export async function execFileWithUpload(
@@ -62,26 +71,38 @@ export async function execFileWithUpload(
   });
 
   execFile(config.executablePath, args, async (error, stdout, stderr) => {
+    console.error("stderr", stderr);
+    console.log("stdout", stdout);
+
     if (error) {
       await updateStatus(conn, executionId, Status.Error);
-      console.error("stderr", stderr);
       console.error("error", error);
       return;
     }
 
     await updateStatus(conn, executionId, Status.Uploading);
 
-    console.log("stdout", stdout);
     console.log("seamCarving, uploading to s3");
     try {
-      const paths: OutputPath[] = outputPaths(params.imageName, routine);
+      const outputPaths: Outputs = outputs(
+        params.imageName,
+        routine,
+        executionId
+      );
 
-      await map(paths, async (outputPath: OutputPath) => {
+      await map(outputPaths.outputs, async (outputPath: OutputPath) => {
         await uploadFile(outputPath.path, outputPath.s3Key);
       });
 
-      const s3Keys: string[] = paths.map((path) => path.s3Key);
-      await updateS3Keys(conn, executionId, s3Keys);
+      const s3Keys: string[] = outputPaths.outputs.map((path) => path.s3Key);
+
+      //will also assult with metadata;
+      await updateFileLocations(
+        conn,
+        executionId,
+        s3Keys,
+        outputPaths.fileNames
+      );
     } catch (e) {
       await updateStatus(conn, executionId, Status.Error);
       console.error(e);

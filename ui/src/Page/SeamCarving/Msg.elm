@@ -1,5 +1,6 @@
 module Page.SeamCarving.Msg exposing (..)
 
+import Bootstrap.Accordion as Accordion
 import Bootstrap.Dropdown as Dropdown
 import Bootstrap.Tab as Tab
 import Data.Markings exposing (Markings)
@@ -53,6 +54,7 @@ type RemoveObjectFormMsg
     | SetLockRatio Bool
     | SetOnlyHorizontal Bool
     | SetOnlyVertical Bool
+    | AccordionMsg Accordion.State
 
 
 type ClickMode

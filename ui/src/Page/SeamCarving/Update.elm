@@ -46,6 +46,7 @@ update msg ({ flags } as model) =
 
         GrewImage resp ->
             { model | growImageResp = resp }
+                |> setPollExecutionId resp
                 |> none
 
         GrowFormMsg gMsg ->
@@ -56,10 +57,8 @@ update msg ({ flags } as model) =
         Tick _ ->
             let
                 pollCmd m =
-                    m.growImageResp
-                        |> RD.toMaybe
-                        |> Maybe.map (\gi -> { executionId = gi.executionId })
-                        |> Maybe.map (getExecutionStatus flags PolledExecutionStatus)
+                    m.pollExecutionId
+                        |> Maybe.map (\i -> getExecutionStatus flags PolledExecutionStatus { executionId = i })
                         |> Maybe.withDefault Cmd.none
             in
             model |> cmd pollCmd
@@ -84,10 +83,13 @@ update msg ({ flags } as model) =
 
         AmplifiedImage resp ->
             --TODO fire off a poll cmd here
-            { model | contentAmplificationResp = resp } |> none
+            { model | contentAmplificationResp = resp }
+                |> setPollExecutionId resp
+                |> none
 
         TabMsg state ->
             { model | tabState = state }
+                |> resetPollExecution
                 |> none
 
         RemoveObjectFormMsg rMsg ->
@@ -96,18 +98,27 @@ update msg ({ flags } as model) =
                 |> none
 
         RemoveObject ->
+            --            let
+            --                removeObjectCmd m =
+            --                    extractRemoveObjectParams m
+            --                        |> Maybe.map (removeObject flags RemovedObject)
+            --                        |> Maybe.withDefault Cmd.none
+            --            in
             let
-                removeObjectCmd m =
-                    extractRemoveObjectParams m
-                        |> Maybe.map (removeObject flags RemovedObject)
-                        |> Maybe.withDefault Cmd.none
+                log =
+                    Debug.log "remove object" ""
             in
-            model
-                |> cmd removeObjectCmd
+            model |> none
 
         RemovedObject resp ->
+            let
+                log =
+                    Debug.log "RemovedObject" resp
+            in
             --TODO fire off a poll cmd
-            { model | removeObjectResp = Loading } |> none
+            { model | removeObjectResp = Success resp }
+                |> setPollExecutionId (Success resp)
+                |> none
 
 
 updateGrowForm : GrowFormMsg -> Model -> Model
@@ -237,18 +248,6 @@ updateRemoveObjectForm_ rMsg form =
         SetOnlyVertical val ->
             { form | onlyVertical = val }
 
-        HandleMarkings markings ->
-            form
-
-
-
--- { form | markings = markings }
-
-
-resetGrowForm : Model -> Model
-resetGrowForm model =
-    { model | growForm = defaultGrowForm }
-
 
 unselectImage : Model -> Model
 unselectImage model =
@@ -256,15 +255,49 @@ unselectImage model =
         | selectedImage = Nothing
         , pollExecutionStatusResp = NotAsked
         , growImageResp = NotAsked
+        , contentAmplificationResp = NotAsked
+        , removeObjectResp = NotAsked
     }
         |> resetGrowForm
+        |> resetContentAmplificationForm
+        |> resetRemoveObjectForm
+        |> resetPollExecution
 
 
-pollExecutionStatus : Model -> ( Model, Cmd Msg )
-pollExecutionStatus model =
-    model.growImageResp
+resetGrowForm : Model -> Model
+resetGrowForm model =
+    { model | growForm = defaultGrowForm }
+
+
+resetContentAmplificationForm : Model -> Model
+resetContentAmplificationForm model =
+    { model | contentAmplificationForm = defaultContentAmplificationForm }
+
+
+resetRemoveObjectForm : Model -> Model
+resetRemoveObjectForm model =
+    { model | removeObjectForm = defaultRemoveObjectForm }
+
+
+setPollExecutionId : WebData { a | executionId : String } -> Model -> Model
+setPollExecutionId resp model =
+    resp
         |> RD.toMaybe
-        |> Maybe.map (\gi -> { executionId = gi.executionId })
-        |> Maybe.map (getExecutionStatus model.flags PolledExecutionStatus)
-        |> Maybe.map (\c -> ( { model | pollExecutionStatusResp = Loading }, c ))
-        |> Maybe.withDefault ( model, Cmd.none )
+        |> Maybe.map .executionId
+        |> (\i -> { model | pollExecutionId = i })
+
+
+resetPollExecution : Model -> Model
+resetPollExecution model =
+    { model | pollExecutionStatusResp = NotAsked, pollExecutionId = Nothing }
+
+
+
+--pollExecutionStatus : Model -> ( Model, Cmd Msg )
+--pollExecutionStatus model =
+--    model.growImageResp
+--        |> RD.toMaybe
+--        |> Maybe.map (\gi -> { executionId = gi.executionId })
+--        |> Maybe.map (getExecutionStatus model.flags PolledExecutionStatus)
+--        |> Maybe.map (\c -> ( { model | pollExecutionStatusResp = Loading }, c ))
+--        |> Maybe.withDefault ( model, Cmd.none )

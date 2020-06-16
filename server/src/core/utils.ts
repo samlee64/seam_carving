@@ -5,16 +5,20 @@ import config from "../config";
 import { Connection } from "../db";
 import { Status } from "../types/schema";
 import { Routine, RoutineParams } from "../types/seamCarving";
-import { updateStatus, insertExecution } from "../store/executions";
+import {
+  updateStatus,
+  insertExecution,
+  updateS3Keys,
+} from "../store/executions";
 import { uploadFile } from "../aws/s3";
 
 interface OutputPath {
-  fileName: string;
   path: string;
+  s3Key: string;
 }
 
+//dataDir + output + routine + imageName + filename
 function outputPaths(imageName: string, routine: Routine): OutputPath[] {
-  //Returns the location of the newly written png and gif files
   let fileNames: string[];
 
   switch (routine) {
@@ -25,20 +29,24 @@ function outputPaths(imageName: string, routine: Routine): OutputPath[] {
       fileNames = ["reduce.gif", "output.png"];
       break;
     case Routine.RemoveObject:
-      fileNames = [];
+      fileNames = [
+        "combined-mask.png",
+        "energy-map.gif",
+        "output.png",
+        "mid.gif",
+        "output.png",
+        "remove.gif",
+        "protect-destroy-areas.png",
+      ];
       break;
   }
 
   return fileNames.map((fileName: string) => {
     return {
-      fileName,
-      path: path.join(config.dataDir, "output", imageName, fileName),
+      path: path.join(config.dataDir, "output", routine, imageName, fileName),
+      s3Key: path.join("output", routine, imageName, fileName),
     };
   });
-}
-
-function s3Path(routine: Routine, imageName: string, fileName: string): string {
-  return path.join("output", routine, imageName, fileName);
 }
 
 export async function execFileWithUpload(
@@ -58,24 +66,22 @@ export async function execFileWithUpload(
       await updateStatus(conn, executionId, Status.Error);
       console.error("stderr", stderr);
       console.error("error", error);
-      throw error;
+      return;
     }
+
     await updateStatus(conn, executionId, Status.Uploading);
 
     console.log("stdout", stdout);
-
     console.log("seamCarving, uploading to s3");
     try {
-      await map(
-        outputPaths(params.imageName, routine),
+      const paths: OutputPath[] = outputPaths(params.imageName, routine);
 
-        async (outputPath: OutputPath) => {
-          console.log(outputPath);
-          const s3 = s3Path(routine, params.imageName, outputPath.fileName);
+      await map(paths, async (outputPath: OutputPath) => {
+        await uploadFile(outputPath.path, outputPath.s3Key);
+      });
 
-          return uploadFile(outputPath.path, s3);
-        }
-      );
+      const s3Keys: string[] = paths.map((path) => path.s3Key);
+      await updateS3Keys(conn, executionId, s3Keys);
     } catch (e) {
       await updateStatus(conn, executionId, Status.Error);
       console.error(e);

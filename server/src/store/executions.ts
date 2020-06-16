@@ -31,3 +31,11 @@ export async function updateStatus(
 ): Promise<void> {
   await conn(EXECUTIONS).update({ status }).where({ id });
 }
+
+export async function updateS3Keys(
+  conn: Connection,
+  id: string,
+  s3Keys: string[]
+): Promise<void> {
+  await conn(EXECUTIONS).update({ s3_url: s3Keys }).where({ id });
+}

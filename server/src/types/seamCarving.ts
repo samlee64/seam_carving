@@ -24,9 +24,12 @@ export interface RemoveObjectParams {
 }
 
 export enum Routine {
-  Grow = 'grow',
-  ContentAmplification = 'contentAmplification',
-  RemoveObject = 'removeObject',
+  Grow = "grow",
+  ContentAmplification = "contentAmplification",
+  RemoveObject = "removeObject",
 }
 
-export type RoutineParams = GrowParams | ContentAmplificationParams | RemoveObjectParams;
+export type RoutineParams =
+  | GrowParams
+  | ContentAmplificationParams
+  | RemoveObjectParams;

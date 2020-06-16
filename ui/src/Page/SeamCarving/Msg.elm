@@ -27,7 +27,7 @@ type Msg
     | TabMsg Tab.State
     | RemoveObjectFormMsg RemoveObjectFormMsg
     | RemoveObject
-    | RemovedObject (WebData RemoveObjectResp)
+    | RemovedObject RemoveObjectResp
 
 
 type GrowFormMsg
@@ -53,7 +53,6 @@ type RemoveObjectFormMsg
     | SetLockRatio Bool
     | SetOnlyHorizontal Bool
     | SetOnlyVertical Bool
-    | HandleMarkings Markings
 
 
 type ClickMode

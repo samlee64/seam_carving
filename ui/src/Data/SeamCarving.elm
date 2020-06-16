@@ -54,7 +54,12 @@ type alias ExecutionStatusParams =
 
 
 type alias ExecutionStatusResp =
-    { status : Status }
+    { status : Status
+    , id : String
+    , imageName : String
+    , routine : String
+    , s3Url : Maybe (List String)
+    }
 
 
 type Status
@@ -152,6 +157,11 @@ removeObjectRespDecoder =
     map RemoveObjectResp (field "executionId" string)
 
 
+removeObjectRespEventDecoder : Decoder RemoveObjectResp
+removeObjectRespEventDecoder =
+    map RemoveObjectResp (at [ "detail", "executionId" ] string)
+
+
 statusDecoder : Decoder Status
 statusDecoder =
     string
@@ -165,4 +175,9 @@ statusDecoder =
 
 pollRespDecoder : Decoder ExecutionStatusResp
 pollRespDecoder =
-    map ExecutionStatusResp (field "status" statusDecoder)
+    map5 ExecutionStatusResp
+        (field "status" statusDecoder)
+        (field "id" string)
+        (field "imageName" string)
+        (field "routine" string)
+        (field "s3Url" (nullable (list string)))

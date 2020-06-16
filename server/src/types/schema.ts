@@ -11,7 +11,7 @@ export interface Execution {
   id: string;
   image_name: string;
   routine: string;
-  s3_url: string | null;
+  s3_url: string[];
   status: Status;
   params: RoutineParams;
 }

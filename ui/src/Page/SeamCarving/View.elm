@@ -15,7 +15,7 @@ import Bootstrap.Utilities.Flex as Flex
 import Bootstrap.Utilities.Spacing as Spacing
 import Data.Markings exposing (..)
 import Data.Mouse exposing (..)
-import Data.SeamCarving exposing (Status(..), statusToString)
+import Data.SeamCarving exposing (..)
 import Data.Triangle as Triangle exposing (Triangle)
 import Extra.Extra as Extra
 import Extra.Html as EH
@@ -56,9 +56,19 @@ viewAllImages model =
     let
         imgSrc title =
             model.flags.bucket ++ "/defaults/" ++ title ++ ".png"
+
+        viewImage title =
+            Card.config [ Card.attrs [ onClick <| SelectImage title ] ]
+                |> Card.header [] [ text title ]
+                |> Card.block []
+                    [ CardBlock.custom <|
+                        img [ src (imgSrc title) ] []
+                    ]
+                |> Card.footer [] []
+                |> Card.view
     in
     imageTitles
-        |> List.map (viewImage model.flags)
+        |> List.map viewImage
         |> div [ Flex.block, Flex.wrap ]
 
 
@@ -75,7 +85,7 @@ viewSelectedImage model imageTitle =
             , Tab.item
                 { id = "content-amplification"
                 , link = Tab.link [] [ text "Content Amplification" ]
-                , pane = Tab.pane [ Spacing.mt3 ] [ viewContentAmplificationForm model ]
+                , pane = Tab.pane [ Spacing.mt3 ] [ viewContentAmplification model ]
                 }
             , Tab.item
                 { id = "grow"
@@ -84,60 +94,6 @@ viewSelectedImage model imageTitle =
                 }
             ]
         |> Tab.view model.tabState
-
-
-viewSelectedImage_ : Model -> String -> Html Msg
-viewSelectedImage_ model imageTitle =
-    let
-        imgSrc =
-            model.flags.bucket ++ "/defaults/" ++ imageTitle ++ ".png"
-
-        gifSrc =
-            model.flags.bucket ++ "/output/" ++ imageTitle ++ "/"
-
-        viewGifs =
-            gifTypes
-                |> List.map (\g -> img [ src (gifSrc ++ g ++ ".gif") ] [])
-                |> div []
-    in
-    Card.config [ Card.attrs [] ]
-        |> Card.header [] [ text imageTitle ]
-        |> Card.block []
-            [ CardBlock.custom <|
-                div []
-                    [ img [ src imgSrc ]
-                        []
-                    , model
-                        |> isExecutionDone
-                        |> Extra.ternary viewGifs EH.none
-                    ]
-            ]
-        |> Card.footer [] []
-        |> Card.view
-
-
-viewHealthCheck : Model -> Html Msg
-viewHealthCheck model =
-    div []
-        [ Button.button [ Button.primary, Button.onClick HealthCheck ] [ text "Check health" ]
-        , model.healthCheck |> viewWebData (\_ -> text "You are healthy")
-        ]
-
-
-viewImage : Flags -> String -> Html Msg
-viewImage flags title =
-    let
-        imgSrc =
-            flags.bucket ++ "/defaults/" ++ title ++ ".png"
-    in
-    Card.config [ Card.attrs [ onClick <| SelectImage title ] ]
-        |> Card.header [] [ text title ]
-        |> Card.block []
-            [ CardBlock.custom <|
-                img [ src imgSrc ] []
-            ]
-        |> Card.footer [] []
-        |> Card.view
 
 
 viewGrowForm : Model -> Html Msg
@@ -185,12 +141,16 @@ viewGrowForm model =
                         , div [] [ text "Specifies how many times the energy map should be cleared. Also specifies max number of times any given pixel can be copied" ]
                         , Dropdown.dropdown model.growForm.numStepsDropdown
                             { options = []
-                            , toggleMsg = \s -> GrowFormMsg <| NumStepsDropdown s
-                            , toggleButton = Dropdown.toggle [ Button.outlinePrimary ] [ text <| String.fromInt model.growForm.numSteps ]
+                            , toggleMsg = GrowFormMsg << NumStepsDropdown
+                            , toggleButton =
+                                Dropdown.toggle
+                                    [ Button.outlinePrimary ]
+                                    [ text <| String.fromInt model.growForm.numSteps ]
                             , items =
                                 List.map
                                     (\s ->
-                                        Dropdown.buttonItem [ onClick <| GrowFormMsg <| SetNumSteps s ]
+                                        Dropdown.buttonItem
+                                            [ onClick <| GrowFormMsg <| SetNumSteps s ]
                                             [ text <| String.fromInt s ]
                                     )
                                     numSteps
@@ -200,12 +160,23 @@ viewGrowForm model =
             ]
         |> Card.footer []
             [ Button.button
-                [ Button.primary, Button.onClick GrowImage, Button.disabled isGrowButtonDisabled ]
+                [ Button.primary
+                , Button.onClick GrowImage
+                , Button.disabled isGrowButtonDisabled
+                ]
                 [ text "Grow" ]
             , div [ Spacing.mt2, Flex.block ]
                 [ viewWebData (\resp -> viewExecutionStatus resp.status) model.pollExecutionStatusResp ]
             ]
         |> Card.view
+
+
+viewContentAmplification : Model -> Html Msg
+viewContentAmplification model =
+    div []
+        [ viewContentAmplificationForm model
+        , viewResults model
+        ]
 
 
 viewContentAmplificationForm : Model -> Html Msg
@@ -228,25 +199,37 @@ viewContentAmplificationForm model =
                             , items = List.map (\s -> Dropdown.buttonItem [ onClick <| ContentAmplificationFormMsg <| SetFactor s ] [ text <| String.fromFloat s ]) factorRange
                             }
                         ]
-                    , viewWebData (\resp -> text "turned out ok") model.contentAmplificationResp
                     ]
             ]
         |> Card.footer []
-            [ Button.button [ Button.primary, Button.onClick AmplifyImage ] [ text "Amp" ]
+            [ Button.button
+                [ Button.primary
+                , Button.onClick AmplifyImage
+                ]
+                [ text "Amp" ]
+            , div
+                [ Spacing.mt2, Flex.block ]
+                [ viewWebData (\resp -> viewExecutionStatus resp.status) model.pollExecutionStatusResp ]
             ]
         |> Card.view
 
 
 viewObjectRemovalForm : Model -> Html Msg
 viewObjectRemovalForm model =
-    Card.config []
-        |> Card.header [] [ text "Object Removal Form" ]
-        |> Card.block [] [ CardBlock.custom <| Html.map RemoveObjectFormMsg <| viewCanvas model ]
-        |> Card.footer [] [ Button.button [ Button.primary, Button.onClick RemoveObject ] [ text "Remove!" ] ]
-        |> Card.view
+    div []
+        [ Card.config []
+            |> Card.header [] [ text "Object Removal Form" ]
+            |> Card.block [] [ CardBlock.custom <| viewCanvas model ]
+            |> Card.footer []
+                [ div [ Spacing.mt2, Flex.block ]
+                    [ viewWebData (\resp -> viewExecutionStatus resp.status) model.pollExecutionStatusResp ]
+                ]
+            |> Card.view
+        , viewResults model
+        ]
 
 
-viewCanvas : Model -> Html RemoveObjectFormMsg
+viewCanvas : Model -> Html Msg
 viewCanvas ({ removeObjectForm } as model) =
     let
         imgSrc =
@@ -292,9 +275,9 @@ viewCanvas ({ removeObjectForm } as model) =
             model.selectedImage |> Maybe.withDefault ""
 
         attributes =
-            [ on "mousemove" (Decode.map MouseMove mouseMoveDataDecoder)
-            , on "markings" (Decode.map HandleMarkings markingsDecoder)
-            , onClick Click
+            [ on "mousemove" (Decode.map MouseMove mouseMoveDataDecoder) |> Html.Attributes.map RemoveObjectFormMsg
+            , on "response" (Decode.map RemovedObject removeObjectRespEventDecoder)
+            , on "drawing-click" (Decode.succeed Click) |> Html.Attributes.map RemoveObjectFormMsg
             , attribute "destroy" destroy
             , attribute "imgSrc" imgSrc
             , attribute "protected" protected
@@ -306,58 +289,61 @@ viewCanvas ({ removeObjectForm } as model) =
             ]
     in
     div []
-        [ div [ Flex.block, Flex.row, style "background" "grey" ] (List.map viewTriangleData removeObjectForm.protected)
-        , div [ Flex.block, Flex.row, style "background" "red" ] (List.map viewTriangleData removeObjectForm.destroy)
-        , div [] [ viewTriangleData removeObjectForm.currTriangle ]
-        , node "remove-object" attributes []
-        , div []
-            [ viewModeInfo removeObjectForm
-            , Button.button
-                [ Button.success
-                , Button.onClick (SetClickMode Continious)
-                , Button.disabled <| removeObjectForm.clickMode == Continious
+        [ node "remove-object" attributes []
+        , Html.map RemoveObjectFormMsg <|
+            div []
+                [ div [ Flex.block, Flex.row, style "background" "grey" ] (List.map viewTriangleData removeObjectForm.protected)
+                , div [ Flex.block, Flex.row, style "background" "red" ] (List.map viewTriangleData removeObjectForm.destroy)
+                , div [] [ viewTriangleData removeObjectForm.currTriangle ]
+                , div []
+                    [ viewModeInfo removeObjectForm
+                    , Button.button
+                        [ Button.success
+                        , Button.onClick (SetClickMode Continious)
+                        , Button.disabled <| removeObjectForm.clickMode == Continious
+                        ]
+                        [ text "Set Continious" ]
+                    , Button.button
+                        [ Button.danger
+                        , Button.onClick (SetClickMode Discreet)
+                        , Button.disabled <| removeObjectForm.clickMode == Discreet
+                        ]
+                        [ text "Set Discreet" ]
+                    ]
+                , div []
+                    [ Button.button
+                        [ Button.success
+                        , Button.onClick (SetMarkMode Protect)
+                        , Button.disabled <| removeObjectForm.markMode == Protect
+                        ]
+                        [ text "Set Protected Areas" ]
+                    , Button.button
+                        [ Button.danger
+                        , Button.onClick (SetMarkMode Destroy)
+                        , Button.disabled <| removeObjectForm.markMode == Destroy
+                        ]
+                        [ text "Set Destroy Areas" ]
+                    ]
+                , div []
+                    [ Checkbox.checkbox
+                        [ Checkbox.checked removeObjectForm.lockRatio
+                        , Checkbox.onCheck SetLockRatio
+                        ]
+                        "Lock Width/Height Ratio"
+                    , Checkbox.checkbox
+                        [ Checkbox.checked removeObjectForm.onlyHorizontal
+                        , Checkbox.onCheck SetOnlyHorizontal
+                        , Checkbox.disabled removeObjectForm.lockRatio
+                        ]
+                        "Remove only horizontal seams"
+                    , Checkbox.checkbox
+                        [ Checkbox.checked removeObjectForm.onlyVertical
+                        , Checkbox.onCheck SetOnlyVertical
+                        , Checkbox.disabled removeObjectForm.lockRatio
+                        ]
+                        "Remove only vertical seams"
+                    ]
                 ]
-                [ text "Set Continious" ]
-            , Button.button
-                [ Button.danger
-                , Button.onClick (SetClickMode Discreet)
-                , Button.disabled <| removeObjectForm.clickMode == Discreet
-                ]
-                [ text "Set Discreet" ]
-            ]
-        , div []
-            [ Button.button
-                [ Button.success
-                , Button.onClick (SetMarkMode Protect)
-                , Button.disabled <| removeObjectForm.markMode == Protect
-                ]
-                [ text "Set Protected Areas" ]
-            , Button.button
-                [ Button.danger
-                , Button.onClick (SetMarkMode Destroy)
-                , Button.disabled <| removeObjectForm.markMode == Destroy
-                ]
-                [ text "Set Destroy Areas" ]
-            ]
-        , div []
-            [ Checkbox.checkbox
-                [ Checkbox.checked removeObjectForm.lockRatio
-                , Checkbox.onCheck SetLockRatio
-                ]
-                "Lock Width/Height Ratio"
-            , Checkbox.checkbox
-                [ Checkbox.checked removeObjectForm.onlyHorizontal
-                , Checkbox.onCheck SetOnlyHorizontal
-                , Checkbox.disabled removeObjectForm.lockRatio
-                ]
-                "Remove only horizontal seams"
-            , Checkbox.checkbox
-                [ Checkbox.checked removeObjectForm.onlyVertical
-                , Checkbox.onCheck SetOnlyVertical
-                , Checkbox.disabled removeObjectForm.lockRatio
-                ]
-                "Remove only vertical seams"
-            ]
         ]
 
 
@@ -402,3 +388,26 @@ viewExecutionStatus status =
 
         Error ->
             Alert.simpleDanger [] [ message ]
+
+
+viewResults : Model -> Html Msg
+viewResults model =
+    let
+        imgSrc s3Key =
+            model.flags.bucket ++ "/" ++ s3Key
+
+        viewResult s3Key =
+            div []
+                [ img [ src (imgSrc s3Key) ] []
+                , text (imgSrc s3Key)
+                ]
+    in
+    div []
+        [ viewWebData
+            (\r ->
+                r.s3Url
+                    |> Maybe.map (div [] << List.map viewResult)
+                    |> Maybe.withDefault EH.none
+            )
+            model.pollExecutionStatusResp
+        ]

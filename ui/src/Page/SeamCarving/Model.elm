@@ -17,6 +17,7 @@ type alias Model =
     , selectedImage : Maybe String
     , growForm : GrowForm
     , growImageResp : WebData GrowImageResp
+    , pollExecutionId : Maybe String
     , pollExecutionStatusResp : WebData ExecutionStatusResp
     , contentAmplificationForm : ContentAmplificationForm
     , contentAmplificationResp : WebData ContentAmplificationResp
@@ -35,6 +36,7 @@ init flags =
             , selectedImage = Just "dolphin"
             , growForm = defaultGrowForm
             , growImageResp = NotAsked
+            , pollExecutionId = Nothing
             , pollExecutionStatusResp = NotAsked
             , contentAmplificationForm = defaultContentAmplificationForm
             , contentAmplificationResp = NotAsked

@@ -26,8 +26,8 @@ void runGrow(const string imageName, const int addWidth, const int addHeight, co
     string inputImagePath = DATA_DIR "/input/" + imageName + ".png";
     const FloatImage input(inputImagePath);
 
-    string outputPath = DATA_DIR "/output/" + imageName + "/";
-    cout << outputPath << endl;
+    string outputPath = DATA_DIR "/output/grow/" + imageName + "/";
+    cout << outputPath <<endl;
     if (mkdir(outputPath.c_str(), 0777) == -1)
        cerr << "Error: " << strerror(errno) << endl;
     else
@@ -82,14 +82,15 @@ void runContentAmplification(const string imageName, const float factor)
 
     const FloatImage input(inputImagePath);
 
-    string outputPath = DATA_DIR "/output/" + imageName + "/";
+    string outputPath = DATA_DIR "/output/contentAmplification/" + imageName + "/";
     cout << outputPath << endl;
 
     //This is mkdir, not mkdirp
-    if (mkdir(outputPath.c_str(), 0777) == -1)
-        cerr << "Error: " << strerror(errno) << endl;
-    else
+    if (mkdir(outputPath.c_str(), 0777) == -1) {
+        cerr << "Error with mkdir: " << strerror(errno) << endl;
+    } else {
         cout << "Directory created" << endl;
+    }
 
     const FloatImage output = contentAmplification(input, factor, outputPath);
 }

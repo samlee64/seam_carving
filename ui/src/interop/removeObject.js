@@ -33,8 +33,8 @@ template.innerHTML = `
 <div id="container">
   <canvas id="drawing-canvas"> </canvas>
   <canvas id="img-canvas"> </canvas>
-  <button>Click Me</button>
 </div>
+<button>Click Me</button>
 `;
 
 class RemoveObject extends HTMLElement {
@@ -50,6 +50,7 @@ class RemoveObject extends HTMLElement {
 
     this.protected = [];
     this.destroy = [];
+    this.addEventListener('response', console.log);
   }
 
   connectedCallback() {
@@ -60,6 +61,9 @@ class RemoveObject extends HTMLElement {
 
     const el = (e) => this.handleClick(e);
     this.shadowRoot.querySelector('button').addEventListener('click', el);
+
+    const la = (e) => this.drawingCanvasClick(e);
+    drawingCanvas.addEventListener('click', la);
 
     const img = new Image();
     const imgSrc = this.getAttribute('imgSrc');
@@ -76,6 +80,10 @@ class RemoveObject extends HTMLElement {
       ctx.drawImage(img, 0, 0);
     };
     this.img = img;
+  }
+
+  drawingCanvasClick(e) {
+    this.dispatchEvent(new CustomEvent('drawing-click'));
   }
 
   handleClick(e) {
@@ -100,7 +108,6 @@ class RemoveObject extends HTMLElement {
     this.protected.map((tri) => this.drawTriangle(tri, '#008000'));
 
     var imageData = ctx.getImageData(0, 0, drawingCanvas.width, drawingCanvas.height);
-    var markings = getMarkings(imageData);
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
@@ -146,7 +153,13 @@ class RemoveObject extends HTMLElement {
 
     postData('http://localhost:3000/seam/remove-object/markings', foo).then((data) => {
       console.log(JSON.stringify(data));
+      this.emitResponse(data);
     });
+  }
+
+  emitResponse(data) {
+    console.log('emit response');
+    this.dispatchEvent(new CustomEvent('response', { detail: data }));
   }
 }
 

@@ -9,7 +9,7 @@ import Time
 
 pollInterval : Float
 pollInterval =
-    10000
+    1000
 
 
 subscriptions : Model -> Sub Msg

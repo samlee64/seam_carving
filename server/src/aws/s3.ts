@@ -16,6 +16,7 @@ export async function uploadFile(filePath: string, key: string): Promise<void> {
   //
   console.log("starting file read/upload");
   const data = fs.readFileSync(filePath);
+
   const params = {
     Body: data,
     Bucket: IMAGE_BUCKET,
@@ -23,27 +24,12 @@ export async function uploadFile(filePath: string, key: string): Promise<void> {
     ACL: "public-read",
   };
 
+  if (config.env === "dev") {
+    console.log("env dev, skipping upload");
+    return;
+  }
+
   console.log("s3, begin upload", filePath, key);
   await s3.putObject(params).promise();
   console.log("s3, finished upload", filePath, key);
-
-  //  fs.readFile(filePath, async (err, data) => {
-  //    if (err) throw err;
-  //    if (config.env === "dev") {
-  //      console.log("env dev, skipping upload");
-  //      return;
-  //    }
-  //
-  //    const params = {
-  //      Body: data,
-  //      Bucket: IMAGE_BUCKET,
-  //      Key: key,
-  //      ACL: "public-read",
-  //    };
-  //
-  //    console.log("s3, begin upload", filePath, key);
-  //
-  //    await s3.putObject(params).promise();
-  //    console.log("s3, finished upload", filePath, key);
-  //  });
 }

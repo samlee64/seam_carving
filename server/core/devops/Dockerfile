@@ -16,8 +16,3 @@ RUN cd pistache && \
   cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release .. &&\
   make && \
   sudo make install
-
-
-
-
-

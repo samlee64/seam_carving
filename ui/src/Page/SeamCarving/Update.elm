@@ -91,11 +91,6 @@ update msg ({ flags } as model) =
                 |> none
 
         RemovedObject resp ->
-            let
-                log =
-                    Debug.log "RemovedObject" resp
-            in
-            --TODO fire off a poll cmd
             { model | removeObjectResp = Success resp }
                 |> setPollExecutionId (Success resp)
                 |> none

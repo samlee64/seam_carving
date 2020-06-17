@@ -1,35 +1,34 @@
-const path = require("path");
-const webpack = require("webpack");
-const merge = require("webpack-merge");
+const path = require('path');
+const webpack = require('webpack');
+const merge = require('webpack-merge');
 
-const CopyWebpackPlugin = require("copy-webpack-plugin");
-const HTMLWebpackPlugin = require("html-webpack-plugin");
-const CleanWebpackPlugin = require("clean-webpack-plugin");
+const CopyWebpackPlugin = require('copy-webpack-plugin');
+const HTMLWebpackPlugin = require('html-webpack-plugin');
+const CleanWebpackPlugin = require('clean-webpack-plugin');
 
-var MODE =
-  process.env.npm_lifecycle_event === "prod" ? "production" : "development";
-var filename = MODE == "production" ? "[name]-[hash].js" : "index.js";
+var MODE = process.env.npm_lifecycle_event === 'prod' ? 'production' : 'development';
+var filename = MODE == 'production' ? '[name]-[hash].js' : 'index.js';
 
 var common = {
   mode: MODE,
-  entry: "./public/index.js",
+  entry: './public/index.js',
   output: {
-    path: path.join(__dirname, "dist"),
-    publicPath: "/",
+    path: path.join(__dirname, 'dist'),
+    publicPath: '/',
     // webpack -p automatically adds hash when building for production
-    filename: filename
+    filename: filename,
   },
   plugins: [
     new HTMLWebpackPlugin({
       // Use this template to get basic responsive meta tags
-      template: "public/index.html",
+      template: 'public/index.html',
       // inject details of output file at end of body
-      inject: "body"
-    })
+      inject: 'body',
+    }),
   ],
   resolve: {
-    modules: [path.join(__dirname, "src"), "node_modules"],
-    extensions: [".js", ".elm", ".png"]
+    modules: [path.join(__dirname, 'src'), 'node_modules'],
+    extensions: ['.js', '.elm', '.png'],
   },
   module: {
     rules: [
@@ -37,40 +36,47 @@ var common = {
         test: /\.js$/,
         exclude: /node_modules/,
         use: {
-          loader: "babel-loader"
-        }
+          loader: 'babel-loader',
+        },
       },
       {
         test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
         exclude: [/elm-stuff/, /node_modules/],
-        loader: "url-loader",
+        loader: 'url-loader',
         options: {
           limit: 10000,
-          mimetype: "application/font-woff"
-        }
+          mimetype: 'application/font-woff',
+        },
       },
       {
         test: /\.(ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
         exclude: [/elm-stuff/, /node_modules/],
-        loader: "file-loader"
+        loader: 'file-loader',
       },
       {
         test: /\.(jpe?g|png|gif|svg)$/i,
         exclude: [/elm-stuff/, /node_modules/],
-        loader: "file-loader"
-      }
-    ]
-  }
+        loader: 'file-loader',
+      },
+    ],
+  },
 };
 
-if (MODE === "development") {
-  console.log("Building for dev...");
+if (MODE === 'development') {
+  console.log('Building for dev...');
   module.exports = merge(common, {
     plugins: [
       // Suggested for hot-loading
       new webpack.NamedModulesPlugin(),
       // Prevents compilation errors causing the hot loader to lose state
-      new webpack.NoEmitOnErrorsPlugin()
+      new webpack.NoEmitOnErrorsPlugin(),
+
+      new CopyWebpackPlugin([
+        {
+          from: 'src/assets/images',
+          to: 'assets/images',
+        },
+      ]),
     ],
     module: {
       rules: [
@@ -78,51 +84,52 @@ if (MODE === "development") {
           test: /\.elm$/,
           exclude: [/elm-stuff/, /node_modules/],
           use: [
-            { loader: "elm-hot-webpack-loader" },
+            { loader: 'elm-hot-webpack-loader' },
             {
-              loader: "elm-webpack-loader",
+              loader: 'elm-webpack-loader',
               options: {
                 // add Elm's debug overlay to output
                 debug: true,
-                forceWatch: true
-              }
-            }
-          ]
-        }
-      ]
+                forceWatch: true,
+              },
+            },
+          ],
+        },
+      ],
     },
     devServer: {
       inline: true,
       overlay: true,
-      stats: "errors-only",
-      contentBase: path.join(__dirname, "src/assets"),
+      stats: 'errors-only',
+      contentBase: path.join(__dirname, 'src/assets'),
       historyApiFallback: true,
       // feel free to delete this section if you don't need anything like this
       before(app) {
         // on port 3000
-        app.get("/test", function(req, res) {
-          res.json({ result: "OK" });
+        app.get('/test', function (req, res) {
+          res.json({ result: 'OK' });
         });
-      }
-    }
+      },
+    },
   });
 }
-if (MODE === "production") {
-  console.log("Building for Production...");
+if (MODE === 'production') {
+  console.log('Building for Production...');
   module.exports = merge(common, {
     plugins: [
       // Delete everything from /dist directory and report to user
-      new CleanWebpackPlugin(["dist"], {
+      new CleanWebpackPlugin(['dist'], {
         root: __dirname,
         exclude: [],
         verbose: true,
-        dry: false
+        dry: false,
       }),
       // Copy static assets
       new CopyWebpackPlugin([
         {
-          from: "src/assets"
-        }
+          from: 'src/assets/images',
+          to: 'assets/images',
+        },
       ]),
     ],
     module: {
@@ -131,13 +138,13 @@ if (MODE === "production") {
           test: /\.elm$/,
           exclude: [/elm-stuff/, /node_modules/],
           use: {
-            loader: "elm-webpack-loader",
+            loader: 'elm-webpack-loader',
             options: {
-              optimize: true
-            }
-          }
+              optimize: true,
+            },
+          },
         },
-      ]
-    }
+      ],
+    },
   });
 }

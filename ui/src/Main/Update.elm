@@ -33,5 +33,8 @@ update msg model =
         ( SeamCarvingMsg scmsg, SeamCarvingPage scmodel ) ->
             SeamCarving.update scmsg scmodel |> updatePage SeamCarvingPage SeamCarvingMsg model
 
+        ( NavbarMsg state, _ ) ->
+            ( { model | navbarState = state }, Cmd.none )
+
         _ ->
             ( model, Cmd.none )

@@ -1,7 +1,7 @@
-import * as fs from 'fs';
-import * as path from 'path';
-import { PNG } from 'pngjs';
-import config from '../config';
+import * as fs from "fs";
+import * as path from "path";
+import { PNG } from "pngjs";
+import config from "../config";
 
 interface CreateMaskParams {
   width: number;
@@ -9,7 +9,11 @@ interface CreateMaskParams {
   data: number[];
 }
 
-export function createMask(params: CreateMaskParams, imageName: string, filename: string): string {
+export function createMask(
+  params: CreateMaskParams,
+  imageName: string,
+  filename: string
+): string {
   //do a validation on the data;
   //data should be equal to width * height;
   const data = params.data;
@@ -24,7 +28,7 @@ export function createMask(params: CreateMaskParams, imageName: string, filename
     if (data[idx] != 0) png.data[idx] = 255;
   }
 
-  const dirPath = path.join(config.dataDir, 'output/mask', imageName);
+  const dirPath = path.join(config.dataDir, "output/mask", imageName);
   const fullPath = path.join(dirPath, filename);
 
   fs.mkdirSync(dirPath, { recursive: true });

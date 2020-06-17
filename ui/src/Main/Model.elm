@@ -1,5 +1,6 @@
 module Main.Model exposing (Model, Page(..), init, initPage, updatePage)
 
+import Bootstrap.Navbar as Navbar
 import Browser.Navigation as Navigation exposing (Key)
 import Flags exposing (Flags)
 import Main.Msg exposing (Msg(..))
@@ -19,23 +20,27 @@ type alias Model =
     { page : Page
     , flags : Flags
     , key : Key
+    , navbarState : Navbar.State
     }
 
 
 init : Flags -> Url -> Key -> ( Model, Cmd Msg )
 init flags url key =
     let
+        ( navbarState, nCmd ) =
+            Navbar.initialState NavbarMsg
+
         ( model, cmd ) =
-            initPage url { page = NotFound, flags = flags, key = key }
+            initPage url { page = NotFound, flags = flags, key = key, navbarState = navbarState }
     in
-    ( model, cmd )
+    ( model, Cmd.batch [ cmd, nCmd ] )
 
 
 initPage : Url -> Model -> ( Model, Cmd Msg )
 initPage url model =
     case Routes.fromUrl url of
         Just Routes.Index ->
-            Index.init |> updatePage IndexPage IndexMsg model
+            Index.init model.flags |> updatePage IndexPage IndexMsg model
 
         Just Routes.SeamCarving ->
             SeamCarving.init model.flags |> updatePage SeamCarvingPage SeamCarvingMsg model

@@ -25,6 +25,7 @@ type Msg
     | TabMsg Tab.State
     | RemoveObjectFormMsg RemoveObjectFormMsg
     | RemovedObject RemoveObjectResp
+    | GotInputImages (WebData InputImagesResp)
 
 
 type GrowFormMsg

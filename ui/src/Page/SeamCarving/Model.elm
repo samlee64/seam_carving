@@ -7,8 +7,10 @@ import Data.Mouse exposing (..)
 import Data.SeamCarving exposing (..)
 import Data.Triangle as Triangle exposing (Triangle)
 import Flags exposing (Flags)
+import List.Extra as LE
 import Page.SeamCarving.Msg exposing (..)
 import RemoteData as RD exposing (RemoteData(..), WebData)
+import Request.SeamCarving exposing (..)
 
 
 type alias Model =
@@ -23,6 +25,7 @@ type alias Model =
     , tabState : Tab.State
     , removeObjectForm : RemoveObjectForm
     , removeObjectResp : WebData RemoveObjectResp
+    , inputImagesResp : WebData InputImagesResp
     }
 
 
@@ -31,7 +34,7 @@ init flags =
     let
         model =
             { flags = flags
-            , selectedImage = Just "dolphin"
+            , selectedImage = Nothing
             , growForm = defaultGrowForm
             , growImageResp = NotAsked
             , pollExecutionId = Nothing
@@ -41,9 +44,10 @@ init flags =
             , tabState = Tab.initialState
             , removeObjectForm = defaultRemoveObjectForm
             , removeObjectResp = NotAsked
+            , inputImagesResp = Loading
             }
     in
-    ( model, Cmd.none )
+    ( model, getInputImages flags GotInputImages )
 
 
 type alias GrowForm =
@@ -115,28 +119,30 @@ defaultRemoveObjectForm =
 
 extractGrowImageParams : Model -> Maybe GrowImageParams
 extractGrowImageParams ({ growForm } as model) =
-    Maybe.map
-        (\si ->
-            { imageName = si
-            , showIntermediateSteps = growForm.showIntermediateSteps
-            , numSteps = growForm.numSteps
-            , addHeight = Maybe.withDefault 0 growForm.addHeight
-            , addWidth = Maybe.withDefault 0 growForm.addWidth
-            }
-        )
-        model.selectedImage
+    model
+        |> getSelectedImageName
+        |> Maybe.map
+            (\i ->
+                { imageName = i
+                , showIntermediateSteps = growForm.showIntermediateSteps
+                , numSteps = growForm.numSteps
+                , addHeight = Maybe.withDefault 0 growForm.addHeight
+                , addWidth = Maybe.withDefault 0 growForm.addWidth
+                }
+            )
 
 
 extractContentAmplificationParams : Model -> Maybe ContentAmplificationParams
 extractContentAmplificationParams ({ contentAmplificationForm } as model) =
-    Maybe.map
-        (\si ->
-            { imageName = si
-            , showIntermediateSteps = contentAmplificationForm.showIntermediateSteps
-            , factor = contentAmplificationForm.factor
-            }
-        )
-        model.selectedImage
+    model
+        |> getSelectedImageName
+        |> Maybe.map
+            (\i ->
+                { imageName = i
+                , showIntermediateSteps = contentAmplificationForm.showIntermediateSteps
+                , factor = contentAmplificationForm.factor
+                }
+            )
 
 
 extractTriangleCoordFromMouseData : MouseMoveData -> List Int
@@ -151,15 +157,6 @@ isExecutionDone model =
         |> RD.withDefault False
 
 
-imageTitles : List String
-imageTitles =
-    [ "dolphin", "edo", "Fuji", "castle-medium", "beach" ]
-
-
-
---This one is currently not used, maybe i do want to use it through
-
-
 numSteps : List Int
 numSteps =
     List.range 1 8
@@ -169,3 +166,10 @@ factorRange : List Float
 factorRange =
     List.range 11 20
         |> List.map (\modifier -> toFloat modifier / 10)
+
+
+getSelectedImageName : Model -> Maybe String
+getSelectedImageName model =
+    model.selectedImage
+        |> Maybe.andThen (LE.last << String.split "/")
+        |> Maybe.andThen (List.head << String.split ".")

@@ -56,3 +56,10 @@ getExecutionStatus flags msg params =
     get flags [ "seam", "status", queryString ]
         |> withExpect pollRespDecoder msg
         |> request
+
+
+getInputImages : Flags -> (WebData InputImagesResp -> msg) -> Cmd msg
+getInputImages flags msg =
+    get flags [ "seam", "images" ]
+        |> withExpect inputImageRespDecoder msg
+        |> request

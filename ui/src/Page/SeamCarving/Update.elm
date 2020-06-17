@@ -100,6 +100,10 @@ update msg ({ flags } as model) =
                 |> setPollExecutionId (Success resp)
                 |> none
 
+        GotInputImages resp ->
+            { model | inputImagesResp = resp }
+                |> none
+
 
 updateGrowForm : GrowFormMsg -> Model -> Model
 updateGrowForm gMsg model =

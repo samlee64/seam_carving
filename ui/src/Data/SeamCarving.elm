@@ -62,6 +62,12 @@ type alias ExecutionStatusResp =
     }
 
 
+type alias InputImagesResp =
+    { keys : List String
+    , bucket : String
+    }
+
+
 type Status
     = Executing
     | Uploading
@@ -160,6 +166,13 @@ removeObjectRespDecoder =
 removeObjectRespEventDecoder : Decoder RemoveObjectResp
 removeObjectRespEventDecoder =
     map RemoveObjectResp (at [ "detail", "executionId" ] string)
+
+
+inputImageRespDecoder : Decoder InputImagesResp
+inputImageRespDecoder =
+    map2 InputImagesResp
+        (field "keys" (list string))
+        (field "bucket" string)
 
 
 statusDecoder : Decoder Status

@@ -1,28 +1,32 @@
-import * as Router from "koa-router";
-import { Context } from "koa";
-import {
-  GrowParams,
-  ContentAmplificationParams,
-  RemoveObjectParams,
-} from "../../types/seamCarving";
-import {
-  grow,
-  contentAmplification,
-  removeObject,
-} from "../../core/seamCarving";
-import { getExecution } from "../../store/executions";
-import { conn } from "../../db";
+import * as Router from 'koa-router';
+import { Context } from 'koa';
+import { GrowParams, ContentAmplificationParams, RemoveObjectParams } from '../../types/seamCarving';
+import { grow, contentAmplification, removeObject } from '../../core/seamCarving';
+import { getExecution } from '../../store/executions';
+import { conn } from '../../db';
+import { listInputImages } from '../../aws/s3';
 
 const router = new Router({
-  prefix: "/seam",
+  prefix: '/seam',
 });
 
-router.get("/status", async (ctx: Context) => {
+router.get('/images', async (ctx: Context) => {
+  try {
+    const ret = await listInputImages();
+    ctx.status = 200;
+    ctx.body = ret;
+  } catch (e) {
+    ctx.status = 500;
+    ctx.body = { e };
+  }
+});
+
+router.get('/status', async (ctx: Context) => {
   const executionId = ctx.query.executionId;
 
   if (!executionId) {
     ctx.status = 400;
-    ctx.body = "Include query string param executionId";
+    ctx.body = 'Include query string param executionId';
     return;
   }
 
@@ -43,7 +47,7 @@ router.get("/status", async (ctx: Context) => {
   }
 });
 
-router.post("/grow", async (ctx: Context) => {
+router.post('/grow', async (ctx: Context) => {
   const params: GrowParams = ctx.request.body;
   try {
     const executionId = await grow(conn, params);
@@ -58,7 +62,7 @@ router.post("/grow", async (ctx: Context) => {
   }
 });
 
-router.post("/content-amplification", async (ctx: Context) => {
+router.post('/content-amplification', async (ctx: Context) => {
   const params: ContentAmplificationParams = ctx.request.body;
   try {
     const executionId = await contentAmplification(conn, params);
@@ -73,7 +77,7 @@ router.post("/content-amplification", async (ctx: Context) => {
   }
 });
 
-router.post("/remove-object/markings", async (ctx: Context) => {
+router.post('/remove-object/markings', async (ctx: Context) => {
   try {
     const params: RemoveObjectParams = ctx.request.body;
     const executionId = await removeObject(conn, params);

@@ -55,22 +55,28 @@ viewToolbar model =
 viewAllImages : Model -> Html Msg
 viewAllImages model =
     let
-        imgSrc title =
-            model.flags.bucket ++ "/defaults/" ++ title ++ ".png"
+        imgSrc bucket key =
+            model.flags.bucket ++ "/" ++ key
 
-        viewImage title =
-            Card.config [ Card.attrs [ onClick <| SelectImage title ] ]
-                |> Card.header [] [ text title ]
+        getImageName key =
+            String.split "/" key |> LE.last |> Maybe.withDefault key
+
+        viewImage bucket key =
+            Card.config [ Card.attrs [ onClick <| SelectImage (imgSrc bucket key) ] ]
+                |> Card.header [] [ text <| getImageName key ]
                 |> Card.block []
-                    [ CardBlock.custom <|
-                        img [ src (imgSrc title) ] []
+                    [ CardBlock.custom <| img [ src (imgSrc bucket key) ] []
                     ]
                 |> Card.footer [] []
                 |> Card.view
     in
-    imageTitles
-        |> List.map viewImage
-        |> div [ Flex.block, Flex.wrap ]
+    model.inputImagesResp
+        |> viewWebData
+            (\r ->
+                r.keys
+                    |> List.map (viewImage r.bucket)
+                    |> div [ Flex.block, Flex.wrap ]
+            )
 
 
 viewSelectedImage : Model -> String -> Html Msg
@@ -174,8 +180,6 @@ viewGrowForm model =
                 , Button.disabled isGrowButtonDisabled
                 ]
                 [ text "Grow" ]
-            , div [ Spacing.mt2, Flex.block ]
-                [ viewWebData (\resp -> viewExecutionStatus resp.status) model.pollExecutionStatusResp ]
             ]
         |> Card.view
 
@@ -216,9 +220,6 @@ viewContentAmplificationForm model =
                 , Button.onClick AmplifyImage
                 ]
                 [ text "Amp" ]
-            , div
-                [ Spacing.mt2, Flex.block ]
-                [ viewWebData (\resp -> viewExecutionStatus resp.status) model.pollExecutionStatusResp ]
             ]
         |> Card.view
 
@@ -239,43 +240,32 @@ viewObjectRemovalForm model =
             [ CardBlock.custom <| viewCanvasControls model
             , CardBlock.custom <| viewCanvas model
             ]
-        |> Card.footer []
-            [ div [ Spacing.mt2, Flex.block ]
-                [ viewWebData (\resp -> viewExecutionStatus resp.status) model.pollExecutionStatusResp ]
-            ]
+        |> Card.footer [] []
         |> Card.view
 
 
 viewCanvasControls : Model -> Html Msg
 viewCanvasControls ({ removeObjectForm } as model) =
     let
-        viewModeInfo form =
-            let
-                clickMode =
-                    form.clickMode
-                        == Continious
-                        |> Extra.ternary
-                            (Badge.badgeLight [] [ text "Continious" ])
-                            (Badge.badgeDark [] [ text "Discreet" ])
+        clickMode =
+            removeObjectForm.clickMode
+                == Continious
+                |> Extra.ternary
+                    (Badge.badgeLight [] [ text "Continious" ])
+                    (Badge.badgeDark [] [ text "Discreet" ])
 
-                markMode =
-                    form.markMode
-                        == Protect
-                        |> Extra.ternary
-                            (Badge.badgeSuccess [] [ text "Protect" ])
-                            (Badge.badgeDanger [] [ text "Destroy" ])
-            in
-            div []
-                [ h5 [] [ text "ClickMode: ", clickMode ]
-                , h5 [] [ text "MarkMode: ", markMode ]
-                ]
+        markMode =
+            removeObjectForm.markMode
+                == Protect
+                |> Extra.ternary
+                    (Badge.badgeSuccess [] [ text "Protect" ])
+                    (Badge.badgeDanger [] [ text "Destroy" ])
     in
     Html.map RemoveObjectFormMsg <|
         div []
             [ viewTriangleData model
             , div [ Spacing.mt3 ]
-                [ viewModeInfo removeObjectForm
-                , div [ Spacing.mb2 ]
+                [ div [ Spacing.mb2 ]
                     [ div [ Spacing.mb1 ]
                         [ Button.button
                             [ Button.success
@@ -325,6 +315,10 @@ viewCanvasControls ({ removeObjectForm } as model) =
                     ]
                     "Remove only vertical seams"
                 ]
+            , div []
+                [ h5 [] [ text "ClickMode: ", clickMode ]
+                , h5 [] [ text "MarkMode: ", markMode ]
+                ]
             ]
 
 
@@ -333,7 +327,6 @@ viewCanvas ({ removeObjectForm } as model) =
     let
         imgSrc =
             model.selectedImage
-                |> Maybe.map (\si -> model.flags.bucket ++ "/defaults/" ++ si ++ ".png")
                 |> Maybe.withDefault ""
 
         currTri =
@@ -362,7 +355,8 @@ viewCanvas ({ removeObjectForm } as model) =
                 |> (\l -> E.encode 0 (E.list Triangle.encode l))
 
         imageName =
-            model.selectedImage |> Maybe.withDefault ""
+            getSelectedImageName model
+                |> Maybe.withDefault ""
 
         attributes =
             [ on "mousemove" (Decode.map MouseMove mouseMoveDataDecoder) |> Html.Attributes.map RemoveObjectFormMsg
@@ -436,24 +430,28 @@ viewTriangleData { removeObjectForm } =
         |> Accordion.view removeObjectForm.showTriangleData
 
 
-viewExecutionStatus : Status -> Html Msg
-viewExecutionStatus status =
+viewExecutionStatus : Model -> Html Msg
+viewExecutionStatus model =
     let
-        message =
+        message status =
             text <| statusToString status
+
+        alert status =
+            case status of
+                Executing ->
+                    Alert.simpleInfo [] [ message status ]
+
+                Uploading ->
+                    Alert.simpleInfo [] [ message status ]
+
+                Done ->
+                    Alert.simpleSuccess [] [ message status ]
+
+                Error ->
+                    Alert.simpleDanger [] [ message status ]
     in
-    case status of
-        Executing ->
-            Alert.simpleInfo [] [ message ]
-
-        Uploading ->
-            Alert.simpleInfo [] [ message ]
-
-        Done ->
-            Alert.simpleSuccess [] [ message ]
-
-        Error ->
-            Alert.simpleDanger [] [ message ]
+    model.pollExecutionStatusResp
+        |> viewWebData (\r -> alert r.status)
 
 
 viewResults : Model -> Html Msg
@@ -479,112 +477,56 @@ viewResults model =
                 |> Maybe.map ((==) "output.png")
                 |> Maybe.withDefault False
 
-        ( output, rest ) =
+        imageKeys =
             model.pollExecutionStatusResp
                 |> RD.toMaybe
                 |> Maybe.andThen .s3Url
                 |> Maybe.map (List.partition isOutputImage)
-                |> Maybe.withDefault ( [], [] )
 
         viewOutputImage =
-            Card.config [ Card.attrs [ Spacing.mt3 ] ]
-                |> Card.header [] [ text "Output" ]
-                |> Card.block []
-                    [ List.map
-                        (\s3Key ->
-                            img [ src (imgSrc s3Key) ] []
-                        )
-                        output
-                        |> div []
-                        |> CardBlock.custom
-                    ]
-                |> Card.view
-
-        viewRest =
-            Card.config [ Card.attrs [ Spacing.mt3 ] ]
-                |> Card.header [] [ text "Intermediate Steps" ]
-                |> Card.block []
-                    [ List.map
-                        (\s3Key ->
-                            img [ src (imgSrc s3Key) ] []
-                        )
-                        rest
-                        |> div []
-                        |> CardBlock.custom
-                    ]
-                |> Card.view
-    in
-    div [ Flex.block, Flex.wrap ] [ viewOutputImage, viewRest ]
-
-
-
---    div [ Flex.block, Flex.wrap ]
---        [ viewWebData
---            (\r ->
---                r.s3Url
---                    |> Maybe.map (div [] << List.map viewResult)
---                    |> Maybe.withDefault EH.none
---            )
---            model.pollExecutionStatusResp
---        ]
-
-
-viewResults2 : Model -> Html Msg
-viewResults2 model =
-    let
-        imgSrc s3Key =
-            model.flags.bucket ++ "/" ++ s3Key
-
-        viewResult s3Key =
-            isOutputImage s3Key
-                |> Extra.ternary
-                    (Card.config []
-                        |> Card.header [] [ text "Output" ]
-                        |> Card.block [] [ CardBlock.custom <| img [ src (imgSrc s3Key) ] [] ]
-                        |> Card.view
+            imageKeys
+                |> Maybe.map Tuple.first
+                |> Maybe.map
+                    (\o ->
+                        Card.config [ Card.attrs [ Spacing.mt3 ] ]
+                            |> Card.header [] [ text "Output" ]
+                            |> Card.block []
+                                [ List.map (\s3Key -> img [ src (imgSrc s3Key) ] []) o
+                                    |> div []
+                                    |> CardBlock.custom
+                                ]
+                            |> Card.view
                     )
-                    (div [] [ img [ src (imgSrc s3Key) ] [] ])
-
-        isOutputImage key =
-            key
-                |> String.split "/"
-                |> LE.last
-                |> Maybe.map ((==) "output.png")
-                |> Maybe.withDefault False
-
-        viewMaybeOutputImage =
-            testImages
-                |> List.partition isOutputImage
-                |> Tuple.first
-                |> List.head
-                |> Maybe.map viewOutputImage
                 |> Maybe.withDefault EH.none
 
-        viewOutputImage s3Key =
-            Card.config []
-                |> Card.header [] [ text "Output" ]
-                |> Card.block [] [ CardBlock.custom <| img [ src (imgSrc s3Key) ] [] ]
-                |> Card.view
-
         viewRest =
-            testImages
-                |> List.partition isOutputImage
-                |> Tuple.second
-                |> List.map viewResult
-                |> div [ Flex.block, Flex.wrap ]
+            imageKeys
+                |> Maybe.map Tuple.second
+                |> Maybe.map
+                    (\r ->
+                        Card.config [ Card.attrs [ Spacing.mt3 ] ]
+                            |> Card.header [] [ text "Intermediate Steps" ]
+                            |> Card.block []
+                                [ List.map (\s3Key -> img [ src (imgSrc s3Key), Spacing.m1 ] []) r
+                                    |> div []
+                                    |> CardBlock.custom
+                                ]
+                            |> Card.view
+                    )
+                |> Maybe.withDefault EH.none
     in
-    div [ Flex.block, Flex.wrap ]
-        [ viewMaybeOutputImage
-        , viewRest
+    div []
+        [ viewExecutionStatus model
+        , model.pollExecutionStatusResp
+            |> RD.map (\_ -> div [ Flex.block, Flex.wrap ] [ viewOutputImage, viewRest ])
+            |> RD.withDefault EH.none
         ]
 
 
-testImages : List String
-testImages =
-    [ "output/removeObject/dolphin/79e85a93-660e-47ea-8bbe-adb274f7b785/combined-mask.png"
-    , "output/removeObject/dolphin/79e85a93-660e-47ea-8bbe-adb274f7b785/energy-map.gif"
-    , "output/removeObject/dolphin/79e85a93-660e-47ea-8bbe-adb274f7b785/mid.gif"
-    , "output/removeObject/dolphin/79e85a93-660e-47ea-8bbe-adb274f7b785/output.png"
-    , "output/removeObject/dolphin/79e85a93-660e-47ea-8bbe-adb274f7b785/remove.gif"
-    , "output/removeObject/dolphin/79e85a93-660e-47ea-8bbe-adb274f7b785/protect-destroy-areas.png"
-    ]
+
+{-
+
+   , div
+       [ Spacing.mt2, Flex.block ]
+       [ viewWebData (\resp -> viewExecutionStatus resp.status) model.pollExecutionStatusResp ]
+-}

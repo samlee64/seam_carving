@@ -44,10 +44,6 @@ request =
 
 healthCheck : Flags -> (WebData String -> msg) -> Cmd msg
 healthCheck flags msg =
-    let
-        logs =
-            Debug.log "flags.api" flags.api
-    in
     UrlBuilder.crossOrigin flags.api [ "health" ] []
         |> HB.get
         |> HB.withExpect (Http.expectJson (RD.fromResult >> msg) string)

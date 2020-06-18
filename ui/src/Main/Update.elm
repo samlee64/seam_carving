@@ -20,9 +20,7 @@ update msg model =
                     )
 
                 Browser.External href ->
-                    ( model
-                    , Navigation.load href
-                    )
+                    ( model, Navigation.load href )
 
         ( UrlChange url, _ ) ->
             initPage url model

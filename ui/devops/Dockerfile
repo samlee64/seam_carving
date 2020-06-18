@@ -12,6 +12,6 @@ RUN npm run prod
 FROM nginx as run
 
 COPY --from=build /usr/app/config.json  /usr/share/nginx
-COPY --from=build /usr/app/public/  /usr/share/nginx/html
+COPY --from=build /usr/app/dist/  /usr/share/nginx/html
 
 COPY ./devops/nginx.conf /etc/nginx/conf.d/default.conf

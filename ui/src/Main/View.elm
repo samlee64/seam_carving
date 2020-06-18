@@ -8,6 +8,7 @@ import Bootstrap.Utilities.Spacing as Spacing
 import Browser exposing (Document)
 import Html exposing (..)
 import Html.Attributes exposing (class, href, placeholder, src, style)
+import Html.Events exposing (onClick)
 import Main.Model exposing (Model, Page(..))
 import Main.Msg exposing (Msg(..))
 import Page.Index as Index
@@ -50,7 +51,7 @@ viewNavbar model =
     Navbar.config NavbarMsg
         |> Navbar.withAnimation
         |> Navbar.collapseMedium
-        |> Navbar.info
+        |> Navbar.dark
         |> Navbar.brand
             [ href "/" ]
             [ text " C++ Projects"
@@ -66,10 +67,19 @@ viewNavbar model =
                     [ src "assets/images/github.svg"
                     , class "d-inline-block align-top"
                     , style "width" "30px"
+                    , style "cursor" "pointer"
                     , Spacing.mr2
+                    , onClick (UrlRequest (Browser.External "https://github.com/samlee64"))
                     ]
                     []
             , Navbar.customItem <|
-                img [ src "assets/images/linkedin.svg" ] []
+                img
+                    [ src "assets/images/linkedin.svg"
+                    , class "d-inline-block align-top"
+                    , style "width" "30px"
+                    , style "cursor" "pointer"
+                    , onClick (UrlRequest (Browser.External "https://www.linkedin.com/in/samuellee18/"))
+                    ]
+                    []
             ]
         |> Navbar.view model.navbarState

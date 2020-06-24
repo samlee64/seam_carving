@@ -33,9 +33,6 @@ void runGrow(const string imageName, const int addWidth, const int addHeight, co
     else
         cout << "Directory created" << endl;
 
-    //check
-
-
     cout << "Input Width, Height: " << input.width() << ", " << input.height() << endl;
     FloatImage output = grow(input, addWidth, addHeight, numSteps, outputPath); //100 vertical seams, 0 horizontal, in 4 steps
     cout << "Output Width, Height: " << output.width() << ", " << output.height() << endl;
@@ -97,13 +94,6 @@ void runContentAmplification(const string imageName, const float factor)
 
 int contentAmplificationArgCheck(int argc, char *argv[])
 {
-    int i;
-    for (i=0; i<argc-1; i++)
-    {
-        cout << " " << argv[i];
-    }
-
-    cout << "\n" << endl;
     if (argc != 5)
     {
         cout << "There is an improper number of arguments." << argc << endl;
@@ -163,14 +153,6 @@ void runRemoveObject(const string imageName, const string destroyMaskPath, const
 
 int removeObjectArgCheck(int argc, char *argv[])
 {
-    int i;
-    for (i=0; i<argc-1; i++)
-    {
-        cout << " " << argv[i];
-    }
-
-    cout << "\n" << endl;
-
     if (argc != 8)
     {
 
@@ -184,9 +166,9 @@ int removeObjectArgCheck(int argc, char *argv[])
         }
         cout << "\n" << endl;
 
-
         return 1;
     }
+
     const string imageName(argv[2]);
     const string destroyMaskPath(argv[3]);
     const string protectMaskPath(argv[4]);
@@ -219,26 +201,17 @@ int main(int argc, char *argv[])
             growArgCheck(argc, argv);
             break;
         case contentAmplificationRoutine:
-            cout << "Calling content amplification" << endl;
+            cout << "Calling content amplification routine" << endl;
             contentAmplificationArgCheck(argc, argv);
             break;
 
         case removeObjectRoutine:
-            cout << "Calling removeObjectRoutine" << endl;
+            cout << "Calling remove object routine" << endl;
             removeObjectArgCheck(argc, argv);
             break;
         default:
             cout << "default" << endl;
     }
-
-
-    //grow imageName width height debug
-    //some arg validation then runGrow
-    //void runGrow(const string imageName, const int addWidth, const int addHeight, const bool debug)
-
-
-//    testGrow();
-
 
     std::cout << "end" << "\n" ;
 }

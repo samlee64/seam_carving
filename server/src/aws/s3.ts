@@ -1,5 +1,5 @@
 import * as fs from "fs";
-//import * as utils from 'utils';
+import * as path from "path";
 import { S3 } from "aws-sdk";
 import config from "../config";
 import { IMAGE_BUCKET } from "./constants";
@@ -46,4 +46,29 @@ export async function listInputImages(): Promise<InputImages> {
   ) as string[];
 
   return { keys: filtered, bucket: IMAGE_BUCKET };
+}
+
+export async function downloadImage(imageName: string): Promise<string> {
+  const key = path.join("defaults", imageName + ".png");
+  const params = { Bucket: IMAGE_BUCKET, Key: key };
+
+  const dirPath = "data/input";
+  fs.mkdirSync(dirPath, { recursive: true });
+
+  const filePath = path.join(dirPath, imageName + ".png");
+  if (fs.existsSync(filePath)) return filePath;
+
+  return new Promise((resolve, reject) => {
+    const file = fs.createWriteStream(filePath);
+    const s3Stream = s3.getObject(params).createReadStream();
+
+    s3Stream.on("error", reject);
+
+    file.on("error", reject);
+    file.on("close", () => {
+      resolve(filePath);
+    });
+
+    s3Stream.pipe(file);
+  });
 }

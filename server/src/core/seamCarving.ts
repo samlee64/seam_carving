@@ -5,6 +5,7 @@ import {
   Routine,
 } from "../types/seamCarving";
 import { execFileWithUpload } from "./utils";
+import { downloadImage } from "../aws/s3";
 import { Connection } from "../db";
 import { createMask } from "./mask";
 
@@ -12,11 +13,11 @@ export async function grow(
   conn: Connection,
   params: GrowParams
 ): Promise<string> {
-  const imageName = params.imageName;
+  await downloadImage(params.imageName);
 
   const args: string[] = [
     Routine.Grow,
-    imageName,
+    params.imageName,
     params.addWidth.toString(),
     params.addHeight.toString(),
     params.numSteps.toString(),
@@ -36,6 +37,8 @@ export async function contentAmplification(
   conn: Connection,
   params: ContentAmplificationParams
 ): Promise<string> {
+  await downloadImage(params.imageName);
+
   const args: string[] = [
     Routine.ContentAmplification,
     params.imageName,
@@ -59,8 +62,8 @@ export async function removeObject(
   conn: Connection,
   params: RemoveObjectParams
 ): Promise<string> {
-  //I need to add paths for destroy and protect regions
-  ////Create mthe masks
+  await downloadImage(params.imageName);
+
   const destroyMaskPath = createMask(
     {
       width: params.imageWidth,
@@ -70,6 +73,7 @@ export async function removeObject(
     params.imageName,
     "destroy.png"
   );
+
   const protectMaskPath = createMask(
     {
       width: params.imageWidth,

@@ -13,7 +13,9 @@
     "prettier": "prettier  --write './src/**/*.ts'",
     "pre-commit-prettier": "prettier --check './src/**/*.ts'",
     "up": "docker-compose up -d",
-    "down": "docker-compose down --remove-orphans"
+    "down": "docker-compose down --remove-orphans",
+    "docker:build":  "docker build -t slicer-server -f devops/Dockerfile .",
+    "docker:run": "docker run --it --rm slicer-server:latest"
   },
   "author": "",
   "license": "ISC",

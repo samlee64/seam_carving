@@ -36,7 +36,7 @@ int growArgCheck(int argc, char *argv[])
     {
         cout <<  "There is an improper number of arguments. Needed 6, received " << argc << "\n" << endl;
         cout << "Needs arguments <grow> <inputImagePath> <outputPath> <addWidth> <addHeight> <numSteps> <showIntermediate>\n" << endl;
-        return 1;
+        throw "Improper number of arguments";
     }
 
     const string inputImagePath(argv[2]);
@@ -46,10 +46,9 @@ int growArgCheck(int argc, char *argv[])
     const int numSteps = atoi(argv[6]);
     const bool showIntermediate = 0 == strcmp(argv[7], "true");
 
-    if (addWidth == 0 && addHeight == 0 )
+    if (addWidth == 0 && addHeight == 0)
     {
-        cout << "0 addWidth, 0 addHeight specified. Not doing anything. \n" << endl;
-        return 0;
+        throw "0 addWidth, 0 addHeight specified. Not doing anything. \n";
     }
 
     cout << "Running grow with parameters \n" << endl;
@@ -69,7 +68,6 @@ int growArgCheck(int argc, char *argv[])
 void runContentAmplification(const string inputImagePath, const string outputPath, const float factor)
 {
     const FloatImage input(inputImagePath);
-
     const FloatImage output = contentAmplification(input, factor, outputPath);
 }
 
@@ -80,7 +78,7 @@ int contentAmplificationArgCheck(int argc, char *argv[])
         cout << "There is an improper number of arguments." << argc << endl;
         cout << "Needs arguments <contentAmplification> <inputImagePath> <outputPath> <factor> <showIntermediate>\n" << endl;
 
-        return 1;
+        throw "There is an improper number of arguments";
     }
 
     const string inputImagePath(argv[2]);
@@ -90,8 +88,7 @@ int contentAmplificationArgCheck(int argc, char *argv[])
 
     if (factor == 0)
     {
-        cout << "0 factor specified. Not doing anything" << endl;
-        return 0;
+        throw "0 factor specified. Not doing anything";
     }
 
     cout << "Running contentAmplification with parameters \n" << endl;
@@ -121,8 +118,7 @@ int removeObjectArgCheck(int argc, char *argv[])
     {
         cout << "There is an improper number of arguments." << argc << endl;
         cout << "Needs arguments <removeObject> <inputImagePath> <outputPath> <destroyMaskPath> <protectMaskPath> <lockRatio> <onlyHorizontal> <onlyVertial> <showIntermediate>\n" << endl;
-
-        return 1;
+        throw "There is an improper number of arugments";
     }
 
     const string inputImagePath(argv[2]);
@@ -162,7 +158,6 @@ int main(int argc, char *argv[])
             cout << "Calling content amplification routine" << endl;
             contentAmplificationArgCheck(argc, argv);
             break;
-
         case removeObjectRoutine:
             cout << "Calling remove object routine" << endl;
             removeObjectArgCheck(argc, argv);

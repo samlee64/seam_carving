@@ -4,6 +4,7 @@
 #include "energy.h"
 #include <iomanip>
 #include <string>
+#include <string.h>
 #include <map>
 #include <sys/stat.h>
 

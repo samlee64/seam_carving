@@ -7,6 +7,8 @@
 #include "seam.h"
 #include <gif.h>
 #include <string>
+#include <limits>
+#include <tuple>
 
 using namespace std;
 

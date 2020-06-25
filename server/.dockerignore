@@ -1,4 +1,8 @@
 node_modules
 lib
 data
+core/cmake-build-debug/*
+core/CMakeFiles
+core/Makefile
 core/CMakeCache.txt
+core/cmake_install.cmake

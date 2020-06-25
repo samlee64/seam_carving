@@ -19,6 +19,7 @@
 #include "filtering.h"
 #include "a2.h"
 #include <math.h>
+#include <algorithm>
 
 using namespace std;
 

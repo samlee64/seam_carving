@@ -3,6 +3,7 @@
 #include "a2.h"
 #include <math.h>
 #include "energy.h"
+#include <limits>
 
 //This function uses a sobel filter to calculate gradients
 // returns a non cumulative energyMap

@@ -1,10 +1,13 @@
 .DS_Store
 .idea/*
 *.swp
-cmake-build-debug/*
 *.png
 server/core/cmake-build-debug/*
-server/core/data/output/**
+server/core/CMakeFiles
+server/core/src/ext
+server/core/Makefile
+server/core/CMakeCache.txt
+server/core/cmake_install.cmake
 server/data/output
 server/lib/
 server/.bic_cache
@@ -13,5 +16,3 @@ node_modules/
 config.json
 database.json
 dist
-server/core/CMakeFiles
-server/core/src/ext

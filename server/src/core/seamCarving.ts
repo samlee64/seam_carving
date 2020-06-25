@@ -4,7 +4,7 @@ import {
   RemoveObjectParams,
   Routine,
 } from "../types/seamCarving";
-import { execFileWithUpload } from "./utils";
+import { execFileWithUpload, getOutputPath } from "./utils";
 import { downloadImage } from "../aws/s3";
 import { Connection } from "../db";
 import { createMask } from "./mask";
@@ -13,23 +13,22 @@ export async function grow(
   conn: Connection,
   params: GrowParams
 ): Promise<string> {
-  await downloadImage(params.imageName);
+  const routine = Routine.Grow;
+
+  const inputImagePath = await downloadImage(params.imageName);
+  const outputPath = getOutputPath(params.imageName, routine);
 
   const args: string[] = [
-    Routine.Grow,
-    params.imageName,
+    routine,
+    inputImagePath,
+    outputPath,
     params.addWidth.toString(),
     params.addHeight.toString(),
     params.numSteps.toString(),
     params.showIntermediateSteps.toString(),
   ];
 
-  const executionId = await execFileWithUpload(
-    conn,
-    Routine.Grow,
-    params,
-    args
-  );
+  const executionId = await execFileWithUpload(conn, routine, params, args);
   return executionId;
 }
 
@@ -37,23 +36,22 @@ export async function contentAmplification(
   conn: Connection,
   params: ContentAmplificationParams
 ): Promise<string> {
-  await downloadImage(params.imageName);
+  const routine = Routine.ContentAmplification;
+
+  const inputImagePath = await downloadImage(params.imageName);
+  const outputPath = getOutputPath(params.imageName, routine);
 
   const args: string[] = [
-    Routine.ContentAmplification,
-    params.imageName,
+    routine,
+    inputImagePath,
+    outputPath,
     params.factor.toString(),
     params.showIntermediateSteps.toString(),
   ];
 
   console.log("Running content amplification with these args", args);
   console.log("Starting exec");
-  const executionId = await execFileWithUpload(
-    conn,
-    Routine.ContentAmplification,
-    params,
-    args
-  );
+  const executionId = await execFileWithUpload(conn, routine, params, args);
 
   return executionId;
 }
@@ -62,7 +60,10 @@ export async function removeObject(
   conn: Connection,
   params: RemoveObjectParams
 ): Promise<string> {
-  await downloadImage(params.imageName);
+  const routine = Routine.RemoveObject;
+
+  const inputImagePath = await downloadImage(params.imageName);
+  const outputPath = getOutputPath(params.imageName, routine);
 
   const destroyMaskPath = createMask(
     {
@@ -85,23 +86,20 @@ export async function removeObject(
   );
 
   const args: string[] = [
-    Routine.RemoveObject,
-    params.imageName,
+    routine,
+    inputImagePath,
+    outputPath,
     destroyMaskPath,
     protectMaskPath,
     params.lockRatio.toString(),
     params.onlyHorizontal.toString(),
+    params.onlyVertical.toString(),
     params.showIntermediateSteps.toString(),
   ];
 
   console.log("Running removeObject with these args", args);
   console.log("Starting exec");
 
-  const executionId = await execFileWithUpload(
-    conn,
-    Routine.RemoveObject,
-    params,
-    args
-  );
+  const executionId = await execFileWithUpload(conn, routine, params, args);
   return executionId;
 }

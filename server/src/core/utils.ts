@@ -1,4 +1,5 @@
 import * as path from "path";
+import * as fs from "fs";
 import { map } from "bluebird";
 import { execFile } from "child_process";
 import config from "../config";
@@ -20,6 +21,14 @@ interface OutputPath {
 interface Outputs {
   fileNames: string[];
   outputs: OutputPath[];
+}
+
+export function getOutputPath(imageName: string, routine: Routine): string {
+  const outputPath =
+    path.join(config.dataDir, "output", routine, imageName) + "/";
+  fs.mkdirSync(outputPath, { recursive: true });
+
+  return outputPath;
 }
 
 function outputs(

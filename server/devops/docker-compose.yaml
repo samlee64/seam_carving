@@ -1,0 +1,20 @@
+version: '2'
+services:
+  postgres:
+    image: "postgres:9.6-alpine"
+    ports:
+      - "8400:5432"
+    environment:
+      - POSTGRES_DB=slicer
+      - POSTGRES_USER=slicer
+      - POSTGRES_PASSWORD=slicer
+    command: postgres -c max_connections=100 -c shared_buffers=80MB -c kernel.shmmax=100663296
+
+  server:
+    image: "967544475577.dkr.ecr.us-west-2.amazonaws.com/slicer-server:latest"
+    ports:
+      - "3000:3000"
+    links:
+      - "postgres:database"
+    depends_on:
+      - postgres

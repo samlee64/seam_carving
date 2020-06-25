@@ -22,7 +22,7 @@ const staticConfig = require("../config.json");
 const config: Config = {
   ...staticConfig,
   dataDir: __dirname + "/../data",
-  executablePath: __dirname + "/../core/cmake-build-debug/seam_carving",
+  executablePath: __dirname + "/../core/bin/seam_carving",
   env: "test",
 };
 

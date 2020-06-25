@@ -14,8 +14,10 @@
     "pre-commit-prettier": "prettier --check './src/**/*.ts'",
     "up": "docker-compose up -d",
     "down": "docker-compose down --remove-orphans",
-    "docker:build":  "docker build -t slicer-server -f devops/Dockerfile .",
-    "docker:run": "docker run --it --rm slicer-server:latest"
+    "docker:build": "docker build -t slicer-server -f devops/Dockerfile .",
+    "docker:run": "docker run -p 3000:3000 slicer-server:latest",
+    "docker:tag": "docker tag slicer-server:latest 967544475577.dkr.ecr.us-west-2.amazonaws.com/slicer-server:latest",
+    "docker:push": "npm run docker:build && npm run docker:tag &&  docker push 967544475577.dkr.ecr.us-west-2.amazonaws.com/slicer-server:latest"
   },
   "author": "",
   "license": "ISC",

@@ -1,2 +1,6 @@
-TODO for core
+# TODO
+Read in AWS Keys as env vars
+
+# TODO for core
+
 Need to reduce the number of deep copies of the image created. When I call "addSeam" instead of doing a deep copy, I should just mutate the original

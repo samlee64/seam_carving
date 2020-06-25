@@ -1,0 +1,18 @@
+{
+  "dev": {
+    "driver": "pg",
+    "user": "slicer",
+    "password": "slicer",
+    "host": "localhost",
+    "database": "slicer",
+    "port": 8400
+  },
+  "prod": {
+    "driver": "pg",
+    "user": "slicer",
+    "password": "slicer",
+    "host": "database",
+    "database": "slicer",
+    "port": 5432
+  }
+}

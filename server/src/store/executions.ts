@@ -2,6 +2,11 @@ import { Connection } from "../db";
 import { Execution, InsertExecutionParams, Status } from "../types/schema";
 import { EXECUTIONS } from "./constants";
 
+export async function ping(conn: Connection): Promise<void> {
+  await conn(EXECUTIONS).select("*").first();
+  return;
+}
+
 export async function getExecution(
   conn: Connection,
   id: string

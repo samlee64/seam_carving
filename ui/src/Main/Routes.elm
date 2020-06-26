@@ -11,6 +11,7 @@ import Url.Parser as Parser
 type Route
     = Index
     | SeamCarving
+    | Technologies
 
 
 parser : Parser.Parser (Route -> a) a
@@ -18,6 +19,7 @@ parser =
     Parser.oneOf
         [ Parser.map Index <| Parser.top
         , Parser.map SeamCarving <| Parser.s "sc"
+        , Parser.map Technologies <| Parser.s "technologies"
         ]
 
 
@@ -29,6 +31,9 @@ toString route =
 
         SeamCarving ->
             Builder.absolute [ "sc" ] []
+
+        Technologies ->
+            Builder.absolute [ "technologies" ] []
 
 
 newUrl : Key -> Route -> Cmd msg

@@ -6,6 +6,7 @@ import Main.Model exposing (Model, Page(..), initPage, updatePage)
 import Main.Msg exposing (Msg(..))
 import Page.Index as Index
 import Page.SeamCarving.Update as SeamCarving
+import Page.Technologies as Technologies
 import Url
 
 
@@ -27,6 +28,9 @@ update msg model =
 
         ( IndexMsg imsg, IndexPage imodel ) ->
             Index.update imsg imodel |> updatePage IndexPage IndexMsg model
+
+        ( TechnologiesMsg imsg, TechnologiesPage imodel ) ->
+            Technologies.update imsg imodel |> updatePage TechnologiesPage TechnologiesMsg model
 
         ( SeamCarvingMsg scmsg, SeamCarvingPage scmodel ) ->
             SeamCarving.update scmsg scmodel |> updatePage SeamCarvingPage SeamCarvingMsg model

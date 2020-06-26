@@ -13,6 +13,7 @@ import Main.Model exposing (Model, Page(..))
 import Main.Msg exposing (Msg(..))
 import Page.Index as Index
 import Page.SeamCarving.View as SeamCarving
+import Page.Technologies as Technologies
 
 
 view : Model -> Document Msg
@@ -44,6 +45,9 @@ viewPage model =
         SeamCarvingPage scmodel ->
             Html.map SeamCarvingMsg <| SeamCarving.view scmodel
 
+        TechnologiesPage tmodel ->
+            Html.map TechnologiesMsg <| Technologies.view tmodel
+
         NotFound ->
             div [] [ text "Not Found" ]
 
@@ -62,6 +66,9 @@ viewNavbar model =
             [ Navbar.itemLink
                 [ href "/sc" ]
                 [ text "Seam Carving" ]
+            , Navbar.itemLink
+                [ href "/technologies" ]
+                [ text "Technologies" ]
             ]
         |> Navbar.customItems
             [ Navbar.customItem <|

@@ -4,6 +4,7 @@ import Bootstrap.Navbar as Navbar
 import Browser exposing (UrlRequest)
 import Page.Index as Index
 import Page.SeamCarving.Msg as SeamCarving
+import Page.Technologies as Technologies
 import Url exposing (Url)
 
 
@@ -12,4 +13,5 @@ type Msg
     | UrlRequest UrlRequest
     | IndexMsg Index.Msg
     | SeamCarvingMsg SeamCarving.Msg
+    | TechnologiesMsg Technologies.Msg
     | NavbarMsg Navbar.State

@@ -7,12 +7,14 @@ import Main.Msg exposing (Msg(..))
 import Main.Routes as Routes
 import Page.Index as Index
 import Page.SeamCarving.Model as SeamCarving
+import Page.Technologies as Technologies
 import Url exposing (Url)
 
 
 type Page
     = IndexPage Index.Model
     | SeamCarvingPage SeamCarving.Model
+    | TechnologiesPage Technologies.Model
     | NotFound
 
 
@@ -44,6 +46,9 @@ initPage url model =
 
         Just Routes.SeamCarving ->
             SeamCarving.init model.flags |> updatePage SeamCarvingPage SeamCarvingMsg model
+
+        Just Routes.Technologies ->
+            Technologies.init model.flags |> updatePage TechnologiesPage TechnologiesMsg model
 
         Nothing ->
             ( { model | page = NotFound }, Cmd.none )

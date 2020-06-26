@@ -5,6 +5,7 @@ import Main.Model exposing (Model, Page(..))
 import Main.Msg exposing (Msg(..))
 import Page.Index as Index
 import Page.SeamCarving.Subscriptions as SeamCarving
+import Page.Technologies as Technologies
 
 
 subscriptions : Model -> Sub Msg
@@ -17,6 +18,9 @@ subscriptions model =
 
                 SeamCarvingPage scmodel ->
                     SeamCarving.subscriptions scmodel |> Sub.map SeamCarvingMsg
+
+                TechnologiesPage imodel ->
+                    Technologies.subscriptions imodel |> Sub.map TechnologiesMsg
 
                 NotFound ->
                     Sub.none

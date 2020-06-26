@@ -56,6 +56,7 @@ type alias GrowForm =
     , addHeight : Maybe Int
     , addWidth : Maybe Int
     , numStepsDropdown : Dropdown.State
+    , showHelp : Accordion.State
     }
 
 
@@ -66,6 +67,7 @@ defaultGrowForm =
     , addHeight = Nothing
     , addWidth = Just 100
     , numStepsDropdown = Dropdown.initialState
+    , showHelp = Accordion.initialStateCardOpen ""
     }
 
 
@@ -73,6 +75,7 @@ type alias ContentAmplificationForm =
     { showIntermediateSteps : Bool
     , factor : Float
     , factorDropdown : Dropdown.State
+    , showHelp : Accordion.State
     }
 
 
@@ -81,6 +84,7 @@ defaultContentAmplificationForm =
     { showIntermediateSteps = False
     , factor = 1.2
     , factorDropdown = Dropdown.initialState
+    , showHelp = Accordion.initialStateCardOpen ""
     }
 
 
@@ -97,6 +101,7 @@ type alias RemoveObjectForm =
     , onlyHorizontal : Bool
     , onlyVertical : Bool
     , showTriangleData : Accordion.State
+    , showHelp : Accordion.State
     }
 
 
@@ -114,6 +119,7 @@ defaultRemoveObjectForm =
     , onlyHorizontal = False
     , onlyVertical = False
     , showTriangleData = Accordion.initialStateCardOpen ""
+    , showHelp = Accordion.initialStateCardOpen ""
     }
 
 

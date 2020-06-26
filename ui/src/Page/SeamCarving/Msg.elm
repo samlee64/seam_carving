@@ -34,12 +34,14 @@ type GrowFormMsg
     | SetHeight String
     | SetWidth String
     | NumStepsDropdown Dropdown.State
+    | GrowHelpAccordionMsg Accordion.State
 
 
 type ContentAmplificationFormMsg
     = ShowContentAmplificationIntermediateSteps Bool
     | SetFactor Float
     | FactorDropdown Dropdown.State
+    | ContentAmplificationHelpAccordionMsg Accordion.State
 
 
 type RemoveObjectFormMsg
@@ -51,7 +53,8 @@ type RemoveObjectFormMsg
     | SetLockRatio Bool
     | SetOnlyHorizontal Bool
     | SetOnlyVertical Bool
-    | AccordionMsg Accordion.State
+    | TriangleDataAccordionMsg Accordion.State
+    | RemoveObjectHelpAccordionMsg Accordion.State
 
 
 type ClickMode

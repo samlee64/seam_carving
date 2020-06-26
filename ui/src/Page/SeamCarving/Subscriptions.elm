@@ -18,7 +18,10 @@ subscriptions model =
     Sub.batch
         [ Dropdown.subscriptions model.growForm.numStepsDropdown (GrowFormMsg << NumStepsDropdown)
         , Dropdown.subscriptions model.contentAmplificationForm.factorDropdown (ContentAmplificationFormMsg << FactorDropdown)
-        , Accordion.subscriptions model.removeObjectForm.showTriangleData (RemoveObjectFormMsg << AccordionMsg)
+        , Accordion.subscriptions model.removeObjectForm.showTriangleData (RemoveObjectFormMsg << TriangleDataAccordionMsg)
+        , Accordion.subscriptions model.growForm.showHelp (GrowFormMsg << GrowHelpAccordionMsg)
+        , Accordion.subscriptions model.contentAmplificationForm.showHelp (ContentAmplificationFormMsg << ContentAmplificationHelpAccordionMsg)
+        , Accordion.subscriptions model.removeObjectForm.showHelp (RemoveObjectFormMsg << RemoveObjectHelpAccordionMsg)
         , Time.every pollInterval Tick
         , Tab.subscriptions model.tabState TabMsg
         ]

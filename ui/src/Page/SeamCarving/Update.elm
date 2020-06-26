@@ -136,6 +136,9 @@ updateGrowForm_ gMsg form =
         NumStepsDropdown state ->
             { form | numStepsDropdown = state }
 
+        GrowHelpAccordionMsg state ->
+            { form | showHelp = state }
+
 
 updateContentAmplificationForm : ContentAmplificationFormMsg -> Model -> Model
 updateContentAmplificationForm caMsg model =
@@ -153,6 +156,9 @@ updateContentAmplificationForm_ caMsg form =
 
         FactorDropdown state ->
             { form | factorDropdown = state }
+
+        ContentAmplificationHelpAccordionMsg state ->
+            { form | showHelp = state }
 
 
 updateRemoveObjectForm : RemoveObjectFormMsg -> Model -> Model
@@ -175,10 +181,6 @@ updateRemoveObjectForm_ rMsg form =
         MouseMove data ->
             { form | mouseMoveData = Just data }
 
-        --                |> (\f -> Maybe.map extractTriangleCoordFromMouseData f.mouseMoveData)
-        --                |> Maybe.map (\coord -> Triangle.updateLatest form.currTriangle coord)
-        --                |> Maybe.withDefault form.currTriangle
-        --                |> (\tri -> { form | currTriangle = tri })
         Click ->
             let
                 tri =
@@ -213,9 +215,7 @@ updateRemoveObjectForm_ rMsg form =
                                     else
                                         { form | currTriangle = updatedTri }
                                 )
-                            --triangle is complete
                             |> Result.withDefault form
-                     --({ form | currTriangle = Triangle.shiftRight tri [] } |> updateProper tri)
                     )
                 |> Maybe.withDefault form
 
@@ -228,8 +228,11 @@ updateRemoveObjectForm_ rMsg form =
         SetOnlyVertical val ->
             { form | onlyVertical = val }
 
-        AccordionMsg state ->
+        TriangleDataAccordionMsg state ->
             { form | showTriangleData = state }
+
+        RemoveObjectHelpAccordionMsg state ->
+            { form | showHelp = state }
 
 
 unselectImage : Model -> Model

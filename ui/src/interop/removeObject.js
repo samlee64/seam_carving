@@ -36,7 +36,7 @@ template.innerHTML = `
   <canvas id="drawing-canvas"> </canvas>
   <canvas id="img-canvas"> </canvas>
 </div>
-<button class="btn btn-primary mt-1">Remove Highlighted Areas</button>
+<button class="btn btn-primary mt-3">Remove Highlighted Areas</button>
 `;
 
 class RemoveObject extends HTMLElement {

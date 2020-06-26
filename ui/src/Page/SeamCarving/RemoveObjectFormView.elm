@@ -100,13 +100,11 @@ viewCanvasControls ({ removeObjectForm } as model) =
                     , Button.radioButton (removeObjectForm.markMode == Destroy)
                         [ Button.outlineDanger
                         , Button.onClick (SetMarkMode Destroy)
-                        , Button.small
                         ]
                         [ text "Destroy" ]
                     , Button.radioButton (removeObjectForm.markMode == Protect)
                         [ Button.outlineSuccess
                         , Button.onClick (SetMarkMode Protect)
-                        , Button.small
                         ]
                         [ text "Protect" ]
                     ]
@@ -242,12 +240,12 @@ viewHelp removeObjectForm =
                             , div [ Spacing.mt2 ]
                                 [ b [] [ text "(Required)" ]
                                 , text "Mark areas to be removed with the "
-                                , b [] [ text "Destroy Areas" ]
+                                , b [] [ text "Destroy" ]
                                 , text " tool"
                                 , br [] []
                                 , b [] [ text "(Optional)" ]
                                 , text "Mark areas in the photo that should not be touched with the "
-                                , b [] [ text "Protected Areas" ]
+                                , b [] [ text "Protected" ]
                                 , text " tool"
                                 ]
                             , div [ Spacing.mt2 ]
@@ -258,13 +256,12 @@ viewHelp removeObjectForm =
                                 [ text "Lock Width/Height ratio will ensure that the aspect ratio of the output image is the same as in the input image."
                                 ]
                             , div [ Spacing.mt2 ]
-                                [ text "It is better to overmark the `Destroy Areas' than undermark. Undermarking can lead to artifacts." ]
+                                [ text "It is better to overmark the `Destroy' than undermark. Undermarking can lead to artifacts." ]
                             , div [ Spacing.mt4 ]
-                                [ text "Took too many photos with my ex in Japan."
-                                , div [ Flex.block, Spacing.mt3 ]
-                                    [ figure [ Spacing.mr1 ] [ img [ src exampleBeforeSrc ] [], figcaption [] [ text "Input" ] ]
+                                [ div [ Flex.block, Spacing.mt3 ]
+                                    [ figure [ Spacing.mr1 ] [ img [ src exampleBeforeSrc ] [], figcaption [] [ text "Took too many photos with my ex in Japan." ] ]
                                     , figure [ Spacing.mr1 ] [ img [ src exampleAfterSrc ] [], figcaption [] [ text "Output" ] ]
-                                    , figure [] [ img [ src exampleBadAfterSrc ] [], figcaption [] [ text "Undermarked 'Destroy Areas'" ] ]
+                                    , figure [] [ img [ src exampleBadAfterSrc ] [], figcaption [] [ text "Undermarked 'Destroy'" ] ]
                                     ]
                                 ]
                             ]

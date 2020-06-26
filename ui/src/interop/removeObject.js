@@ -103,10 +103,10 @@ class RemoveObject extends HTMLElement {
     ctx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
     ctx.strokeStyle = 'black';
 
-    ctx.fillStyle = '#FF0000';
+    ctx.fillStyle = 'rgb(255,0,0,0.5)';
     this.destroy.map((tri) => this.drawTriangle(tri, '#FF0000'));
 
-    ctx.fillStyle = '#008000';
+    ctx.fillStyle = 'rgb(0,255,0, 0.5)';
     this.protected.map((tri) => this.drawTriangle(tri, '#008000'));
 
     var imageData = ctx.getImageData(0, 0, drawingCanvas.width, drawingCanvas.height);
@@ -122,7 +122,6 @@ class RemoveObject extends HTMLElement {
 
   drawTriangle(points) {
     const ctx = this.shadowRoot.getElementById('drawing-canvas').getContext('2d');
-    ctx.stroke();
 
     const pointOne = points[0];
     const pointTwo = points[1];
@@ -142,7 +141,7 @@ class RemoveObject extends HTMLElement {
     const showIntermediateSteps = this.getAttribute('showIntermediateSteps') === 'True';
     const imageName = this.getAttribute('imageName');
 
-    var foo = {
+    var params = {
       imageName: imageName,
       showIntermediateSteps,
       lockRatio,
@@ -153,7 +152,7 @@ class RemoveObject extends HTMLElement {
       markings,
     };
 
-    postData('http://localhost:3000/seam/remove-object/markings', foo).then((data) => {
+    postData('http://localhost:3000/seam/remove-object/markings', params).then((data) => {
       console.log(JSON.stringify(data));
       this.emitResponse(data);
     });
@@ -191,9 +190,7 @@ function getMarkings(imageData) {
   return { destroy: destroy, protect: protect };
 }
 
-// Example POST method implementation:
 async function postData(url = '', data = {}) {
-  // Default options are marked with *
   const response = await fetch(url, {
     method: 'POST',
     mode: 'cors',
@@ -207,23 +204,6 @@ async function postData(url = '', data = {}) {
     body: JSON.stringify(data),
   });
   return response.json();
-}
-
-async function getData(url = '', data = {}) {
-  // Default options are marked with *
-  const response = await fetch(url, {
-    method: 'GET', // *GET, POST, PUT, DELETE, etc.
-    mode: 'cors', // no-cors, *cors, same-origin
-    cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
-    credentials: 'same-origin', // include, *same-origin, omit
-    headers: {
-      'Content-Type': 'application/json',
-      // 'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    redirect: 'follow', // manual, *follow, error
-    referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
-  });
-  return response.json(); // parses JSON response into native JavaScript objects
 }
 
 window.customElements.define('remove-object', RemoveObject);

@@ -54,7 +54,8 @@ update msg ({ flags } as model) =
                         |> Maybe.map (\i -> getExecutionStatus flags PolledExecutionStatus { executionId = i })
                         |> Maybe.withDefault Cmd.none
             in
-            model |> cmd pollCmd
+            model
+                |> cmd pollCmd
 
         PolledExecutionStatus resp ->
             { model | pollExecutionStatusResp = resp } |> none
@@ -272,14 +273,3 @@ setPollExecutionId resp model =
 resetPollExecution : Model -> Model
 resetPollExecution model =
     { model | pollExecutionStatusResp = NotAsked, pollExecutionId = Nothing }
-
-
-
---pollExecutionStatus : Model -> ( Model, Cmd Msg )
---pollExecutionStatus model =
---    model.growImageResp
---        |> RD.toMaybe
---        |> Maybe.map (\gi -> { executionId = gi.executionId })
---        |> Maybe.map (getExecutionStatus model.flags PolledExecutionStatus)
---        |> Maybe.map (\c -> ( { model | pollExecutionStatusResp = Loading }, c ))
---        |> Maybe.withDefault ( model, Cmd.none )

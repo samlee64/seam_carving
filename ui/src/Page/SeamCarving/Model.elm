@@ -173,3 +173,12 @@ getSelectedImageName model =
     model.selectedImage
         |> Maybe.andThen (LE.last << String.split "/")
         |> Maybe.andThen (List.head << String.split ".")
+
+
+isOutputImage : String -> Bool
+isOutputImage key =
+    key
+        |> String.split "/"
+        |> LE.last
+        |> Maybe.map ((==) "output.png")
+        |> Maybe.withDefault False

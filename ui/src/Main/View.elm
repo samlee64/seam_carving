@@ -28,7 +28,9 @@ view_ model =
         [ style "position" "aboslute"
         , style "height" "100vh"
         , style "width" "100vw"
-        , Spacing.p5
+        , Spacing.pr5
+        , Spacing.pl5
+        , Spacing.pt3
         ]
         [ viewPage model ]
 
@@ -54,7 +56,7 @@ viewNavbar model =
         |> Navbar.dark
         |> Navbar.brand
             [ href "/" ]
-            [ text " C++ Projects"
+            [ text " Covid Projects"
             ]
         |> Navbar.items
             [ Navbar.itemLink

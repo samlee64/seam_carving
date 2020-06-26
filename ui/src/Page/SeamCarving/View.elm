@@ -45,7 +45,7 @@ view model =
 
 viewToolbar : Model -> Html Msg
 viewToolbar model =
-    div []
+    div [ Spacing.mb2 ]
         [ model.selectedImage
             |> Maybe.map (\_ -> Button.button [ Button.primary, Button.onClick UnselectImage ] [ text "Back" ])
             |> Maybe.withDefault EH.none
@@ -62,7 +62,7 @@ viewAllImages model =
             String.split "/" key |> LE.last |> Maybe.withDefault key
 
         viewImage bucket key =
-            Card.config [ Card.attrs [ onClick <| SelectImage (imgSrc bucket key) ] ]
+            Card.config [ Card.attrs [ onClick <| SelectImage (imgSrc bucket key), Spacing.m2, style "cursor" "pointer" ] ]
                 |> Card.header [] [ text <| getImageName key ]
                 |> Card.block []
                     [ CardBlock.custom <| img [ src (imgSrc bucket key) ] []
@@ -114,6 +114,11 @@ viewGrow model =
 viewGrowForm : Model -> Html Msg
 viewGrowForm model =
     let
+        viewImage =
+            model.selectedImage
+                |> Maybe.map (\s -> div [ Spacing.mt2 ] [ img [ src s ] [] ])
+                |> Maybe.withDefault EH.none
+
         heightValue =
             model.growForm.addHeight
                 |> Maybe.map String.fromInt
@@ -171,6 +176,7 @@ viewGrowForm model =
                                     numSteps
                             }
                         ]
+                    , viewImage
                     ]
             ]
         |> Card.footer []
@@ -194,23 +200,41 @@ viewContentAmplification model =
 
 viewContentAmplificationForm : Model -> Html Msg
 viewContentAmplificationForm model =
+    let
+        viewDropdown =
+            Dropdown.dropdown model.contentAmplificationForm.factorDropdown
+                { options = []
+                , toggleMsg = \s -> ContentAmplificationFormMsg <| FactorDropdown s
+                , toggleButton =
+                    Dropdown.toggle
+                        [ Button.outlinePrimary ]
+                        [ text <| String.fromFloat model.contentAmplificationForm.factor ]
+                , items =
+                    List.map
+                        (\s ->
+                            Dropdown.buttonItem
+                                [ onClick <| ContentAmplificationFormMsg <| SetFactor s ]
+                                [ text <| String.fromFloat s ]
+                        )
+                        factorRange
+                }
+
+        viewImage =
+            model.selectedImage
+                |> Maybe.map (\s -> div [ Spacing.mt2 ] [ img [ src s ] [] ])
+                |> Maybe.withDefault EH.none
+    in
     Card.config []
         |> Card.header [] [ text "Content Amplification Form" ]
         |> Card.block []
             [ CardBlock.custom <|
                 div []
-                    [ Checkbox.checkbox
-                        [ Checkbox.checked True, Checkbox.onCheck (\b -> GrowFormMsg (ShowGrowIntermediateSteps b)) ]
-                        "Show Intermediate Steps"
-                    , Form.group []
-                        [ Form.label [] [ text "Set Factor: " ]
+                    [ Form.group []
+                        [ div [] [ text "" ]
+                        , Form.label [] [ text "Set Factor: " ]
                         , br [] []
-                        , Dropdown.dropdown model.contentAmplificationForm.factorDropdown
-                            { options = []
-                            , toggleMsg = \s -> ContentAmplificationFormMsg <| FactorDropdown s
-                            , toggleButton = Dropdown.toggle [ Button.outlinePrimary ] [ text <| String.fromFloat model.contentAmplificationForm.factor ]
-                            , items = List.map (\s -> Dropdown.buttonItem [ onClick <| ContentAmplificationFormMsg <| SetFactor s ] [ text <| String.fromFloat s ]) factorRange
-                            }
+                        , viewDropdown
+                        , viewImage
                         ]
                     ]
             ]
@@ -470,13 +494,6 @@ viewResults model =
                     )
                     (img [ src (imgSrc s3Key) ] [])
 
-        isOutputImage key =
-            key
-                |> String.split "/"
-                |> LE.last
-                |> Maybe.map ((==) "output.png")
-                |> Maybe.withDefault False
-
         imageKeys =
             model.pollExecutionStatusResp
                 |> RD.toMaybe
@@ -521,12 +538,3 @@ viewResults model =
             |> RD.map (\_ -> div [ Flex.block, Flex.wrap ] [ viewOutputImage, viewRest ])
             |> RD.withDefault EH.none
         ]
-
-
-
-{-
-
-   , div
-       [ Spacing.mt2, Flex.block ]
-       [ viewWebData (\resp -> viewExecutionStatus resp.status) model.pollExecutionStatusResp ]
--}

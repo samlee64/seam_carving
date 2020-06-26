@@ -86,6 +86,12 @@ viewHelp caForm =
     let
         msg =
             ContentAmplificationFormMsg << ContentAmplificationHelpAccordionMsg
+
+        exampleBeforeSrc =
+            "https://seam-carving.s3-us-west-2.amazonaws.com/examples/contentAmplification/input.png"
+
+        exampleAfterSrc =
+            "http://seam-carving.s3-us-west-2.amazonaws.com/examples/contentAmplification/output.png"
     in
     Accordion.config msg
         |> Accordion.withAnimation
@@ -94,7 +100,22 @@ viewHelp caForm =
                 { id = "card"
                 , options = []
                 , header = Accordion.header [] <| Accordion.toggle [] [ text "Help" ]
-                , blocks = [ Accordion.block [] [ CardBlock.text [] [ text "hello ther" ] ] ]
+                , blocks =
+                    [ Accordion.block []
+                        [ CardBlock.text []
+                            [ text "Upscales the image by "
+                            , b [] [ text "Factor" ]
+                            , text " and then seam carves the image down to the original size."
+                            , br [] []
+                            , text "Makes the high energy content more prominant in the photo. In the below example, the content was amplified by a factor of 1.6"
+                            , div [ Flex.block, Spacing.mt3 ]
+                                [ img [ src exampleBeforeSrc ] []
+                                , img [ src "assets/images/next.svg", Spacing.mx2 ] []
+                                , img [ src exampleAfterSrc ] []
+                                ]
+                            ]
+                        ]
+                    ]
                 }
             ]
         |> Accordion.view caForm.showHelp

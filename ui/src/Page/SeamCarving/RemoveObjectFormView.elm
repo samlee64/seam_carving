@@ -32,8 +32,12 @@ viewObjectRemovalForm model =
     Card.config []
         |> Card.header [] [ text "Object Removal Form" ]
         |> Card.block []
-            [ CardBlock.custom <| viewCanvasControls model
-            , CardBlock.custom <| viewCanvas model
+            [ CardBlock.custom <|
+                div []
+                    [ viewHelp model.removeObjectForm
+                    , viewCanvasControls model
+                    , viewCanvas model
+                    ]
             ]
         |> Card.view
 
@@ -213,3 +217,65 @@ viewTriangleData { removeObjectForm } =
                 }
             ]
         |> Accordion.view removeObjectForm.showTriangleData
+
+
+viewHelp : RemoveObjectForm -> Html Msg
+viewHelp removeObjectForm =
+    let
+        msg =
+            RemoveObjectFormMsg << RemoveObjectHelpAccordionMsg
+
+        exampleBeforeSrc =
+            "https://seam-carving.s3-us-west-2.amazonaws.com/examples/removeObject/input.png"
+
+        exampleAfterSrc =
+            "http://seam-carving.s3-us-west-2.amazonaws.com/examples/removeObject/output.png"
+
+        exampleBadAfterSrc =
+            "http://seam-carving.s3-us-west-2.amazonaws.com/examples/removeObject/bad-output.png"
+    in
+    Accordion.config msg
+        |> Accordion.withAnimation
+        |> Accordion.cards
+            [ Accordion.card
+                { id = "card"
+                , options = []
+                , header = Accordion.header [] <| Accordion.toggle [] [ text "Help" ]
+                , blocks =
+                    [ Accordion.block []
+                        [ CardBlock.text []
+                            [ div [] [ text "Remove objects from a picture." ]
+                            , div [ Spacing.mt2 ]
+                                [ b [] [ text "(Required)" ]
+                                , text "Mark areas to be removed with the "
+                                , b [] [ text "Destroy Areas" ]
+                                , text " tool"
+                                , br [] []
+                                , b [] [ text "(Optional)" ]
+                                , text "Mark areas in the photo that should not be touched with the "
+                                , b [] [ text "Protected Areas" ]
+                                , text " tool"
+                                ]
+                            , div [ Spacing.mt2 ]
+                                [ text "ClickMode: Continious will link triangles togeter. To exit ClickMode: Continious, enter ClickMode: Discreet and click once to finish your last triangle. "
+                                , text "ClickMode: Discreet will make each triangle discreet."
+                                ]
+                            , div [ Spacing.mt2 ]
+                                [ text "Lock Width/Height ratio will ensure that the aspect ratio of the output image is the same as in the input image."
+                                ]
+                            , div [ Spacing.mt2 ]
+                                [ text "It is better to overmark the `Destroy Areas' than undermark. Undermarking can lead to artifacts." ]
+                            , div [ Spacing.mt4 ]
+                                [ text "Took too many photos with my ex in Japan."
+                                , div [ Flex.block, Spacing.mt3 ]
+                                    [ figure [ Spacing.mr1 ] [ img [ src exampleBeforeSrc ] [], figcaption [] [ text "Input" ] ]
+                                    , figure [ Spacing.mr1 ] [ img [ src exampleAfterSrc ] [], figcaption [] [ text "Output" ] ]
+                                    , figure [] [ img [ src exampleBadAfterSrc ] [], figcaption [] [ text "Undermarked 'Destroy Areas'" ] ]
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ]
+                }
+            ]
+        |> Accordion.view removeObjectForm.showHelp

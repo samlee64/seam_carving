@@ -42,4 +42,5 @@ view model =
         , div [] [ text "Shipped in Docker containers" ]
         , div [] [ text "Frontend: ", a [ href "https://elm-lang.org/" ] [ text "Elm" ], text " (No runtime errors, uniform code style) + JS" ]
         , div [] [ text "Backend: Node, Typescript, C++, PSQL" ]
+        , div [] [ text "Icons made by ", a [ href "https://www.flaticon.com/authors/pixel-perfect" ] [ text "Pixel perfect" ], text " from ", a [ href "https://www.flaticon.com/" ] [ text "Flaticon" ] ]
         ]

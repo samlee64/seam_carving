@@ -18,7 +18,7 @@ import Page.Technologies as Technologies
 
 view : Model -> Document Msg
 view model =
-    { title = ""
+    { title = "Sam Lee"
     , body = [ viewNavbar model, view_ model ]
     }
 

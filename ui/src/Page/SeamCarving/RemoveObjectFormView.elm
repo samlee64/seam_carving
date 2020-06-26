@@ -10,6 +10,7 @@ import Bootstrap.Dropdown as Dropdown
 import Bootstrap.Form as Form
 import Bootstrap.Form.Checkbox as Checkbox
 import Bootstrap.Form.Input as Input
+import Bootstrap.Form.Radio as Radio
 import Bootstrap.Utilities.Flex as Flex
 import Bootstrap.Utilities.Spacing as Spacing
 import Data.Mouse exposing (..)
@@ -49,8 +50,8 @@ viewCanvasControls ({ removeObjectForm } as model) =
             removeObjectForm.clickMode
                 == Continious
                 |> Extra.ternary
-                    (Badge.badgeLight [] [ text "Continious" ])
-                    (Badge.badgeDark [] [ text "Discreet" ])
+                    (Badge.badgeLight [ style "cursor" "pointer" ] [ text "Continious" ])
+                    (Badge.pillDark [ style "cursor" "pointer" ] [ text "Discreet" ])
 
         markMode =
             removeObjectForm.markMode
@@ -61,40 +62,7 @@ viewCanvasControls ({ removeObjectForm } as model) =
     in
     Html.map RemoveObjectFormMsg <|
         div []
-            [ viewTriangleData model
-            , div [ Spacing.mt3 ]
-                [ div [ Spacing.mb2 ]
-                    [ div [ Spacing.mb1 ]
-                        [ Button.button
-                            [ Button.success
-                            , Button.onClick (SetMarkMode Protect)
-                            , Button.disabled <| removeObjectForm.markMode == Protect
-                            ]
-                            [ text "Set Protected Areas" ]
-                        , Button.button
-                            [ Button.danger
-                            , Button.onClick (SetMarkMode Destroy)
-                            , Button.disabled <| removeObjectForm.markMode == Destroy
-                            ]
-                            [ text "Set Destroy Areas" ]
-                        ]
-                    , div []
-                        [ Button.button
-                            [ Button.success
-                            , Button.onClick (SetClickMode Continious)
-                            , Button.disabled <| removeObjectForm.clickMode == Continious
-                            ]
-                            [ text "ClickMode: Continious" ]
-                        , Button.button
-                            [ Button.danger
-                            , Button.onClick (SetClickMode Discreet)
-                            , Button.disabled <| removeObjectForm.clickMode == Discreet
-                            ]
-                            [ text "ClickMode: Discreet" ]
-                        ]
-                    ]
-                ]
-            , div [ Spacing.mb2 ]
+            [ div [ Spacing.my2 ]
                 [ Checkbox.checkbox
                     [ Checkbox.checked removeObjectForm.lockRatio
                     , Checkbox.onCheck SetLockRatio
@@ -114,8 +82,34 @@ viewCanvasControls ({ removeObjectForm } as model) =
                     "Remove only vertical seams"
                 ]
             , div []
-                [ h5 [] [ text "ClickMode: ", clickMode ]
-                , h5 [] [ text "MarkMode: ", markMode ]
+                [ div [ Flex.block ]
+                    [ h5 [] [ text "ClickMode: " ]
+                    , Button.radioButton (removeObjectForm.clickMode == Continious)
+                        [ Button.outlinePrimary
+                        , Button.onClick (SetClickMode Continious)
+                        ]
+                        [ text "Continious" ]
+                    , Button.radioButton (removeObjectForm.clickMode == Discreet)
+                        [ Button.outlineSecondary
+                        , Button.onClick (SetClickMode Discreet)
+                        ]
+                        [ text "Discreet" ]
+                    ]
+                , div [ Flex.block ]
+                    [ h5 [] [ text "MarkMode: " ]
+                    , Button.radioButton (removeObjectForm.markMode == Destroy)
+                        [ Button.outlineDanger
+                        , Button.onClick (SetMarkMode Destroy)
+                        , Button.small
+                        ]
+                        [ text "Destroy" ]
+                    , Button.radioButton (removeObjectForm.markMode == Protect)
+                        [ Button.outlineSuccess
+                        , Button.onClick (SetMarkMode Protect)
+                        , Button.small
+                        ]
+                        [ text "Protect" ]
+                    ]
                 ]
             ]
 

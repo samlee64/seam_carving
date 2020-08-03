@@ -73,9 +73,9 @@ viewNavbar model =
         |> Navbar.customItems
             [ Navbar.customItem <|
                 img
-                    [ src "assets/images/github.svg"
+                    [ src "assets/images/github.png"
                     , class "d-inline-block align-top"
-                    , style "width" "30px"
+                    , style "width" "40px"
                     , style "cursor" "pointer"
                     , Spacing.mr2
                     , onClick (UrlRequest (Browser.External "https://github.com/samlee64"))
@@ -83,9 +83,9 @@ viewNavbar model =
                     []
             , Navbar.customItem <|
                 img
-                    [ src "assets/images/linkedin.svg"
+                    [ src "assets/images/linkedin.png"
                     , class "d-inline-block align-top"
-                    , style "width" "30px"
+                    , style "width" "40px"
                     , style "cursor" "pointer"
                     , onClick (UrlRequest (Browser.External "https://www.linkedin.com/in/samuellee18/"))
                     ]

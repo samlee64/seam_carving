@@ -9,7 +9,8 @@
     "prod": "webpack -p",
     "docker:build": "docker build -t slicer-ui -f devops/Dockerfile .",
     "docker:run": "docker run -d -p 3001:80 slicer-ui",
-    "docker": "npm run docker:build && npm run docker:run"
+    "docker:tag": "docker tag slicer-ui:latest 967544475577.dkr.ecr.us-west-2.amazonaws.com/slicer-ui:latest",
+    "docker:push": "npm run docker:build && npm run docker:tag && docker push 967544475577.dkr.ecr.us-west-2.amazonaws.com/slicer-ui:latest"
   },
   "author": "",
   "license": "ISC",

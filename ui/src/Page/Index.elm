@@ -41,12 +41,8 @@ view model =
             model.flags.bucket ++ "/defaults/couple.png"
     in
     div [ Flex.block ]
-        [ Card.config [ Card.attrs [ Spacing.mr3 ] ]
-            |> Card.header [] [ text "Platform" ]
-            |> Card.block [] [ CardBlock.text [] [ text "Platform built run c++ image processing code." ] ]
-            |> Card.view
-        , a [ style "cursor" "pointer", href "/sc" ]
-            [ Card.config [ Card.attrs [] ]
+        [ a [ style "cursor" "pointer", href "/sc" ]
+            [ Card.config [ Card.attrs [ Spacing.mr3 ] ]
                 |> Card.header [] [ text "Seam Carving" ]
                 |> Card.block []
                     [ CardBlock.custom <|
@@ -55,4 +51,12 @@ view model =
                 |> Card.footer [] []
                 |> Card.view
             ]
+        , Card.config []
+            |> Card.header [] [ text "Glub Step" ]
+            |> Card.block []
+                [ CardBlock.text [] [ text "Procedurally generated music for aquarium live streams. Coming Soon!" ]
+                , CardBlock.custom <| div [ Flex.block, Flex.justifyCenter ] [ img [ src "/assets/images/glub-fish.png" ] [] ]
+                ]
+            |> Card.footer [] []
+            |> Card.view
         ]

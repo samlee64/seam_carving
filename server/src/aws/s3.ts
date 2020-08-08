@@ -12,63 +12,56 @@ const s3 = new S3({
 });
 
 export async function uploadFile(filePath: string, key: string): Promise<void> {
-  //TODO maybe add tagging for user generated content
-  //  const readFile = utils.promisify(fs.readFile);
-  //
-  console.log("starting file read/upload");
-  const data = fs.readFileSync(filePath);
+  const dataStream = fs.createReadStream(filePath);
 
   const params = {
-    Body: data,
+    Body: dataStream,
     Bucket: IMAGE_BUCKET,
     Key: key,
     ACL: "public-read",
   };
 
-  if (config.env === "dev") {
-    console.log("env dev, skipping upload");
-    return;
-  }
-
-  console.log("s3, begin upload", filePath, key);
   await s3.putObject(params).promise();
-  console.log("s3, finished upload", filePath, key);
 }
 
 export async function listInputImages(): Promise<InputImages> {
   const params = { Bucket: IMAGE_BUCKET, Prefix: "defaults" };
-
   const resp = await s3.listObjectsV2(params).promise();
+
   if (!resp.Contents) return { keys: [], bucket: IMAGE_BUCKET };
 
   const filtered: string[] = resp.Contents.map((i) => i.Key).filter(
     (element) => element !== undefined
   ) as string[];
 
-  return { keys: filtered, bucket: IMAGE_BUCKET };
+  return { bucket: IMAGE_BUCKET, keys: filtered };
 }
 
-export async function downloadImage(imageName: string): Promise<string> {
+export async function downloadDefaultImage(imageName: string): Promise<string> {
   const key = path.join("defaults", imageName + ".png");
   const params = { Bucket: IMAGE_BUCKET, Key: key };
 
   const dirPath = "data/input";
-  fs.mkdirSync(dirPath, { recursive: true });
-
+  await fs.promises.mkdir(dirPath, { recursive: true });
   const filePath = path.join(dirPath, imageName + ".png");
-  if (fs.existsSync(filePath)) return filePath;
 
-  return new Promise((resolve, reject) => {
-    const file = fs.createWriteStream(filePath);
-    const s3Stream = s3.getObject(params).createReadStream();
+  try {
+    await fs.promises.access(filePath);
 
-    s3Stream.on("error", reject);
+    return filePath;
+  } catch (e) {
+    return new Promise((resolve, reject) => {
+      const file = fs.createWriteStream(filePath);
+      const s3Stream = s3.getObject(params).createReadStream();
 
-    file.on("error", reject);
-    file.on("close", () => {
-      resolve(filePath);
+      s3Stream.on("error", reject);
+
+      file.on("error", reject);
+      file.on("close", () => {
+        resolve(filePath);
+      });
+
+      s3Stream.pipe(file);
     });
-
-    s3Stream.pipe(file);
-  });
+  }
 }

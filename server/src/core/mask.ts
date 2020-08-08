@@ -6,32 +6,28 @@ import config from "../config";
 interface CreateMaskParams {
   width: number;
   height: number;
-  data: number[];
+  data: number[]; //binary array 1 indicating mask placement
 }
 
-export function createMask(
+export async function createMask(
   params: CreateMaskParams,
   imageName: string,
-  filename: string
-): string {
-  //do a validation on the data;
-  //data should be equal to width * height;
-  const data = params.data;
-
+  fileName: string
+): Promise<string> {
   const png = new PNG({
     width: params.width,
     height: params.height,
     colorType: 0,
     inputColorType: 0,
   });
-  for (let idx = 0; idx < data.length; idx++) {
-    if (data[idx] != 0) png.data[idx] = 255;
+
+  for (let idx = 0; idx < params.data.length; idx++) {
+    if (params.data[idx] !== 0) png.data[idx] = 255;
   }
 
   const dirPath = path.join(config.dataDir, "output/mask", imageName);
-  const fullPath = path.join(dirPath, filename);
-
-  fs.mkdirSync(dirPath, { recursive: true });
+  const fullPath = path.join(dirPath, fileName);
+  await fs.promises.mkdir(dirPath, { recursive: true });
 
   png.pack().pipe(fs.createWriteStream(fullPath));
 

@@ -13,6 +13,7 @@ export interface Config {
     database: string;
     port: number;
   };
+  outputs: { [key: string]: string[] };
   env: string;
 }
 

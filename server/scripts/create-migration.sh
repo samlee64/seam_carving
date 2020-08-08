@@ -7,4 +7,3 @@ if [ $# != 1 ]; then
 else
   node_modules/db-migrate/bin/db-migrate create $1 --sql-file
 fi
-

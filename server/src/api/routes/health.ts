@@ -9,11 +9,14 @@ const router = new Router({
 
 router.get("/", async (ctx: Context) => {
   console.log("Health Checked");
+
   ctx.status = 200;
   ctx.body = { msg: "I'm COVID free!!" };
 });
 
 router.get("/db", async (ctx: Context) => {
+  console.log("DB Checked");
+
   await ping(conn);
   ctx.status = 200;
   ctx.body = { msg: "I'm connected to the db" };

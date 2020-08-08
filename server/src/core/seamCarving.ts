@@ -1,3 +1,4 @@
+import * as fs from "fs";
 import {
   GrowParams,
   ContentAmplificationParams,
@@ -5,18 +6,18 @@ import {
   Routine,
 } from "../types/seamCarving";
 import { execFileWithUpload, getOutputPath } from "./utils";
-import { downloadImage } from "../aws/s3";
-import { Connection } from "../db";
 import { createMask } from "./mask";
+import { downloadDefaultImage } from "../aws/s3";
+import { Connection } from "../db";
 
 export async function grow(
   conn: Connection,
   params: GrowParams
 ): Promise<string> {
   const routine = Routine.Grow;
-
-  const inputImagePath = await downloadImage(params.imageName);
+  const inputImagePath = await downloadDefaultImage(params.imageName);
   const outputPath = getOutputPath(params.imageName, routine);
+  await fs.promises.mkdir(outputPath, { recursive: true });
 
   const args: string[] = [
     routine,
@@ -28,6 +29,7 @@ export async function grow(
     params.showIntermediateSteps.toString(),
   ];
 
+  console.log("Running grow with these args", args);
   const executionId = await execFileWithUpload(conn, routine, params, args);
   return executionId;
 }
@@ -37,9 +39,9 @@ export async function contentAmplification(
   params: ContentAmplificationParams
 ): Promise<string> {
   const routine = Routine.ContentAmplification;
-
-  const inputImagePath = await downloadImage(params.imageName);
+  const inputImagePath = await downloadDefaultImage(params.imageName);
   const outputPath = getOutputPath(params.imageName, routine);
+  await fs.promises.mkdir(outputPath, { recursive: true });
 
   const args: string[] = [
     routine,
@@ -50,7 +52,6 @@ export async function contentAmplification(
   ];
 
   console.log("Running content amplification with these args", args);
-  console.log("Starting exec");
   const executionId = await execFileWithUpload(conn, routine, params, args);
 
   return executionId;
@@ -61,11 +62,11 @@ export async function removeObject(
   params: RemoveObjectParams
 ): Promise<string> {
   const routine = Routine.RemoveObject;
-
-  const inputImagePath = await downloadImage(params.imageName);
+  const inputImagePath = await downloadDefaultImage(params.imageName);
   const outputPath = getOutputPath(params.imageName, routine);
+  await fs.promises.mkdir(outputPath, { recursive: true });
 
-  const destroyMaskPath = createMask(
+  const destroyMaskPath = await createMask(
     {
       width: params.imageWidth,
       height: params.imageHeight,
@@ -75,7 +76,7 @@ export async function removeObject(
     "destroy.png"
   );
 
-  const protectMaskPath = createMask(
+  const protectMaskPath = await createMask(
     {
       width: params.imageWidth,
       height: params.imageHeight,
@@ -98,8 +99,6 @@ export async function removeObject(
   ];
 
   console.log("Running removeObject with these args", args);
-  console.log("Starting exec");
-
   const executionId = await execFileWithUpload(conn, routine, params, args);
   return executionId;
 }

@@ -1,4 +1,5 @@
-{"port": 3000,
+{
+  "port": 3000,
   "aws": {
     "accessKey": "",
     "secretAccessKey": ""
@@ -9,5 +10,16 @@
     "password": "slicer",
     "database": "slicer",
     "port": 8400
+  },
+  "outputs": {
+    "grow": ["mask.gif", "energy-map.gif", "mid.gif", "output.png"],
+    "contentAmplification": ["reduce.gif", "output.png"],
+    "removeObject": [
+      "combined-mask.png",
+      "energy-map.gif",
+      "output.png",
+      "mid.gif",
+      "protect-destroy-areas.png"
+    ]
   }
 }

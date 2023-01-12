@@ -45,8 +45,9 @@ template.innerHTML = `
 
 class RemoveObject2 extends HTMLElement {
   static get observedAttributes() {
-    return ['protected', 'destroy', 'imgSrc'];
+    return ['imgSrc', 'markmode'];
   }
+
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
@@ -54,11 +55,8 @@ class RemoveObject2 extends HTMLElement {
 
     this.img;
 
-    this.protected = [];
-    this.destroy = [];
+    this.mousedownID = -1; //Global ID of mouse down interval
 
-    this.destroyPoints = [];
-    this.protectedPoints = [];
     this.addEventListener('response', console.log);
   }
 
@@ -68,11 +66,14 @@ class RemoveObject2 extends HTMLElement {
     var drawingCanvas = this.shadowRoot.getElementById('drawing-canvas');
     var container = this.shadowRoot.getElementById('container');
 
-    const el = (e) => this.handleClick(e);
+    const el = (e) => this.handleSubmit(e);
     this.shadowRoot.querySelector('button').addEventListener('click', el);
 
-    const la = (e) => this.drawingCanvasClick(e);
-    drawingCanvas.addEventListener('click', la);
+    drawingCanvas.addEventListener('mousedown', (e) => this.handleMouseDown(e));
+    drawingCanvas.addEventListener('mouseup', (e) => this.handleMouseUp(e));
+    drawingCanvas.addEventListener('mouseout', (e) => this.handleMouseUp(e));
+
+    drawingCanvas.addEventListener('mousemove', (e) => this.handleMouseMove(e));
 
     const img = new Image();
     img.src = this.getAttribute('imgSrc');
@@ -89,11 +90,7 @@ class RemoveObject2 extends HTMLElement {
     this.img = img;
   }
 
-  drawingCanvasClick(e) {
-    this.dispatchEvent(new CustomEvent('drawing-click'));
-  }
-
-  handleClick(e) {
+  handleSubmit(e) {
     var drawingCanvas = this.shadowRoot.getElementById('drawing-canvas');
     var ctx = drawingCanvas.getContext('2d');
     var imageData = ctx.getImageData(0, 0, drawingCanvas.width, drawingCanvas.height);
@@ -101,48 +98,42 @@ class RemoveObject2 extends HTMLElement {
     this.emitMarkings(getMarkings(imageData));
   }
 
-  redraw() {
+  handleMouseDown(e) {
+    function whilemousedown() {
+      console.log('mouse is being dragged');
+    }
+    if (this.mousedownID == -1)
+      //Prevent multimple loops!
+      this.mousedownID = setInterval(whilemousedown, 100 /*execute every 100ms*/);
+  }
+
+  handleMouseUp(e) {
+    if (this.mousedownID != -1) {
+      //Only stop if exists
+      clearInterval(this.mousedownID);
+      this.mousedownID = -1;
+    }
+  }
+
+  handleMouseMove(e) {
     var drawingCanvas = this.shadowRoot.getElementById('drawing-canvas');
-    var ctx = drawingCanvas.getContext('2d');
+    if (this.mousedownID != -1) {
+      const drawingCtx = drawingCanvas.getContext('2d');
 
-    ctx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
-    ctx.strokeStyle = 'black';
-
-    ctx.fillStyle = 'rgb(255,0,0,0.5)';
-    this.destroy.map((pointRadius) => this.drawMaskValues(pointRadius, '#FF0000'));
-
-    ctx.fillStyle = 'rgb(0,255,0, 0.5)';
-    this.protected.map((pointRadius) => this.drawMaskValues(pointRadius, '#FF0000'));
+      // depending on what is selected
+      const fillStyle =
+        this.getAttribute('markMode') == 'destroy' ? 'rgb(255,0,0,0.5)' : 'rgb(0, 255, 0, 0.5)';
+      console.log('fillStyle', fillStyle);
+      drawingCtx.fillStyle = fillStyle;
+      drawingCtx.fillRect(e.offsetX, e.offsetY, 10, 10);
+    } else {
+      console.log('mouse is moving');
+    }
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
-    const parsedValues = JSON.parse(newValue);
-    this[name] = parsedValues;
-
-    this.redraw();
-  }
-
-  getImageCanvas() {
-    return this.shadowRoot.getElementById('img-canvas');
-  }
-
-  getDrawingCanvas() {
-    return this.shadowRoot.getElementById('drawing-canvas');
-  }
-
-  drawMaskValues(pointRadius) {
-    const { point, radius } = pointRadius;
-
-    const canvas = this.getDrawingCanvas();
-    const ctx = canvas.getContext('2d');
-
-    const startX = Math.max(point[0] - radius, 0);
-    const startY = Math.max(point[1] - radius, 0);
-    const endX = Math.min(point[0] + radius, canvas.width);
-    const endY = Math.min(point[1] + radius, canvas.height);
-
-    ctx.fillStyle = 'red';
-    ctx.fillRect(startX, startY, radius, radius);
+    console.log('attributeChangedCallback', name, oldValue, newValue);
+    this[name] = newValue;
   }
 
   // how do I want to store the data?
@@ -156,7 +147,7 @@ class RemoveObject2 extends HTMLElement {
 
   // gets params and sends information to api
   emitMarkings(markings) {
-    console.log('emitMarkings');
+    console.log('emitMarkings', markings);
     const onlyHorizontal = this.getAttribute('onlyHorizontal') === 'True';
     const onlyVertical = this.getAttribute('onlyVertical') === 'True';
     const lockRatio = this.getAttribute('lockRatio') === 'True';

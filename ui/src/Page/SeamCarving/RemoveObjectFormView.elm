@@ -45,20 +45,6 @@ viewObjectRemovalForm model =
 
 viewCanvasControls : Model -> Html Msg
 viewCanvasControls ({ removeObjectForm } as model) =
-    let
-        --clickMode =
-        --    removeObjectForm.clickMode
-        --        == Continious
-        --        |> Extra.ternary
-        --            (Badge.badgeLight [ style "cursor" "pointer" ] [ text "Continious" ])
-        --            (Badge.pillDark [ style "cursor" "pointer" ] [ text "Discreet" ])
-        markMode =
-            removeObjectForm.markMode
-                == Protect
-                |> Extra.ternary
-                    (Badge.badgeSuccess [] [ text "Protect" ])
-                    (Badge.badgeDanger [] [ text "Destroy" ])
-    in
     Html.map RemoveObjectFormMsg <|
         div []
             [ div [ Spacing.my2 ]
@@ -81,20 +67,7 @@ viewCanvasControls ({ removeObjectForm } as model) =
                     "Remove only vertical seams"
                 ]
             , div []
-                [ --div [ Flex.block ]
-                  --  [ h5 [] [ text "ClickMode: " ]
-                  --  , Button.radioButton (removeObjectForm.clickMode == Continious)
-                  --      [ Button.outlinePrimary
-                  --      , Button.onClick (SetClickMode Continious)
-                  --      ]
-                  --      [ text "Continious" ]
-                  --  , Button.radioButton (removeObjectForm.clickMode == Discreet)
-                  --      [ Button.outlineSecondary
-                  --      , Button.onClick (SetClickMode Discreet)
-                  --      ]
-                  --      [ text "Discreet" ]
-                  --  ]
-                  div [ Flex.block ]
+                [ div [ Flex.block ]
                     [ h5 [] [ text "MarkMode: " ]
                     , Button.radioButton (removeObjectForm.markMode == Destroy)
                         [ Button.outlineDanger
@@ -117,6 +90,14 @@ viewCanvas ({ removeObjectForm } as model) =
         imgSrc =
             Maybe.withDefault "" model.selectedImage
 
+        markMode =
+            case removeObjectForm.markMode of
+                Destroy ->
+                    "destroy"
+
+                Protect ->
+                    "protect"
+
         protected =
             removeObjectForm.protected
                 |> (\l -> E.encode 0 (E.list PointRadius.encode l))
@@ -132,8 +113,11 @@ viewCanvas ({ removeObjectForm } as model) =
             [ on "mousemove" (Decode.map MouseMove mouseMoveDataDecoder) |> Html.Attributes.map RemoveObjectFormMsg
             , on "response" (Decode.map RemovedObject removeObjectRespEventDecoder)
             , on "drawing-click" (Decode.succeed Click) |> Html.Attributes.map RemoveObjectFormMsg
+
+            --, on "sam" (D)
             , attribute "destroy" destroy
             , attribute "imgSrc" imgSrc
+            , attribute "markMode" markMode
             , attribute "protected" protected
             , attribute "onlyHorizontal" <| BE.toString removeObjectForm.onlyHorizontal
             , attribute "onlyVertical" <| BE.toString removeObjectForm.onlyVertical

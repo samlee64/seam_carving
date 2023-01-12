@@ -4,8 +4,8 @@ import Bootstrap.Accordion as Accordion
 import Bootstrap.Dropdown as Dropdown
 import Bootstrap.Tab as Tab
 import Data.Mouse exposing (..)
+import Data.PointRadius as PointRadius exposing (PointRadius)
 import Data.SeamCarving exposing (..)
-import Data.Triangle as Triangle exposing (Triangle)
 import Flags exposing (Flags)
 import List.Extra as LE
 import Page.SeamCarving.Msg exposing (..)
@@ -89,13 +89,12 @@ defaultContentAmplificationForm =
 
 
 type alias RemoveObjectForm =
-    { protected : List Triangle
-    , destroy : List Triangle
+    { protected : List PointRadius
+    , destroy : List PointRadius
     , clickMode : ClickMode
     , markMode : MarkMode
     , showIntermediateSteps : Bool
     , mouseMoveData : Maybe MouseMoveData
-    , currTriangle : Triangle
     , trianglePointIdx : Int
     , lockRatio : Bool
     , onlyHorizontal : Bool
@@ -113,7 +112,6 @@ defaultRemoveObjectForm =
     , markMode = Destroy
     , showIntermediateSteps = True
     , mouseMoveData = Nothing
-    , currTriangle = Triangle.empty
     , trianglePointIdx = 0
     , lockRatio = False
     , onlyHorizontal = False
@@ -154,6 +152,13 @@ extractContentAmplificationParams ({ contentAmplificationForm } as model) =
 extractTriangleCoordFromMouseData : MouseMoveData -> List Int
 extractTriangleCoordFromMouseData mouseMoveData =
     [ mouseMoveData.offsetX, mouseMoveData.offsetY ]
+
+
+extractPointRadiusFromMouseData : MouseMoveData -> PointRadius
+extractPointRadiusFromMouseData mouseMoveData =
+    { point = [ mouseMoveData.offsetX, mouseMoveData.offsetY ]
+    , radius = 10
+    }
 
 
 isExecutionDone : Model -> Bool

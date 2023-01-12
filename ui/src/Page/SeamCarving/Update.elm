@@ -183,16 +183,6 @@ updateRemoveObjectForm_ rMsg form =
 
         Click ->
             let
-                tri =
-                    form.currTriangle
-
-                nextTriangle t =
-                    if form.clickMode == Continious then
-                        Triangle.shiftRight t []
-
-                    else
-                        Triangle.empty
-
                 updateProper item ff =
                     case form.markMode of
                         Protect ->
@@ -202,20 +192,15 @@ updateRemoveObjectForm_ rMsg form =
                             { ff | destroy = item :: form.destroy }
             in
             form.mouseMoveData
-                |> Maybe.map extractTriangleCoordFromMouseData
+                |> Maybe.map extractPointRadiusFromMouseData
                 |> Maybe.map
-                    (\coord ->
-                        Triangle.addCoord tri coord
-                            |> Result.map
-                                (\updatedTri ->
-                                    if Triangle.isComplete updatedTri then
-                                        { form | currTriangle = nextTriangle updatedTri }
-                                            |> updateProper updatedTri
+                    (\pointRadius ->
+                        case form.markMode of
+                            Protect ->
+                                { form | protected = pointRadius :: form.protected }
 
-                                    else
-                                        { form | currTriangle = updatedTri }
-                                )
-                            |> Result.withDefault form
+                            Destroy ->
+                                { form | destroy = pointRadius :: form.destroy }
                     )
                 |> Maybe.withDefault form
 

@@ -14,8 +14,8 @@ import Bootstrap.Form.Radio as Radio
 import Bootstrap.Utilities.Flex as Flex
 import Bootstrap.Utilities.Spacing as Spacing
 import Data.Mouse exposing (..)
+import Data.PointRadius as PointRadius exposing (PointRadius)
 import Data.SeamCarving exposing (..)
-import Data.Triangle as Triangle exposing (Triangle)
 import Extra.Extra as Extra
 import Extra.Html as EH
 import Html exposing (..)
@@ -46,13 +46,12 @@ viewObjectRemovalForm model =
 viewCanvasControls : Model -> Html Msg
 viewCanvasControls ({ removeObjectForm } as model) =
     let
-        clickMode =
-            removeObjectForm.clickMode
-                == Continious
-                |> Extra.ternary
-                    (Badge.badgeLight [ style "cursor" "pointer" ] [ text "Continious" ])
-                    (Badge.pillDark [ style "cursor" "pointer" ] [ text "Discreet" ])
-
+        --clickMode =
+        --    removeObjectForm.clickMode
+        --        == Continious
+        --        |> Extra.ternary
+        --            (Badge.badgeLight [ style "cursor" "pointer" ] [ text "Continious" ])
+        --            (Badge.pillDark [ style "cursor" "pointer" ] [ text "Discreet" ])
         markMode =
             removeObjectForm.markMode
                 == Protect
@@ -82,20 +81,20 @@ viewCanvasControls ({ removeObjectForm } as model) =
                     "Remove only vertical seams"
                 ]
             , div []
-                [ div [ Flex.block ]
-                    [ h5 [] [ text "ClickMode: " ]
-                    , Button.radioButton (removeObjectForm.clickMode == Continious)
-                        [ Button.outlinePrimary
-                        , Button.onClick (SetClickMode Continious)
-                        ]
-                        [ text "Continious" ]
-                    , Button.radioButton (removeObjectForm.clickMode == Discreet)
-                        [ Button.outlineSecondary
-                        , Button.onClick (SetClickMode Discreet)
-                        ]
-                        [ text "Discreet" ]
-                    ]
-                , div [ Flex.block ]
+                [ --div [ Flex.block ]
+                  --  [ h5 [] [ text "ClickMode: " ]
+                  --  , Button.radioButton (removeObjectForm.clickMode == Continious)
+                  --      [ Button.outlinePrimary
+                  --      , Button.onClick (SetClickMode Continious)
+                  --      ]
+                  --      [ text "Continious" ]
+                  --  , Button.radioButton (removeObjectForm.clickMode == Discreet)
+                  --      [ Button.outlineSecondary
+                  --      , Button.onClick (SetClickMode Discreet)
+                  --      ]
+                  --      [ text "Discreet" ]
+                  --  ]
+                  div [ Flex.block ]
                     [ h5 [] [ text "MarkMode: " ]
                     , Button.radioButton (removeObjectForm.markMode == Destroy)
                         [ Button.outlineDanger
@@ -116,37 +115,18 @@ viewCanvas : Model -> Html Msg
 viewCanvas ({ removeObjectForm } as model) =
     let
         imgSrc =
-            model.selectedImage
-                |> Maybe.withDefault ""
-
-        currTri =
-            removeObjectForm.mouseMoveData
-                |> Maybe.map extractTriangleCoordFromMouseData
-                |> Maybe.andThen (\c -> Result.toMaybe <| Triangle.addCoord removeObjectForm.currTriangle c)
+            Maybe.withDefault "" model.selectedImage
 
         protected =
-            currTri
-                |> Maybe.map
-                    (\t ->
-                        removeObjectForm.markMode
-                            == Protect
-                            |> Extra.ternary (t :: removeObjectForm.protected) removeObjectForm.protected
-                    )
-                |> Maybe.withDefault removeObjectForm.protected
-                |> (\l -> E.encode 0 (E.list Triangle.encode l))
+            removeObjectForm.protected
+                |> (\l -> E.encode 0 (E.list PointRadius.encode l))
 
         destroy =
-            currTri
-                |> Maybe.map
-                    (\t ->
-                        removeObjectForm.markMode == Destroy |> Extra.ternary (t :: removeObjectForm.destroy) removeObjectForm.destroy
-                    )
-                |> Maybe.withDefault removeObjectForm.destroy
-                |> (\l -> E.encode 0 (E.list Triangle.encode l))
+            removeObjectForm.destroy
+                |> (\l -> E.encode 0 (E.list PointRadius.encode l))
 
         imageName =
-            getSelectedImageName model
-                |> Maybe.withDefault ""
+            getSelectedImageName model |> Maybe.withDefault ""
 
         attributes =
             [ on "mousemove" (Decode.map MouseMove mouseMoveDataDecoder) |> Html.Attributes.map RemoveObjectFormMsg
@@ -163,52 +143,8 @@ viewCanvas ({ removeObjectForm } as model) =
             ]
     in
     div []
-        [ node "remove-object" attributes []
+        [ node "remove-object-2" attributes []
         ]
-
-
-viewTriangleData : Model -> Html RemoveObjectFormMsg
-viewTriangleData { removeObjectForm } =
-    let
-        triToString data =
-            E.encode 0 (E.list (E.list E.int) [ data.one, data.two, data.three ])
-
-        viewCoords data =
-            div [ Spacing.m2 ] [ text <| triToString data ]
-    in
-    Accordion.config TriangleDataAccordionMsg
-        |> Accordion.withAnimation
-        |> Accordion.cards
-            [ Accordion.card
-                { id = "card"
-                , options = []
-                , header = Accordion.header [] <| Accordion.toggle [] [ text "View Marking Data" ]
-                , blocks =
-                    [ Accordion.block []
-                        [ CardBlock.text []
-                            [ div []
-                                [ h6 [] [ text "Destory Coords" ]
-                                , div [ Flex.block, Flex.row, style "background" "red" ] (List.map viewCoords removeObjectForm.destroy)
-                                ]
-                            ]
-                        ]
-                    , Accordion.block []
-                        [ CardBlock.text []
-                            [ div []
-                                [ h6 [] [ text "Protect Coords" ]
-                                , div [ Flex.block, Flex.row, Flex.wrap, style "background" "grey" ] (List.map viewCoords removeObjectForm.protected)
-                                ]
-                            ]
-                        ]
-                    , Accordion.block []
-                        [ CardBlock.text []
-                            [ div [] [ h6 [] [ text "Current Triangle" ], viewCoords removeObjectForm.currTriangle ]
-                            ]
-                        ]
-                    ]
-                }
-            ]
-        |> Accordion.view removeObjectForm.showTriangleData
 
 
 viewHelp : RemoveObjectForm -> Html Msg

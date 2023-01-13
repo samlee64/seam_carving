@@ -41,7 +41,7 @@ removeObject flags msg params =
         body =
             encodeRemoveObjectParams params
     in
-    post flags [ "seam", "remove-object" ]
+    post flags [ "seam", "remove-object", "markings" ]
         |> withJsonBody body
         |> withExpect removeObjectRespDecoder msg
         |> request

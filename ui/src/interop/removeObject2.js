@@ -56,8 +56,6 @@ class RemoveObject2 extends HTMLElement {
     this.img;
 
     this.mousedownID = -1; //Global ID of mouse down interval
-
-    this.addEventListener('response', console.log);
   }
 
   connectedCallback() {
@@ -95,6 +93,7 @@ class RemoveObject2 extends HTMLElement {
     var ctx = drawingCanvas.getContext('2d');
     var imageData = ctx.getImageData(0, 0, drawingCanvas.width, drawingCanvas.height);
 
+    this.emitResponse('asdfkadfsadfs');
     this.emitMarkings(getMarkings(imageData));
   }
 
@@ -102,6 +101,13 @@ class RemoveObject2 extends HTMLElement {
     function whilemousedown() {
       console.log('mouse is being dragged');
     }
+
+    var drawingCanvas = this.shadowRoot.getElementById('drawing-canvas');
+    const drawingCtx = drawingCanvas.getContext('2d');
+    const fillStyle = this.getAttribute('markMode') == 'destroy' ? 'rgb(255,0,0,0.5)' : 'rgb(0, 255, 0, 0.5)';
+    console.log('fillStyle', fillStyle);
+    drawingCtx.fillStyle = fillStyle;
+    drawingCtx.fillRect(e.offsetX, e.offsetY, 10, 10);
     if (this.mousedownID == -1)
       //Prevent multimple loops!
       this.mousedownID = setInterval(whilemousedown, 100 /*execute every 100ms*/);
@@ -146,34 +152,44 @@ class RemoveObject2 extends HTMLElement {
   // // second lets do total image
 
   // gets params and sends information to api
-  emitMarkings(markings) {
-    console.log('emitMarkings', markings);
-    const onlyHorizontal = this.getAttribute('onlyHorizontal') === 'True';
-    const onlyVertical = this.getAttribute('onlyVertical') === 'True';
-    const lockRatio = this.getAttribute('lockRatio') === 'True';
-    const showIntermediateSteps = this.getAttribute('showIntermediateSteps') === 'True';
-    const imageName = this.getAttribute('imageName');
+  //emitMarkings(markings) {
+  //  console.log('emitMarkings', markings);
+  //  const onlyHorizontal = this.getAttribute('onlyHorizontal') === 'True';
+  //  const onlyVertical = this.getAttribute('onlyVertical') === 'True';
+  //  const lockRatio = this.getAttribute('lockRatio') === 'True';
+  //  const showIntermediateSteps = this.getAttribute('showIntermediateSteps') === 'True';
+  //  const imageName = this.getAttribute('imageName');
 
-    var params = {
-      imageName: imageName,
-      showIntermediateSteps,
-      lockRatio,
-      onlyHorizontal,
-      onlyVertical,
-      imageWidth: this.img.width,
-      imageHeight: this.img.height,
-      markings,
-    };
+  //  var params = {
+  //    imageName: imageName,
+  //    showIntermediateSteps,
+  //    lockRatio,
+  //    onlyHorizontal,
+  //    onlyVertical,
+  //    imageWidth: this.img.width,
+  //    imageHeight: this.img.height,
+  //    markings,
+  //  };
 
-    postData('http://localhost:3000/seam/remove-object/markings', params).then((data) => {
-      console.log(JSON.stringify(data));
-      this.emitResponse(data);
-    });
-  }
+  //  postData('http://localhost:3000/seam/remove-object/markings', params).then((data) => {
+  //    console.log(JSON.stringify(data));
+  //    this.emitResponse(data);
+  //  });
+  //}
 
   emitResponse(data) {
-    console.log('emit response');
-    this.dispatchEvent(new CustomEvent('response', { detail: data }));
+    console.log('emitResponse');
+    this.dispatchEvent(
+      new CustomEvent('response', { detail: data, cancelable: false, bubbles: true, composed: true }),
+    );
+  }
+
+  emitMarkings(markings) {
+    console.log('emitMarkings', markings);
+
+    this.dispatchEvent(
+      new CustomEvent('markings', { detail: markings, cancelable: false, bubbles: true, composed: true }),
+    );
   }
 }
 

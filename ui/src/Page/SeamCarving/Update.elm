@@ -91,9 +91,18 @@ update msg ({ flags } as model) =
                 |> updateRemoveObjectForm rMsg
                 |> none
 
+        RemoveObject markings ->
+            let
+                removeObjectCmd m =
+                    extractRemoveObjectParams m markings
+                        |> Maybe.map (removeObject flags RemovedObject)
+                        |> Maybe.withDefault Cmd.none
+            in
+            model |> cmd removeObjectCmd
+
         RemovedObject resp ->
-            { model | removeObjectResp = Success resp }
-                |> setPollExecutionId (Success resp)
+            { model | removeObjectResp = resp }
+                |> setPollExecutionId resp
                 |> none
 
         GotInputImages resp ->

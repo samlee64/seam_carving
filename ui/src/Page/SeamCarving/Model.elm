@@ -3,6 +3,7 @@ module Page.SeamCarving.Model exposing (..)
 import Bootstrap.Accordion as Accordion
 import Bootstrap.Dropdown as Dropdown
 import Bootstrap.Tab as Tab
+import Data.Markings exposing (Markings)
 import Data.Mouse exposing (..)
 import Data.PointRadius as PointRadius exposing (PointRadius)
 import Data.SeamCarving exposing (..)
@@ -145,6 +146,24 @@ extractContentAmplificationParams ({ contentAmplificationForm } as model) =
                 { imageName = i
                 , showIntermediateSteps = contentAmplificationForm.showIntermediateSteps
                 , factor = contentAmplificationForm.factor
+                }
+            )
+
+
+extractRemoveObjectParams : Model -> Markings -> Maybe RemoveObjectParams
+extractRemoveObjectParams ({ removeObjectForm } as model) markings =
+    model
+        |> getSelectedImageName
+        |> Maybe.map
+            (\i ->
+                { imageName = i
+                , showIntermediateSteps = removeObjectForm.showIntermediateSteps
+                , lockRatio = removeObjectForm.lockRatio
+                , onlyHorizontal = removeObjectForm.onlyHorizontal
+                , onlyVertical = removeObjectForm.onlyVertical
+                , markings = markings
+                , imageHeight = 300 --hack for beach picture, TODO fix later
+                , imageWidth = 400 -- hack
                 }
             )
 

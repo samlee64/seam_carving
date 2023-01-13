@@ -13,6 +13,7 @@ import Bootstrap.Form.Input as Input
 import Bootstrap.Form.Radio as Radio
 import Bootstrap.Utilities.Flex as Flex
 import Bootstrap.Utilities.Spacing as Spacing
+import Data.Markings exposing (markingsDecoder)
 import Data.Mouse exposing (..)
 import Data.PointRadius as PointRadius exposing (PointRadius)
 import Data.SeamCarving exposing (..)
@@ -20,7 +21,7 @@ import Extra.Extra as Extra
 import Extra.Html as EH
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (on, onClick)
+import Html.Events exposing (on, onClick, targetValue)
 import Json.Decode as Decode
 import Json.Encode as E
 import Page.SeamCarving.Model exposing (..)
@@ -110,9 +111,10 @@ viewCanvas ({ removeObjectForm } as model) =
             getSelectedImageName model |> Maybe.withDefault ""
 
         attributes =
-            [ on "mousemove" (Decode.map MouseMove mouseMoveDataDecoder) |> Html.Attributes.map RemoveObjectFormMsg
-            , on "response" (Decode.map RemovedObject removeObjectRespEventDecoder)
-            , on "drawing-click" (Decode.succeed Click) |> Html.Attributes.map RemoveObjectFormMsg
+            [ --on "mousemove" (Decode.map MouseMove mouseMoveDataDecoder) |> Html.Attributes.map RemoveObjectFormMsg
+              --              on "response" (Decode.map RemovedObject removeObjectRespEventDecoder)
+              on "drawing-click" (Decode.succeed Click) |> Html.Attributes.map RemoveObjectFormMsg
+            , on "markings" (Decode.map RemoveObject <| Decode.at [ "detail" ] markingsDecoder)
 
             --, on "sam" (D)
             , attribute "destroy" destroy

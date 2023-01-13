@@ -3,6 +3,7 @@ module Page.SeamCarving.Msg exposing (..)
 import Bootstrap.Accordion as Accordion
 import Bootstrap.Dropdown as Dropdown
 import Bootstrap.Tab as Tab
+import Data.Markings exposing (Markings)
 import Data.Mouse exposing (..)
 import Data.SeamCarving exposing (..)
 import Http
@@ -24,7 +25,8 @@ type Msg
     | AmplifiedImage (WebData ContentAmplificationResp)
     | TabMsg Tab.State
     | RemoveObjectFormMsg RemoveObjectFormMsg
-    | RemovedObject RemoveObjectResp
+    | RemoveObject Markings
+    | RemovedObject (WebData RemoveObjectResp)
     | GotInputImages (WebData InputImagesResp)
 
 

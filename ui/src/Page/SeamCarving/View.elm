@@ -16,7 +16,6 @@ import Bootstrap.Utilities.Flex as Flex
 import Bootstrap.Utilities.Spacing as Spacing
 import Data.Mouse exposing (..)
 import Data.SeamCarving exposing (..)
-import Data.Triangle as Triangle exposing (Triangle)
 import Extra.Extra as Extra
 import Extra.Html as EH
 import Flags exposing (Flags)
@@ -38,7 +37,7 @@ import View.WebData exposing (viewWebData, viewWebDataButton)
 
 view : Model -> Html Msg
 view model =
-    div []
+    div [ style "classname" "foobar" ]
         [ viewToolbar model
         , model.selectedImage
             |> Maybe.map (viewSelectedImage model)

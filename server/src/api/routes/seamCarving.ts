@@ -56,8 +56,9 @@ router.get("/status", async (ctx: Context) => {
 });
 
 router.post("/grow", async (ctx: Context) => {
-  const params: GrowParams = ctx.request.body;
   try {
+    console.log("grow");
+    const params: GrowParams = ctx.request.body;
     const executionId = await grow(conn, params);
     ctx.status = 200;
     ctx.body = { ...params, executionId };
@@ -71,8 +72,9 @@ router.post("/grow", async (ctx: Context) => {
 });
 
 router.post("/content-amplification", async (ctx: Context) => {
-  const params: ContentAmplificationParams = ctx.request.body;
   try {
+    console.log("content-amplification");
+    const params: ContentAmplificationParams = ctx.request.body;
     const executionId = await contentAmplification(conn, params);
     ctx.status = 200;
     ctx.body = { executionId };
@@ -87,6 +89,7 @@ router.post("/content-amplification", async (ctx: Context) => {
 
 router.post("/remove-object/markings", async (ctx: Context) => {
   try {
+    console.log("remove-object/markings");
     const params: RemoveObjectParams = ctx.request.body;
     const executionId = await removeObject(conn, params);
     ctx.status = 200;

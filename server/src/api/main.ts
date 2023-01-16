@@ -16,5 +16,5 @@ app.use(cors());
 app.use(router.routes());
 
 app.listen(config.port, () => {
-  console.log("Running...");
+  console.log("Running fast...");
 });

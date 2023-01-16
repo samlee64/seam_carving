@@ -3,9 +3,10 @@ module Page.SeamCarving.Model exposing (..)
 import Bootstrap.Accordion as Accordion
 import Bootstrap.Dropdown as Dropdown
 import Bootstrap.Tab as Tab
+import Data.Markings exposing (Markings)
 import Data.Mouse exposing (..)
+import Data.PointRadius as PointRadius exposing (PointRadius)
 import Data.SeamCarving exposing (..)
-import Data.Triangle as Triangle exposing (Triangle)
 import Flags exposing (Flags)
 import List.Extra as LE
 import Page.SeamCarving.Msg exposing (..)
@@ -89,13 +90,10 @@ defaultContentAmplificationForm =
 
 
 type alias RemoveObjectForm =
-    { protected : List Triangle
-    , destroy : List Triangle
-    , clickMode : ClickMode
+    { clickMode : ClickMode
     , markMode : MarkMode
     , showIntermediateSteps : Bool
     , mouseMoveData : Maybe MouseMoveData
-    , currTriangle : Triangle
     , trianglePointIdx : Int
     , lockRatio : Bool
     , onlyHorizontal : Bool
@@ -107,13 +105,10 @@ type alias RemoveObjectForm =
 
 defaultRemoveObjectForm : RemoveObjectForm
 defaultRemoveObjectForm =
-    { protected = []
-    , destroy = []
-    , clickMode = Discreet
+    { clickMode = Discreet
     , markMode = Destroy
     , showIntermediateSteps = True
     , mouseMoveData = Nothing
-    , currTriangle = Triangle.empty
     , trianglePointIdx = 0
     , lockRatio = False
     , onlyHorizontal = False
@@ -151,9 +146,34 @@ extractContentAmplificationParams ({ contentAmplificationForm } as model) =
             )
 
 
+extractRemoveObjectParams : Model -> Markings -> Maybe RemoveObjectParams
+extractRemoveObjectParams ({ removeObjectForm } as model) markings =
+    model
+        |> getSelectedImageName
+        |> Maybe.map
+            (\i ->
+                { imageName = i
+                , showIntermediateSteps = removeObjectForm.showIntermediateSteps
+                , lockRatio = removeObjectForm.lockRatio
+                , onlyHorizontal = removeObjectForm.onlyHorizontal
+                , onlyVertical = removeObjectForm.onlyVertical
+                , markings = markings
+                , imageHeight = 300 --hack for beach picture, TODO fix later
+                , imageWidth = 400 -- hack
+                }
+            )
+
+
 extractTriangleCoordFromMouseData : MouseMoveData -> List Int
 extractTriangleCoordFromMouseData mouseMoveData =
     [ mouseMoveData.offsetX, mouseMoveData.offsetY ]
+
+
+extractPointRadiusFromMouseData : MouseMoveData -> PointRadius
+extractPointRadiusFromMouseData mouseMoveData =
+    { point = [ mouseMoveData.offsetX, mouseMoveData.offsetY ]
+    , radius = 10
+    }
 
 
 isExecutionDone : Model -> Bool

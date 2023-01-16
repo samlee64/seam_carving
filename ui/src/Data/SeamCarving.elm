@@ -42,6 +42,8 @@ type alias RemoveObjectParams =
     , onlyHorizontal : Bool
     , onlyVertical : Bool
     , markings : Markings
+    , imageWidth : Int
+    , imageHeight : Int
     }
 
 
@@ -155,6 +157,8 @@ encodeRemoveObjectParams params =
         , ( "onlyHorizontal", E.bool params.onlyHorizontal )
         , ( "onlyVertical", E.bool params.onlyVertical )
         , ( "markings", Markings.encode params.markings )
+        , ( "imageHeight", E.int params.imageHeight )
+        , ( "imageWidth", E.int params.imageWidth )
         ]
 
 

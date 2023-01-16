@@ -5,7 +5,7 @@ import Json.Encode as E
 
 
 type alias Markings =
-    { destroy : String, protect : String }
+    { destroy : List Int, protect : List Int }
 
 
 
@@ -15,8 +15,8 @@ type alias Markings =
 markingsDecoder : Decoder Markings
 markingsDecoder =
     map2 Markings
-        (at [ "detail", "destroy" ] string)
-        (at [ "detail", "protect" ] string)
+        (field "destroy" (list int))
+        (field "protect" (list int))
 
 
 
@@ -27,12 +27,6 @@ markingsDecoder =
 encode : Markings -> E.Value
 encode markings =
     E.object
-        [ ( "destroy", E.string markings.destroy )
-        , ( "protect", E.string markings.protect )
+        [ ( "destroy", E.list E.int markings.destroy )
+        , ( "protect", E.list E.int markings.protect )
         ]
-
-
-
---        [ ( "destroy", E.list E.int markings.destroy )
---        , ( "protect", E.list E.int markings.protect )
---        ]

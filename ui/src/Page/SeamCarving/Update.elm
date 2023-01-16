@@ -91,9 +91,18 @@ update msg ({ flags } as model) =
                 |> updateRemoveObjectForm rMsg
                 |> none
 
+        RemoveObject markings ->
+            let
+                removeObjectCmd m =
+                    extractRemoveObjectParams m markings
+                        |> Maybe.map (removeObject flags RemovedObject)
+                        |> Maybe.withDefault Cmd.none
+            in
+            model |> cmd removeObjectCmd
+
         RemovedObject resp ->
-            { model | removeObjectResp = Success resp }
-                |> setPollExecutionId (Success resp)
+            { model | removeObjectResp = resp }
+                |> setPollExecutionId resp
                 |> none
 
         GotInputImages resp ->
@@ -180,44 +189,6 @@ updateRemoveObjectForm_ rMsg form =
 
         MouseMove data ->
             { form | mouseMoveData = Just data }
-
-        Click ->
-            let
-                tri =
-                    form.currTriangle
-
-                nextTriangle t =
-                    if form.clickMode == Continious then
-                        Triangle.shiftRight t []
-
-                    else
-                        Triangle.empty
-
-                updateProper item ff =
-                    case form.markMode of
-                        Protect ->
-                            { ff | protected = item :: form.protected }
-
-                        Destroy ->
-                            { ff | destroy = item :: form.destroy }
-            in
-            form.mouseMoveData
-                |> Maybe.map extractTriangleCoordFromMouseData
-                |> Maybe.map
-                    (\coord ->
-                        Triangle.addCoord tri coord
-                            |> Result.map
-                                (\updatedTri ->
-                                    if Triangle.isComplete updatedTri then
-                                        { form | currTriangle = nextTriangle updatedTri }
-                                            |> updateProper updatedTri
-
-                                    else
-                                        { form | currTriangle = updatedTri }
-                                )
-                            |> Result.withDefault form
-                    )
-                |> Maybe.withDefault form
 
         SetLockRatio val ->
             { form | lockRatio = val }

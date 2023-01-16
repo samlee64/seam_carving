@@ -13,14 +13,15 @@ import Bootstrap.Form.Input as Input
 import Bootstrap.Form.Radio as Radio
 import Bootstrap.Utilities.Flex as Flex
 import Bootstrap.Utilities.Spacing as Spacing
+import Data.Markings exposing (markingsDecoder)
 import Data.Mouse exposing (..)
+import Data.PointRadius as PointRadius exposing (PointRadius)
 import Data.SeamCarving exposing (..)
-import Data.Triangle as Triangle exposing (Triangle)
 import Extra.Extra as Extra
 import Extra.Html as EH
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (on, onClick)
+import Html.Events exposing (on, onClick, targetValue)
 import Json.Decode as Decode
 import Json.Encode as E
 import Page.SeamCarving.Model exposing (..)
@@ -45,21 +46,6 @@ viewObjectRemovalForm model =
 
 viewCanvasControls : Model -> Html Msg
 viewCanvasControls ({ removeObjectForm } as model) =
-    let
-        clickMode =
-            removeObjectForm.clickMode
-                == Continious
-                |> Extra.ternary
-                    (Badge.badgeLight [ style "cursor" "pointer" ] [ text "Continious" ])
-                    (Badge.pillDark [ style "cursor" "pointer" ] [ text "Discreet" ])
-
-        markMode =
-            removeObjectForm.markMode
-                == Protect
-                |> Extra.ternary
-                    (Badge.badgeSuccess [] [ text "Protect" ])
-                    (Badge.badgeDanger [] [ text "Destroy" ])
-    in
     Html.map RemoveObjectFormMsg <|
         div []
             [ div [ Spacing.my2 ]
@@ -83,20 +69,7 @@ viewCanvasControls ({ removeObjectForm } as model) =
                 ]
             , div []
                 [ div [ Flex.block ]
-                    [ h5 [] [ text "ClickMode: " ]
-                    , Button.radioButton (removeObjectForm.clickMode == Continious)
-                        [ Button.outlinePrimary
-                        , Button.onClick (SetClickMode Continious)
-                        ]
-                        [ text "Continious" ]
-                    , Button.radioButton (removeObjectForm.clickMode == Discreet)
-                        [ Button.outlineSecondary
-                        , Button.onClick (SetClickMode Discreet)
-                        ]
-                        [ text "Discreet" ]
-                    ]
-                , div [ Flex.block ]
-                    [ h5 [] [ text "MarkMode: " ]
+                    [ h5 [] [ text "Mark Mode: " ]
                     , Button.radioButton (removeObjectForm.markMode == Destroy)
                         [ Button.outlineDanger
                         , Button.onClick (SetMarkMode Destroy)
@@ -116,99 +89,42 @@ viewCanvas : Model -> Html Msg
 viewCanvas ({ removeObjectForm } as model) =
     let
         imgSrc =
-            model.selectedImage
-                |> Maybe.withDefault ""
+            Maybe.withDefault "" model.selectedImage
 
-        currTri =
-            removeObjectForm.mouseMoveData
-                |> Maybe.map extractTriangleCoordFromMouseData
-                |> Maybe.andThen (\c -> Result.toMaybe <| Triangle.addCoord removeObjectForm.currTriangle c)
+        markMode =
+            case removeObjectForm.markMode of
+                Destroy ->
+                    "destroy"
 
-        protected =
-            currTri
-                |> Maybe.map
-                    (\t ->
-                        removeObjectForm.markMode
-                            == Protect
-                            |> Extra.ternary (t :: removeObjectForm.protected) removeObjectForm.protected
-                    )
-                |> Maybe.withDefault removeObjectForm.protected
-                |> (\l -> E.encode 0 (E.list Triangle.encode l))
+                Protect ->
+                    "protect"
 
-        destroy =
-            currTri
-                |> Maybe.map
-                    (\t ->
-                        removeObjectForm.markMode == Destroy |> Extra.ternary (t :: removeObjectForm.destroy) removeObjectForm.destroy
-                    )
-                |> Maybe.withDefault removeObjectForm.destroy
-                |> (\l -> E.encode 0 (E.list Triangle.encode l))
+                Erase ->
+                    "erase"
 
         imageName =
-            getSelectedImageName model
-                |> Maybe.withDefault ""
+            getSelectedImageName model |> Maybe.withDefault ""
 
         attributes =
-            [ on "mousemove" (Decode.map MouseMove mouseMoveDataDecoder) |> Html.Attributes.map RemoveObjectFormMsg
-            , on "response" (Decode.map RemovedObject removeObjectRespEventDecoder)
-            , on "drawing-click" (Decode.succeed Click) |> Html.Attributes.map RemoveObjectFormMsg
-            , attribute "destroy" destroy
+            [ --on "mousemove" (Decode.map MouseMove mouseMoveDataDecoder) |> Html.Attributes.map RemoveObjectFormMsg
+              --              on "response" (Decode.map RemovedObject removeObjectRespEventDecoder)
+              --              on "drawing-click" (Decode.succeed Click) |> Html.Attributes.map RemoveObjectFormMsg
+              on "markings" (Decode.map RemoveObject <| Decode.at [ "detail" ] markingsDecoder)
+
+            --, on "sam" (D)
             , attribute "imgSrc" imgSrc
-            , attribute "protected" protected
+            , attribute "markMode" markMode
             , attribute "onlyHorizontal" <| BE.toString removeObjectForm.onlyHorizontal
             , attribute "onlyVertical" <| BE.toString removeObjectForm.onlyVertical
             , attribute "lockRatio" <| BE.toString removeObjectForm.lockRatio
             , attribute "showIntermediateSteps" <| BE.toString removeObjectForm.showIntermediateSteps
             , attribute "imageName" imageName
+            , id "samuel"
             ]
     in
     div []
         [ node "remove-object" attributes []
         ]
-
-
-viewTriangleData : Model -> Html RemoveObjectFormMsg
-viewTriangleData { removeObjectForm } =
-    let
-        triToString data =
-            E.encode 0 (E.list (E.list E.int) [ data.one, data.two, data.three ])
-
-        viewCoords data =
-            div [ Spacing.m2 ] [ text <| triToString data ]
-    in
-    Accordion.config TriangleDataAccordionMsg
-        |> Accordion.withAnimation
-        |> Accordion.cards
-            [ Accordion.card
-                { id = "card"
-                , options = []
-                , header = Accordion.header [] <| Accordion.toggle [] [ text "View Marking Data" ]
-                , blocks =
-                    [ Accordion.block []
-                        [ CardBlock.text []
-                            [ div []
-                                [ h6 [] [ text "Destory Coords" ]
-                                , div [ Flex.block, Flex.row, style "background" "red" ] (List.map viewCoords removeObjectForm.destroy)
-                                ]
-                            ]
-                        ]
-                    , Accordion.block []
-                        [ CardBlock.text []
-                            [ div []
-                                [ h6 [] [ text "Protect Coords" ]
-                                , div [ Flex.block, Flex.row, Flex.wrap, style "background" "grey" ] (List.map viewCoords removeObjectForm.protected)
-                                ]
-                            ]
-                        ]
-                    , Accordion.block []
-                        [ CardBlock.text []
-                            [ div [] [ h6 [] [ text "Current Triangle" ], viewCoords removeObjectForm.currTriangle ]
-                            ]
-                        ]
-                    ]
-                }
-            ]
-        |> Accordion.view removeObjectForm.showTriangleData
 
 
 viewHelp : RemoveObjectForm -> Html Msg

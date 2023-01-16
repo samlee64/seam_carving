@@ -12,6 +12,7 @@
     "bic": "build-if-changed",
     "prettier": "prettier  --write './src/**/*.ts'",
     "pre-commit-prettier": "prettier --check './src/**/*.ts'",
+    "migrate-up": "db-migrate up",
     "up": "docker-compose up -d",
     "down": "docker-compose down --remove-orphans",
     "docker:build": "docker build -t slicer-server -f devops/Dockerfile .",

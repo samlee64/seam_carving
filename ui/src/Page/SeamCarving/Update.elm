@@ -190,29 +190,6 @@ updateRemoveObjectForm_ rMsg form =
         MouseMove data ->
             { form | mouseMoveData = Just data }
 
-        Click ->
-            let
-                updateProper item ff =
-                    case form.markMode of
-                        Protect ->
-                            { ff | protected = item :: form.protected }
-
-                        Destroy ->
-                            { ff | destroy = item :: form.destroy }
-            in
-            form.mouseMoveData
-                |> Maybe.map extractPointRadiusFromMouseData
-                |> Maybe.map
-                    (\pointRadius ->
-                        case form.markMode of
-                            Protect ->
-                                { form | protected = pointRadius :: form.protected }
-
-                            Destroy ->
-                                { form | destroy = pointRadius :: form.destroy }
-                    )
-                |> Maybe.withDefault form
-
         SetLockRatio val ->
             { form | lockRatio = val }
 

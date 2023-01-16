@@ -90,9 +90,7 @@ defaultContentAmplificationForm =
 
 
 type alias RemoveObjectForm =
-    { protected : List PointRadius
-    , destroy : List PointRadius
-    , clickMode : ClickMode
+    { clickMode : ClickMode
     , markMode : MarkMode
     , showIntermediateSteps : Bool
     , mouseMoveData : Maybe MouseMoveData
@@ -107,9 +105,7 @@ type alias RemoveObjectForm =
 
 defaultRemoveObjectForm : RemoveObjectForm
 defaultRemoveObjectForm =
-    { protected = []
-    , destroy = []
-    , clickMode = Discreet
+    { clickMode = Discreet
     , markMode = Destroy
     , showIntermediateSteps = True
     , mouseMoveData = Nothing

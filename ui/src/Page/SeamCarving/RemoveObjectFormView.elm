@@ -69,7 +69,7 @@ viewCanvasControls ({ removeObjectForm } as model) =
                 ]
             , div []
                 [ div [ Flex.block ]
-                    [ h5 [] [ text "MarkMode: " ]
+                    [ h5 [] [ text "Mark Mode: " ]
                     , Button.radioButton (removeObjectForm.markMode == Destroy)
                         [ Button.outlineDanger
                         , Button.onClick (SetMarkMode Destroy)
@@ -99,13 +99,8 @@ viewCanvas ({ removeObjectForm } as model) =
                 Protect ->
                     "protect"
 
-        protected =
-            removeObjectForm.protected
-                |> (\l -> E.encode 0 (E.list PointRadius.encode l))
-
-        destroy =
-            removeObjectForm.destroy
-                |> (\l -> E.encode 0 (E.list PointRadius.encode l))
+                Erase ->
+                    "erase"
 
         imageName =
             getSelectedImageName model |> Maybe.withDefault ""
@@ -113,23 +108,22 @@ viewCanvas ({ removeObjectForm } as model) =
         attributes =
             [ --on "mousemove" (Decode.map MouseMove mouseMoveDataDecoder) |> Html.Attributes.map RemoveObjectFormMsg
               --              on "response" (Decode.map RemovedObject removeObjectRespEventDecoder)
-              on "drawing-click" (Decode.succeed Click) |> Html.Attributes.map RemoveObjectFormMsg
-            , on "markings" (Decode.map RemoveObject <| Decode.at [ "detail" ] markingsDecoder)
+              --              on "drawing-click" (Decode.succeed Click) |> Html.Attributes.map RemoveObjectFormMsg
+              on "markings" (Decode.map RemoveObject <| Decode.at [ "detail" ] markingsDecoder)
 
             --, on "sam" (D)
-            , attribute "destroy" destroy
             , attribute "imgSrc" imgSrc
             , attribute "markMode" markMode
-            , attribute "protected" protected
             , attribute "onlyHorizontal" <| BE.toString removeObjectForm.onlyHorizontal
             , attribute "onlyVertical" <| BE.toString removeObjectForm.onlyVertical
             , attribute "lockRatio" <| BE.toString removeObjectForm.lockRatio
             , attribute "showIntermediateSteps" <| BE.toString removeObjectForm.showIntermediateSteps
             , attribute "imageName" imageName
+            , id "samuel"
             ]
     in
     div []
-        [ node "remove-object-2" attributes []
+        [ node "remove-object" attributes []
         ]
 
 

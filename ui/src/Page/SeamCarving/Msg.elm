@@ -51,7 +51,6 @@ type RemoveObjectFormMsg
     | SetClickMode ClickMode
     | SetMarkMode MarkMode
     | MouseMove MouseMoveData
-    | Click
     | SetLockRatio Bool
     | SetOnlyHorizontal Bool
     | SetOnlyVertical Bool
@@ -67,3 +66,4 @@ type ClickMode
 type MarkMode
     = Protect
     | Destroy
+    | Erase

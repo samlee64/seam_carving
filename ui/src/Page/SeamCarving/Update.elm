@@ -98,7 +98,7 @@ update msg ({ flags } as model) =
                         |> Maybe.map (removeObject flags RemovedObject)
                         |> Maybe.withDefault Cmd.none
             in
-            model |> cmd removeObjectCmd
+            { model | removeObjectResp = Loading } |> cmd removeObjectCmd
 
         RemovedObject resp ->
             { model | removeObjectResp = resp }

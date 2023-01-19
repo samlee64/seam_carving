@@ -7,6 +7,7 @@ import Bootstrap.Utilities.Spacing as Spacing
 import Flags exposing (Flags)
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Main.Routes as Routes
 
 
 type Msg
@@ -41,13 +42,11 @@ view model =
             model.flags.bucket ++ "/defaults/couple.png"
     in
     div [ Flex.block ]
-        [ a [ style "cursor" "pointer", href "/sc" ]
+        [ a [ style "cursor" "pointer", href <| Routes.toString Routes.SeamCarving ]
             [ Card.config [ Card.attrs [ Spacing.mr3 ] ]
                 |> Card.header [] [ text "Seam Carving" ]
                 |> Card.block []
-                    [ CardBlock.custom <|
-                        img [ src imgSrc ] []
-                    ]
+                    [ CardBlock.custom <| img [ src imgSrc ] [] ]
                 |> Card.footer [] []
                 |> Card.view
             ]

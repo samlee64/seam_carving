@@ -5,23 +5,16 @@ import Json.Encode as E
 
 
 type alias Markings =
-    { destroy : List Int, protect : List Int }
-
-
-
---{ destroy : List Int, protect : List Int }
+    { destroy : List Int, protect : List Int, imageHeight : Int, imageWidth : Int }
 
 
 markingsDecoder : Decoder Markings
 markingsDecoder =
-    map2 Markings
+    map4 Markings
         (field "destroy" (list int))
         (field "protect" (list int))
-
-
-
---        (at [ "detail", "destroy" ] (list int))
---        (at [ "detail", "protect" ] (list int))
+        (field "imageHeight" int)
+        (field "imageWidth" int)
 
 
 encode : Markings -> E.Value
@@ -29,4 +22,6 @@ encode markings =
     E.object
         [ ( "destroy", E.list E.int markings.destroy )
         , ( "protect", E.list E.int markings.protect )
+        , ( "imageHeight", E.int markings.imageHeight )
+        , ( "imageWidth", E.int markings.imageWidth )
         ]

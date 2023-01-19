@@ -30,8 +30,8 @@ type alias Model =
     }
 
 
-init : Flags -> ( Model, Cmd Msg )
-init flags =
+init : Flags -> Maybe String -> ( Model, Cmd Msg )
+init flags selectedImage =
     let
         model =
             { flags = flags
@@ -158,8 +158,8 @@ extractRemoveObjectParams ({ removeObjectForm } as model) markings =
                 , onlyHorizontal = removeObjectForm.onlyHorizontal
                 , onlyVertical = removeObjectForm.onlyVertical
                 , markings = markings
-                , imageHeight = 300 --hack for beach picture, TODO fix later
-                , imageWidth = 400 -- hack
+                , imageHeight = markings.imageHeight
+                , imageWidth = markings.imageWidth
                 }
             )
 

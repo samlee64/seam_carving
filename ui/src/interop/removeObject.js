@@ -1,4 +1,4 @@
-var template = document.createElement('template');
+var template = document.createElement("template");
 
 template.innerHTML = `
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
@@ -29,12 +29,12 @@ template.innerHTML = `
 
 class RemoveObject extends HTMLElement {
   static get observedAttributes() {
-    return ['imgSrc', 'markmode'];
+    return ["imgSrc", "markmode"];
   }
 
   constructor() {
     super();
-    this.attachShadow({ mode: 'open' });
+    this.attachShadow({ mode: "open" });
     this.shadowRoot.appendChild(template.content.cloneNode(true));
 
     this.img;
@@ -47,21 +47,26 @@ class RemoveObject extends HTMLElement {
   }
 
   connectedCallback() {
-    var imgCanvas = this.shadowRoot.getElementById('img-canvas');
-    var drawingCanvas = this.shadowRoot.getElementById('drawing-canvas');
-    var container = this.shadowRoot.getElementById('container');
+    var imgCanvas = this.shadowRoot.getElementById("img-canvas");
+    var drawingCanvas = this.shadowRoot.getElementById("drawing-canvas");
+    var container = this.shadowRoot.getElementById("container");
 
-    this.shadowRoot.querySelector('button').addEventListener('click', (e) => this.handleSubmit(e));
+    this.shadowRoot
+      .querySelector("button")
+      .addEventListener("click", (e) => this.handleSubmit(e));
 
-    drawingCanvas.addEventListener('mousedown', (e) => this.handleMouseDown(e));
-    drawingCanvas.addEventListener('mouseup', (e) => this.handleMouseUp(e));
-    drawingCanvas.addEventListener('mouseout', (e) => this.handleMouseUp(e));
-    drawingCanvas.addEventListener('mousemove', (e) => this.handleMouseMove(e));
+    drawingCanvas.addEventListener("mousedown", (e) => this.handleMouseDown(e));
+    drawingCanvas.addEventListener("mouseup", (e) => this.handleMouseUp(e));
+    drawingCanvas.addEventListener("mouseout", (e) => this.handleMouseUp(e));
+    drawingCanvas.addEventListener("mousemove", (e) => this.handleMouseMove(e));
 
     const img = new Image();
-    img.src = this.getAttribute('imgSrc');
+    img.src = this.getAttribute("imgSrc");
     img.onload = function () {
-      container.setAttribute('style', `width:${this.width}px;height:${this.height}px`);
+      container.setAttribute(
+        "style",
+        `width:${this.width}px;height:${this.height}px`
+      );
 
       imgCanvas.width = this.width;
       imgCanvas.height = this.height;
@@ -69,21 +74,26 @@ class RemoveObject extends HTMLElement {
       drawingCanvas.width = this.width;
       drawingCanvas.height = this.height;
 
-      imgCanvas.getContext('2d').drawImage(img, 0, 0);
+      imgCanvas.getContext("2d").drawImage(img, 0, 0);
     };
   }
 
   handleSubmit(e) {
-    var drawingCanvas = this.shadowRoot.getElementById('drawing-canvas');
-    var ctx = drawingCanvas.getContext('2d');
-    var imageData = ctx.getImageData(0, 0, drawingCanvas.width, drawingCanvas.height);
+    var drawingCanvas = this.shadowRoot.getElementById("drawing-canvas");
+    var ctx = drawingCanvas.getContext("2d");
+    var imageData = ctx.getImageData(
+      0,
+      0,
+      drawingCanvas.width,
+      drawingCanvas.height
+    );
 
     this.emitMarkings(getMarkings(imageData));
   }
 
   handleMouseDown(e) {
-    var drawingCanvas = this.shadowRoot.getElementById('drawing-canvas');
-    const drawingCtx = drawingCanvas.getContext('2d');
+    var drawingCanvas = this.shadowRoot.getElementById("drawing-canvas");
+    const drawingCtx = drawingCanvas.getContext("2d");
 
     this.drawSquare(e.offsetX, e.offsetY);
 
@@ -91,7 +101,8 @@ class RemoveObject extends HTMLElement {
       this.allowMouseMove = !this.allowMouseMove;
     };
 
-    if (this.mousedownID == -1) this.mousedownID = setInterval(toggleAllowMouseMove, 50);
+    if (this.mousedownID == -1)
+      this.mousedownID = setInterval(toggleAllowMouseMove, 50);
   }
 
   handleMouseUp(e) {
@@ -104,45 +115,50 @@ class RemoveObject extends HTMLElement {
   handleMouseMove(e) {
     if (this.allowMouseMove) return;
 
-    var drawingCanvas = this.shadowRoot.getElementById('drawing-canvas');
+    var drawingCanvas = this.shadowRoot.getElementById("drawing-canvas");
     if (this.mousedownID != -1) {
-      const drawingCtx = drawingCanvas.getContext('2d');
+      const drawingCtx = drawingCanvas.getContext("2d");
 
       this.drawSquare(e.offsetX, e.offsetY);
     } else {
-      console.log('mouse is moving');
+      console.log("mouse is moving");
     }
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
-    console.log('attributeChangedCallback', name, oldValue, newValue);
+    console.log("attributeChangedCallback", name, oldValue, newValue);
     this[name] = newValue;
   }
 
   emitMarkings(markings) {
     this.dispatchEvent(
-      new CustomEvent('markings', { detail: markings, cancelable: false, bubbles: true, composed: true }),
+      new CustomEvent("markings", {
+        detail: markings,
+        cancelable: false,
+        bubbles: true,
+        composed: true,
+      })
     );
   }
 
   drawSquare(x, y) {
-    const drawingCanvas = this.shadowRoot.getElementById('drawing-canvas');
-    const drawingCtx = drawingCanvas.getContext('2d');
+    const drawingCanvas = this.shadowRoot.getElementById("drawing-canvas");
+    const drawingCtx = drawingCanvas.getContext("2d");
 
-    var fillStyle = '';
+    var fillStyle = "";
 
-    switch (this.getAttribute('markMode')) {
-      case 'destroy':
-        fillStyle = 'rgb(255,0,0,0.5)';
+    switch (this.getAttribute("markMode")) {
+      case "destroy":
+        fillStyle = "rgb(255,0,0,0.5)";
         break;
-      case 'protect':
-        fillStyle = 'rgb(0,255,0,0.5)';
+      case "protect":
+        fillStyle = "rgb(0,255,0,0.5)";
         break;
-      case 'erase':
-        fillStyle = 'rgb(0, 0, 0, 0)';
+      case "erase":
+        fillStyle = "rgb(0, 0, 0, 0)";
         break;
       default:
-        fillStyle = 'rgb(0, 0, 0, 0)';
+        fillStyle = "rgb(0, 0, 0, 0)";
         break;
     }
 
@@ -151,7 +167,6 @@ class RemoveObject extends HTMLElement {
   }
 }
 
-//Maybe turn this into a two channel array?
 function getMarkings(imageData) {
   var destroy = [];
   var protect = [];
@@ -174,7 +189,12 @@ function getMarkings(imageData) {
     }
   }
 
-  return { destroy: destroy, protect: protect };
+  return {
+    destroy: destroy,
+    protect: protect,
+    imageWidth: imageData.width,
+    imageHeight: imageData.height,
+  };
 }
 
-window.customElements.define('remove-object', RemoveObject);
+window.customElements.define("remove-object", RemoveObject);

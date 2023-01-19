@@ -11,6 +11,7 @@ import Html.Attributes exposing (class, href, placeholder, src, style)
 import Html.Events exposing (onClick)
 import Main.Model exposing (Model, Page(..))
 import Main.Msg exposing (Msg(..))
+import Main.Routes as Routes
 import Page.Index as Index
 import Page.SeamCarving.View as SeamCarving
 import Page.Technologies as Technologies
@@ -64,10 +65,10 @@ viewNavbar model =
             ]
         |> Navbar.items
             [ Navbar.itemLink
-                [ href "/sc" ]
+                [ href <| Routes.toString Routes.SeamCarving ]
                 [ text "Seam Carving" ]
             , Navbar.itemLink
-                [ href "/technologies" ]
+                [ href <| Routes.toString Routes.Technologies ]
                 [ text "Technologies" ]
             ]
         |> Navbar.customItems

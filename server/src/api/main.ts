@@ -8,7 +8,7 @@ import config from "../config";
 const app = new Koa();
 
 //middleware
-app.use(bodyParser());
+app.use(bodyParser({ jsonLimit: "10mb" }));
 app.use(json());
 app.use(cors());
 

@@ -44,8 +44,11 @@ initPage url model =
         Just Routes.Index ->
             Index.init model.flags |> updatePage IndexPage IndexMsg model
 
+        Just (Routes.SeamCarvingPicture pictureUrl) ->
+            SeamCarving.init model.flags pictureUrl |> updatePage SeamCarvingPage SeamCarvingMsg model
+
         Just Routes.SeamCarving ->
-            SeamCarving.init model.flags |> updatePage SeamCarvingPage SeamCarvingMsg model
+            SeamCarving.init model.flags Nothing |> updatePage SeamCarvingPage SeamCarvingMsg model
 
         Just Routes.Technologies ->
             Technologies.init model.flags |> updatePage TechnologiesPage TechnologiesMsg model

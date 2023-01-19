@@ -108,9 +108,9 @@ viewHelp caForm =
                             , text " and then seam carves the image down to the original size."
                             , br [] []
                             , text "Makes the high energy content more prominant in the photo. In the below example, the content was amplified by a factor of 1.6"
-                            , div [ Flex.block, Spacing.mt3 ]
+                            , div []
                                 [ img [ src exampleBeforeSrc ] []
-                                , img [ src "assets/images/next.svg", Spacing.mx2 ] []
+                                , img [ src "assets/images/next.svg", Spacing.mx2, width 30 ] []
                                 , img [ src exampleAfterSrc ] []
                                 ]
                             ]

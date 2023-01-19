@@ -18,7 +18,14 @@ export interface RemoveObjectParams {
   lockRatio: boolean;
   onlyHorizontal: boolean;
   onlyVertical: boolean;
-  markings: { destroy: number[]; protect: number[] };
+  markings: Markings;
+  imageWidth: number;
+  imageHeight: number;
+}
+
+interface Markings {
+  destroy: number[];
+  protect: number[];
   imageWidth: number;
   imageHeight: number;
 }
